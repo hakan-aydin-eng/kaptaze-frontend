@@ -338,11 +338,27 @@ function renderUsersTable(users) {
 }
 
 function renderMockUsersData() {
+    // Load registrations from localStorage
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    const customerRegistrations = registrations.filter(reg => reg.type === 'customer');
+    
     const mockUsers = [
         { id: '1', name: 'Ahmet Yılmaz', email: 'ahmet@example.com', phone: '0532 XXX XX XX', date: '2024-01-15', status: 'active' },
         { id: '2', name: 'Fatma Kaya', email: 'fatma@example.com', phone: '0542 XXX XX XX', date: '2024-01-20', status: 'active' },
         { id: '3', name: 'Mehmet Demir', email: 'mehmet@example.com', phone: '0555 XXX XX XX', date: '2024-01-25', status: 'inactive' }
     ];
+    
+    // Add customer registrations
+    customerRegistrations.forEach(reg => {
+        mockUsers.push({
+            id: reg.id,
+            name: `${reg.firstName} ${reg.lastName}`,
+            email: reg.email,
+            phone: reg.phone,
+            date: new Date(reg.createdAt).toLocaleDateString('tr-TR'),
+            status: reg.status === 'approved' ? 'active' : 'pending'
+        });
+    });
     
     const tableBody = document.getElementById('users-table-body');
     tableBody.innerHTML = mockUsers.map(user => `
@@ -352,7 +368,7 @@ function renderMockUsersData() {
             <td>${user.email}</td>
             <td>${user.phone}</td>
             <td>${user.date}</td>
-            <td><span class="status-badge ${user.status}">${user.status === 'active' ? 'Aktif' : 'Pasif'}</span></td>
+            <td><span class="status-badge ${user.status}">${getStatusText(user.status)}</span></td>
             <td>
                 <button class="btn-secondary" onclick="editUser('${user.id}')">
                     <i class="fas fa-edit"></i>
@@ -360,9 +376,42 @@ function renderMockUsersData() {
                 <button class="btn-secondary" onclick="toggleUserStatus('${user.id}', '${user.status}')">
                     <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
                 </button>
+                ${user.status === 'pending' ? `
+                <button class="btn-primary" onclick="approveUser('${user.id}')">
+                    <i class="fas fa-check"></i> Onayla
+                </button>
+                ` : ''}
             </td>
         </tr>
     `).join('');
+}
+
+function getStatusText(status) {
+    const statusMap = {
+        'active': 'Aktif',
+        'inactive': 'Pasif',
+        'pending': 'Onay Bekliyor',
+        'approved': 'Onaylı'
+    };
+    return statusMap[status] || status;
+}
+
+function approveUser(userId) {
+    if (confirm('Bu kullanıcıyı onaylamak istediğinizden emin misiniz?')) {
+        // Update registration status
+        const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+        const updatedRegistrations = registrations.map(reg => {
+            if (reg.id === userId) {
+                reg.status = 'approved';
+                reg.approvedAt = new Date().toISOString();
+            }
+            return reg;
+        });
+        localStorage.setItem('registrations', JSON.stringify(updatedRegistrations));
+        
+        showNotification(`Kullanıcı başarıyla onaylandı!`, 'success');
+        loadUsersData(); // Reload users
+    }
 }
 
 // Restaurants functions
@@ -390,17 +439,39 @@ async function loadRestaurantsData() {
 }
 
 function renderMockRestaurantsData() {
+    // Load registrations from localStorage
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    const restaurantRegistrations = registrations.filter(reg => reg.type === 'restaurant');
+    
     const mockRestaurants = [
         { id: '1', name: 'Seraser Restaurant', email: 'info@seraser.com', address: 'Kaleiçi, Antalya', approved: 'active', packages: 12 },
         { id: '2', name: 'Lara Balık Evi', email: 'info@larabalik.com', address: 'Lara, Antalya', approved: 'pending', packages: 8 },
         { id: '3', name: 'Köşe Kebap', email: 'info@kosekebap.com', address: 'Konyaaltı, Antalya', approved: 'active', packages: 15 }
     ];
     
+    // Add restaurant registrations
+    restaurantRegistrations.forEach(reg => {
+        mockRestaurants.push({
+            id: reg.id,
+            name: reg.businessName,
+            email: reg.email,
+            address: `${reg.businessAddress}, ${reg.district}/${reg.city}`,
+            approved: reg.status === 'approved' ? 'active' : 'pending',
+            packages: 0,
+            category: reg.businessCategory,
+            owner: `${reg.firstName} ${reg.lastName}`,
+            phone: reg.phone
+        });
+    });
+    
     const tableBody = document.getElementById('restaurants-table-body');
     tableBody.innerHTML = mockRestaurants.map(restaurant => `
         <tr>
             <td>${restaurant.id}</td>
-            <td>${restaurant.name}</td>
+            <td>
+                <strong>${restaurant.name}</strong><br>
+                <small style="color: #6b7280;">${restaurant.owner || 'N/A'}</small>
+            </td>
             <td>${restaurant.email}</td>
             <td>${restaurant.address}</td>
             <td><span class="status-badge ${restaurant.approved}">${restaurant.approved === 'active' ? 'Onaylı' : 'Beklemede'}</span></td>
@@ -409,12 +480,40 @@ function renderMockRestaurantsData() {
                 <button class="btn-secondary" onclick="editRestaurant('${restaurant.id}')">
                     <i class="fas fa-edit"></i>
                 </button>
+                ${restaurant.approved === 'pending' ? `
                 <button class="btn-primary" onclick="approveRestaurant('${restaurant.id}')">
-                    <i class="fas fa-check"></i>
+                    <i class="fas fa-check"></i> Onayla
                 </button>
+                ` : `
+                <button class="btn-secondary" onclick="viewRestaurant('${restaurant.id}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+                `}
             </td>
         </tr>
     `).join('');
+}
+
+function approveRestaurant(restaurantId) {
+    if (confirm('Bu restoranı onaylamak istediğinizden emin misiniz?')) {
+        // Update registration status
+        const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+        const updatedRegistrations = registrations.map(reg => {
+            if (reg.id === restaurantId) {
+                reg.status = 'approved';
+                reg.approvedAt = new Date().toISOString();
+            }
+            return reg;
+        });
+        localStorage.setItem('registrations', JSON.stringify(updatedRegistrations));
+        
+        showNotification(`Restoran başarıyla onaylandı!`, 'success');
+        loadRestaurantsData(); // Reload restaurants
+    }
+}
+
+function viewRestaurant(restaurantId) {
+    showNotification(`Restoran detayları görüntüleme özelliği yakında aktif olacak (ID: ${restaurantId})`, 'info');
 }
 
 // Orders functions

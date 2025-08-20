@@ -553,8 +553,14 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// Customer registration function
+function openCustomerRegistration() {
+    window.open('./customer-registration.html', '_blank');
+}
+
 // Export functions for global access
 window.openPanel = openPanel;
+window.openCustomerRegistration = openCustomerRegistration;
 window.closeErrorModal = closeErrorModal;
 window.retryConnection = retryConnection;
 window.scrollToSection = scrollToSection;

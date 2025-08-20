@@ -90,8 +90,74 @@ let apiConnected = false;
 
 // Initialize app when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication first
+    if (!checkAuthentication()) {
+        return; // Will redirect to login
+    }
+    
     initializeApp();
 });
+
+// Authentication check
+function checkAuthentication() {
+    const token = localStorage.getItem('restaurantToken');
+    const user = localStorage.getItem('restaurantUser');
+    
+    if (!token || !user) {
+        // Redirect to login
+        window.location.href = './login.html';
+        return false;
+    }
+    
+    try {
+        const userData = JSON.parse(user);
+        const loginTime = new Date(userData.loginTime);
+        const now = new Date();
+        const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+        
+        // Token expires after 24 hours
+        if (hoursDiff > 24) {
+            localStorage.removeItem('restaurantToken');
+            localStorage.removeItem('restaurantUser');
+            window.location.href = './login.html';
+            return false;
+        }
+        
+        // Update restaurant info in header
+        const restaurantName = document.getElementById('restaurant-name');
+        const restaurantStatus = document.getElementById('restaurant-status');
+        const userInfo = document.querySelector('.user-info span');
+        
+        if (restaurantName) {
+            restaurantName.textContent = userData.name;
+        }
+        
+        if (restaurantStatus) {
+            restaurantStatus.textContent = userData.status === 'approved' ? 'Onaylı' : 'Onay Bekliyor';
+            restaurantStatus.className = `restaurant-status ${userData.status}`;
+        }
+        
+        if (userInfo) {
+            userInfo.textContent = userData.name;
+        }
+        
+        return true;
+    } catch (error) {
+        localStorage.removeItem('restaurantToken');
+        localStorage.removeItem('restaurantUser');
+        window.location.href = './login.html';
+        return false;
+    }
+}
+
+// Logout function
+function logout() {
+    if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+        localStorage.removeItem('restaurantToken');
+        localStorage.removeItem('restaurantUser');
+        window.location.href = './login.html';
+    }
+}
 
 // Initialize the application
 function initializeApp() {
@@ -404,8 +470,205 @@ function getStatusText(status) {
 
 // Package Management Functions
 function showAddPackageModal() {
-    // Modal implementation would go here
-    alert('Yeni paket ekleme modalı açılacak (geliştirme aşamasında)');
+    const user = JSON.parse(localStorage.getItem('restaurantUser') || '{}');
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Yeni Paket Ekle</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="packageForm">
+                    <div class="form-group">
+                        <label>Paket Adı *</label>
+                        <input type="text" id="packageName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Açıklama *</label>
+                        <textarea id="packageDescription" required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Orijinal Fiyat (₺) *</label>
+                            <input type="number" id="originalPrice" required>
+                        </div>
+                        <div class="form-group">
+                            <label>İndirimli Fiyat (₺) *</label>
+                            <input type="number" id="discountPrice" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Adet *</label>
+                            <input type="number" id="quantity" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Son Teslim Saati *</label>
+                            <input type="time" id="expiryTime" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="category">
+                            <option value="Ana Yemek">Ana Yemek</option>
+                            <option value="Çorba">Çorba</option>
+                            <option value="Salata">Salata</option>
+                            <option value="Tatlı">Tatlı</option>
+                            <option value="İçecek">İçecek</option>
+                            <option value="Karma Menü">Karma Menü</option>
+                        </select>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal()">İptal</button>
+                        <button type="submit" class="btn-primary">Paket Ekle</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    // Add modal styles
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    
+    const content = modal.querySelector('.modal-content');
+    content.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    `;
+    
+    const header = modal.querySelector('.modal-header');
+    header.style.cssText = `
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    `;
+    
+    const body = modal.querySelector('.modal-body');
+    body.style.cssText = `padding: 1.5rem;`;
+    
+    const closeBtn = modal.querySelector('.modal-close');
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6b7280;
+    `;
+    
+    // Form styling
+    const formGroups = modal.querySelectorAll('.form-group');
+    formGroups.forEach(group => {
+        group.style.cssText = `margin-bottom: 1rem;`;
+        const label = group.querySelector('label');
+        if (label) label.style.cssText = `display: block; margin-bottom: 0.5rem; font-weight: 500;`;
+        const input = group.querySelector('input, textarea, select');
+        if (input) input.style.cssText = `
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        `;
+    });
+    
+    // Form row styling
+    const formRows = modal.querySelectorAll('.form-row');
+    formRows.forEach(row => {
+        row.style.cssText = `display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;`;
+    });
+    
+    // Actions styling
+    const actions = modal.querySelector('.modal-actions');
+    actions.style.cssText = `
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    `;
+    
+    const buttons = modal.querySelectorAll('.modal-actions button');
+    buttons.forEach(btn => {
+        btn.style.cssText = `
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+        `;
+        if (btn.classList.contains('btn-primary')) {
+            btn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+            btn.style.color = 'white';
+        } else {
+            btn.style.background = '#f3f4f6';
+            btn.style.color = '#374151';
+        }
+    });
+    
+    document.body.appendChild(modal);
+    window.currentModal = modal;
+    
+    // Form submit handler
+    const form = modal.querySelector('#packageForm');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const packageData = {
+            id: Date.now().toString(),
+            name: document.getElementById('packageName').value,
+            description: document.getElementById('packageDescription').value,
+            originalPrice: parseInt(document.getElementById('originalPrice').value),
+            discountPrice: parseInt(document.getElementById('discountPrice').value),
+            quantity: parseInt(document.getElementById('quantity').value),
+            expiryTime: document.getElementById('expiryTime').value,
+            category: document.getElementById('category').value,
+            restaurantId: user.id,
+            restaurantName: user.name,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            image: 'https://via.placeholder.com/300x200'
+        };
+        
+        // Save to localStorage
+        const packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+        packages.push(packageData);
+        localStorage.setItem('restaurantPackages', JSON.stringify(packages));
+        
+        alert(`Paket "${packageData.name}" başarıyla eklendi!`);
+        closeModal();
+        loadPackages(); // Reload packages
+    });
+    
+    window.closeModal = function() {
+        if (window.currentModal) {
+            window.currentModal.remove();
+            window.currentModal = null;
+        }
+    };
 }
 
 function editPackage(packageId) {

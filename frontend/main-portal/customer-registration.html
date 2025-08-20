@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Müşteri Kayıt - KapTaze</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .registration-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .form-container {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.875rem;
+            padding-left: 3rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #16a34a;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 1.1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            padding: 0;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .register-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 1rem;
+        }
+
+        .register-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+        }
+
+        .register-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message,
+        .error-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .footer-links {
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer-link {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 1rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-link:hover {
+            color: #16a34a;
+        }
+
+        .business-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .business-type-option {
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .business-type-option:hover {
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .business-type-option.selected {
+            border-color: #16a34a;
+            background: #dcfce7;
+        }
+
+        .business-type-option i {
+            font-size: 2rem;
+            color: #16a34a;
+            margin-bottom: 0.5rem;
+        }
+
+        .business-type-option h3 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            color: #1f2937;
+        }
+
+        .business-type-option p {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .business-type-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .registration-container {
+                margin: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="registration-container">
+        <div class="header">
+            <div class="logo">
+                <span class="logo-icon">🌱</span>
+                <span class="logo-text">KapTaze</span>
+            </div>
+            <h1>Platformumuza Katılın</h1>
+            <p>Gıda israfına karşı durun, tasarruf edin!</p>
+        </div>
+
+        <div class="form-container">
+            <div class="success-message" id="successMessage"></div>
+            <div class="error-message" id="errorMessage"></div>
+
+            <form id="registrationForm" onsubmit="handleRegistration(event)">
+                <div class="form-group">
+                    <label>Hesap Türü Seçin:</label>
+                    <div class="business-type-selector">
+                        <div class="business-type-option" onclick="selectBusinessType('customer')" id="customer-type">
+                            <i class="fas fa-user"></i>
+                            <h3>Müşteri</h3>
+                            <p>Uygun fiyatla yemek paketi alın</p>
+                        </div>
+                        <div class="business-type-option" onclick="selectBusinessType('restaurant')" id="restaurant-type">
+                            <i class="fas fa-store"></i>
+                            <h3>Restoran</h3>
+                            <p>İşletmenizi platformda tanıtın</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="businessType" name="businessType" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">Ad *</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Soyad *</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">E-posta *</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Telefon *</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-phone input-icon"></i>
+                        <input type="tel" id="phone" name="phone" placeholder="05XX XXX XX XX" required>
+                    </div>
+                </div>
+
+                <!-- Restoran için ek alanlar -->
+                <div id="restaurantFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="businessName">İşletme Adı *</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-store input-icon"></i>
+                            <input type="text" id="businessName" name="businessName">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="businessCategory">İşletme Kategorisi *</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-tags input-icon"></i>
+                            <select id="businessCategory" name="businessCategory">
+                                <option value="">Kategori Seçin</option>
+                                <option value="Geleneksel Türk">Geleneksel Türk</option>
+                                <option value="Et & Kebap">Et & Kebap</option>
+                                <option value="Deniz Ürünleri">Deniz Ürünleri</option>
+                                <option value="Börek & Kahvaltı">Börek & Kahvaltı</option>
+                                <option value="Pide & Lahmacun">Pide & Lahmacun</option>
+                                <option value="Kahve & Pasta">Kahve & Pasta</option>
+                                <option value="Fast Food">Fast Food</option>
+                                <option value="Vegan Yemekler">Vegan Yemekler</option>
+                                <option value="Tatlı & Dondurma">Tatlı & Dondurma</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="businessAddress">İşletme Adresi *</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-map-marker-alt input-icon"></i>
+                            <input type="text" id="businessAddress" name="businessAddress">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="city">Şehir *</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-city input-icon"></i>
+                            <select id="city" name="city" required>
+                                <option value="">Şehir Seçin</option>
+                                <option value="Antalya">Antalya</option>
+                                <option value="İstanbul">İstanbul</option>
+                                <option value="Ankara">Ankara</option>
+                                <option value="İzmir">İzmir</option>
+                                <option value="Bursa">Bursa</option>
+                                <option value="Adana">Adana</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="district">İlçe *</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-map input-icon"></i>
+                            <select id="district" name="district" required>
+                                <option value="">İlçe Seçin</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">
+                        <a href="#" style="color: #16a34a;">Kullanım Şartları</a> ve 
+                        <a href="#" style="color: #16a34a;">Gizlilik Politikası</a>'nı okudum ve kabul ediyorum.
+                    </label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="newsletter" name="newsletter">
+                    <label for="newsletter">
+                        Kampanya ve duyurulardan haberdar olmak istiyorum.
+                    </label>
+                </div>
+
+                <button type="submit" class="register-btn" id="registerBtn">
+                    <i class="fas fa-user-plus"></i>
+                    Kayıt Ol
+                </button>
+            </form>
+
+            <div class="footer-links">
+                <a href="./index.html" class="footer-link">
+                    <i class="fas fa-home"></i>
+                    Ana Sayfa
+                </a>
+                <a href="#" class="footer-link">
+                    <i class="fas fa-headset"></i>
+                    Yardım
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedBusinessType = '';
+
+        // İlçe verileri
+        const districts = {
+            'Antalya': ['Muratpaşa', 'Konyaaltı', 'Kepez', 'Döşemealtı', 'Aksu', 'Alanya', 'Manavgat', 'Side'],
+            'İstanbul': ['Kadıköy', 'Beşiktaş', 'Şişli', 'Beyoğlu', 'Üsküdar', 'Bakırköy', 'Fatih', 'Zeytinburnu'],
+            'Ankara': ['Çankaya', 'Keçiören', 'Yenimahalle', 'Mamak', 'Sincan', 'Altındağ', 'Etimesgut'],
+            'İzmir': ['Konak', 'Karşıyaka', 'Bornova', 'Buca', 'Bayraklı', 'Gaziemir', 'Balçova'],
+            'Bursa': ['Osmangazi', 'Nilüfer', 'Yıldırım', 'Gürsu', 'Kestel', 'Mudanya'],
+            'Adana': ['Seyhan', 'Yüreğir', 'Çukurova', 'Sarıçam', 'Karaisalı']
+        };
+
+        function selectBusinessType(type) {
+            selectedBusinessType = type;
+            document.getElementById('businessType').value = type;
+            
+            // Update UI
+            document.querySelectorAll('.business-type-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            document.getElementById(type + '-type').classList.add('selected');
+            
+            // Show/hide restaurant fields
+            const restaurantFields = document.getElementById('restaurantFields');
+            if (type === 'restaurant') {
+                restaurantFields.style.display = 'block';
+                // Make restaurant fields required
+                document.getElementById('businessName').required = true;
+                document.getElementById('businessCategory').required = true;
+                document.getElementById('businessAddress').required = true;
+            } else {
+                restaurantFields.style.display = 'none';
+                // Remove required from restaurant fields
+                document.getElementById('businessName').required = false;
+                document.getElementById('businessCategory').required = false;
+                document.getElementById('businessAddress').required = false;
+            }
+        }
+
+        // City change handler
+        document.getElementById('city').addEventListener('change', function() {
+            const city = this.value;
+            const districtSelect = document.getElementById('district');
+            
+            // Clear districts
+            districtSelect.innerHTML = '<option value="">İlçe Seçin</option>';
+            
+            if (city && districts[city]) {
+                districts[city].forEach(district => {
+                    const option = document.createElement('option');
+                    option.value = district;
+                    option.textContent = district;
+                    districtSelect.appendChild(option);
+                });
+            }
+        });
+
+        // Phone formatting
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 11) {
+                if (value.length >= 3) {
+                    value = value.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
+                }
+                e.target.value = value;
+            }
+        });
+
+        async function handleRegistration(event) {
+            event.preventDefault();
+            
+            const registerBtn = document.getElementById('registerBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            
+            // Hide messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            // Validate business type
+            if (!selectedBusinessType) {
+                showError('Lütfen hesap türü seçin');
+                return;
+            }
+            
+            // Show loading
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kaydediliyor...';
+            
+            try {
+                const formData = new FormData(event.target);
+                const data = Object.fromEntries(formData.entries());
+                
+                // API call simulation
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Store registration data
+                const registrationId = Date.now().toString();
+                const registrationData = {
+                    id: registrationId,
+                    ...data,
+                    status: 'pending',
+                    createdAt: new Date().toISOString(),
+                    type: selectedBusinessType
+                };
+                
+                // Store in localStorage (simulating database)
+                const existingRegistrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+                existingRegistrations.push(registrationData);
+                localStorage.setItem('registrations', JSON.stringify(existingRegistrations));
+                
+                // Show success
+                showSuccess(`Başvurunuz başarıyla alındı! Başvuru numaranız: ${registrationId}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
+                
+                // Reset form
+                event.target.reset();
+                selectedBusinessType = '';
+                document.querySelectorAll('.business-type-option').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                document.getElementById('restaurantFields').style.display = 'none';
+                
+            } catch (error) {
+                showError('Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Kayıt Ol';
+            }
+        }
+
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function showSuccess(message) {
+            const successMessage = document.getElementById('successMessage');
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+</html>

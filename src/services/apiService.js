@@ -231,6 +231,71 @@ class ApiService {
     return this.get('/kullanici/istatistikler');
   }
 
+  // Web localStorage integration
+  async getWebStorageData() {
+    try {
+      // Bu production'da gerçek API'den gelecek
+      // Şimdilik localStorage simülasyonu
+      const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+      const approvedRestaurants = registrations.filter(reg => 
+        reg.type === 'restaurant' && reg.status === 'approved'
+      );
+      
+      // Paketleri yükle
+      const packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+      
+      return {
+        success: true,
+        data: {
+          restaurants: approvedRestaurants.map(reg => {
+            // Bu restorana ait paketleri bul
+            const restaurantPackages = packages.filter(pkg => pkg.restaurantId === reg.id);
+            
+            return {
+              _id: reg.id,
+              ad: reg.businessName,
+              kategori: reg.businessCategory,
+              puan: 4.0 + Math.random(),
+              konum: { 
+                mesafe: (Math.random() * 5).toFixed(1) + 'km',
+                adres: reg.businessAddress,
+                sehir: reg.city,
+                ilce: reg.district
+              },
+              resimUrl: null,
+              sahibi: `${reg.firstName} ${reg.lastName}`,
+              telefon: reg.phone,
+              eposta: reg.email,
+              onerilenMi: true, // Yeni onaylanan restoranlar öne çıkarılsın
+              packages: restaurantPackages.length > 0 ? restaurantPackages.map(pkg => ({
+                _id: pkg.id,
+                ad: pkg.name,
+                aciklama: pkg.description,
+                orijinalFiyat: pkg.originalPrice,
+                satisFiyati: pkg.discountPrice,
+                stokAdedi: pkg.quantity,
+                durum: 'pickup_now',
+                kategori: pkg.category,
+                sonTeslim: pkg.expiryTime,
+                resimUrl: pkg.image
+              })) : [{
+                _id: `p_${reg.id}`,
+                ad: 'Sürpriz Paketi',
+                aciklama: 'Günün özel menüsü',
+                orijinalFiyat: 80 + Math.floor(Math.random() * 40),
+                satisFiyati: 30 + Math.floor(Math.random() * 30),
+                stokAdedi: Math.floor(Math.random() * 10) + 1,
+                durum: 'pickup_now'
+              }]
+            };
+          })
+        }
+      };
+    } catch (error) {
+      return this.getMockRestaurants();
+    }
+  }
+
   // Mock data fallback (API çalışmazsa)
   getMockRestaurants() {
     return {

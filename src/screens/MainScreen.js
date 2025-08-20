@@ -65,25 +65,48 @@ const MainScreen = ({ navigation }) => {
       setLoading(true);
       console.log('Loading restaurants from API...');
       
-      // Gerçek API'den restoranları yükle
-      const response = await apiService.get('/restaurants');
-      
-      if (response.success && response.data.restaurants) {
-        const apiRestaurants = response.data.restaurants;
-        console.log('API restaurants loaded:', apiRestaurants.length);
-        
-        setRestaurants(apiRestaurants);
-        setDisplayedRestaurants(apiRestaurants.slice(0, ITEMS_PER_PAGE));
-        setHasMore(apiRestaurants.length > ITEMS_PER_PAGE);
-        
-        console.log('Loaded restaurants:', apiRestaurants.map(r => ({ name: r.name, category: r.category })));
-      } else {
-        console.log('API failed, using fallback data');
-        // Fallback olarak mock data kullan
-        setRestaurants(antalyaRestaurants);
-        setDisplayedRestaurants(antalyaRestaurants.slice(0, ITEMS_PER_PAGE));
-        setHasMore(antalyaRestaurants.length > ITEMS_PER_PAGE);
+      // Önce web storage'dan onaylı restoranları çek
+      let webRestaurants = [];
+      try {
+        const webData = await apiService.getWebStorageData();
+        if (webData.success && webData.data.restaurants) {
+          webRestaurants = webData.data.restaurants;
+          console.log('Web storage restaurants loaded:', webRestaurants.length);
+        }
+      } catch (error) {
+        console.log('Web storage okunamadı:', error);
       }
+      
+      // API'den veri çekmeye çalış
+      let apiRestaurants = [];
+      try {
+        const response = await apiService.get('/restaurants');
+        if (response.success && response.data.restaurants) {
+          apiRestaurants = response.data.restaurants;
+          console.log('API restaurants loaded:', apiRestaurants.length);
+        }
+      } catch (error) {
+        console.log('API failed, using fallback data');
+      }
+      
+      // Web storage + API + yerel veriyi birleştir
+      const allRestaurants = [
+        ...webRestaurants,
+        ...apiRestaurants,
+        ...antalyaRestaurants
+      ];
+      
+      // Duplicate removal (by id or name)
+      const uniqueRestaurants = allRestaurants.filter((restaurant, index, self) => 
+        index === self.findIndex(r => r._id === restaurant._id || r.ad === restaurant.ad)
+      );
+      
+      setRestaurants(uniqueRestaurants);
+      setDisplayedRestaurants(uniqueRestaurants.slice(0, ITEMS_PER_PAGE));
+      setHasMore(uniqueRestaurants.length > ITEMS_PER_PAGE);
+      
+      console.log(`📱 Toplam ${uniqueRestaurants.length} restoran yüklendi (${webRestaurants.length} web + ${apiRestaurants.length} API + ${antalyaRestaurants.length} yerel)`);
+      
     } catch (error) {
       console.error('Restaurant loading error:', error);
       // Hata durumunda fallback data kullan
