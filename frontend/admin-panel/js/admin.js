@@ -124,11 +124,13 @@ function showSection(sectionId) {
 
 // Load section data
 function loadSectionData(sectionId) {
+    console.log('📄 Loading section data for:', sectionId);
     switch (sectionId) {
         case 'dashboard':
             loadDashboardData();
             break;
         case 'applications':
+            console.log('📋 Loading applications section...');
             loadApplicationsData();
             break;
         case 'users':
@@ -678,6 +680,9 @@ async function loadApplicationsData() {
     
     tableBody.innerHTML = '<tr><td colspan="8" class="loading">Başvurular yükleniyor...</td></tr>';
     
+    console.log('🔄 Loading applications data...');
+    console.log('📡 API Connected:', apiConnected);
+    
     try {
         if (apiConnected) {
             // Try to get real data from API
@@ -689,6 +694,7 @@ async function loadApplicationsData() {
                 renderMockApplicationsData();
             }
         } else {
+            console.log('📁 Using localStorage data...');
             renderMockApplicationsData();
         }
     } catch (error) {
@@ -701,8 +707,14 @@ function renderMockApplicationsData() {
     // Load registrations from localStorage
     const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
     
+    // Debug: Log the registrations data
+    console.log('📋 All Registrations:', registrations);
+    
     // Filter only restaurant applications
     const restaurantApplications = registrations.filter(app => app.type === 'restaurant');
+    
+    // Debug: Log filtered restaurant applications
+    console.log('🏪 Restaurant Applications:', restaurantApplications);
     
     const tableBody = document.getElementById('applications-table-body');
     
