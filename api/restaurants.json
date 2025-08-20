@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "message": "Restaurants loaded successfully",
+  "timestamp": "2024-01-20T10:30:00Z",
+  "data": {
+    "restaurants": [],
+    "meta": {
+      "total": 0,
+      "webRegistrations": 0,
+      "packages": 0,
+      "note": "This endpoint will be populated from web localStorage data"
+    }
+  }
+}

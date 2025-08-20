@@ -231,18 +231,114 @@ class ApiService {
     return this.get('/kullanici/istatistikler');
   }
 
+  // MOBIL ENTEGRASYON API'leri
+  async getMobileRestaurants() {
+    try {
+      console.log('📱 Mobil restoran verisi yükleniyor...');
+      
+      // 1. Önce web bridge üzerinden dene
+      const bridgeData = await this.getWebBridgeData();
+      if (bridgeData.success && bridgeData.data.restaurants.length > 0) {
+        return bridgeData;
+      }
+      
+      // 2. Direkt API dene
+      const apiData = await this.get('/mobile/restaurants');
+      if (apiData.success) {
+        return apiData;
+      }
+      
+      // 3. Fallback - JSON endpoint
+      const jsonData = await this.getJSONEndpoint();
+      if (jsonData.success) {
+        return jsonData;
+      }
+      
+      // 4. Son fallback - mock data
+      return this.getMockRestaurants();
+      
+    } catch (error) {
+      console.error('❌ Mobile restaurant data failed:', error);
+      return this.getMockRestaurants();
+    }
+  }
+
+  async getWebBridgeData() {
+    try {
+      // Web bridge sayfasına postMessage ile istek gönder
+      if (typeof window !== 'undefined' && window.postMessage) {
+        return new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Bridge timeout'));
+          }, 5000);
+
+          const messageHandler = (event) => {
+            if (event.data.type === 'KAPTAZE_API_RESPONSE') {
+              clearTimeout(timeout);
+              window.removeEventListener('message', messageHandler);
+              resolve(event.data.data);
+            }
+          };
+
+          window.addEventListener('message', messageHandler);
+          window.postMessage({
+            type: 'KAPTAZE_API_REQUEST',
+            method: 'GET',
+            endpoint: '/restaurants/approved'
+          }, '*');
+        });
+      }
+      
+      throw new Error('Bridge not available');
+    } catch (error) {
+      console.log('🌉 Web bridge failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async getJSONEndpoint() {
+    try {
+      // GitHub Pages veya Netlify'da host edilen JSON dosyası
+      const response = await fetch('/api/restaurants.json');
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+      throw new Error('JSON endpoint failed');
+    } catch (error) {
+      console.log('📄 JSON endpoint failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Web localStorage integration
   async getWebStorageData() {
     try {
-      // Bu production'da gerçek API'den gelecek
-      // Şimdilik localStorage simülasyonu
-      const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+      // Web storage'a erişim için cross-origin problemi olabilir
+      // Bu durumda gerçek API'ye geçmek gerekir
+      console.log('🌐 Web storage verisi yükleniyor...');
+      
+      // localStorage verilerine erişim yolu - browser ortamında çalışacak
+      let registrations = [];
+      let packages = [];
+      
+      if (typeof window !== 'undefined' && window.localStorage) {
+        registrations = JSON.parse(window.localStorage.getItem('registrations') || '[]');
+        packages = JSON.parse(window.localStorage.getItem('restaurantPackages') || '[]');
+      } else if (typeof localStorage !== 'undefined') {
+        registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+        packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+      }
+      
       const approvedRestaurants = registrations.filter(reg => 
         reg.type === 'restaurant' && reg.status === 'approved'
       );
       
-      // Paketleri yükle
-      const packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+      console.log('📊 Storage data:', {
+        totalRegistrations: registrations.length,
+        approvedRestaurants: approvedRestaurants.length,
+        packages: packages.length
+      });
       
       return {
         success: true,

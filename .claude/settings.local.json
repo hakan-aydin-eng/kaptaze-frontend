@@ -47,7 +47,10 @@
       "Bash(true)",
       "Bash(start msedge:*)",
       "Bash(git push:*)",
-      "Bash(npx netlify-cli deploy:*)"
+      "Bash(npx netlify-cli deploy:*)",
+      "Bash(start frontend/main-portal/customer-registration.html)",
+      "Bash(start test-registration.html)",
+      "Bash(start frontend/admin-panel/login.html)"
     ],
     "deny": [],
     "ask": [],

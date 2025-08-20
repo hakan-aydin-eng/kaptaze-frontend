@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Registration Data</title>
+</head>
+<body>
+    <h1>Test Restoran Başvurusu Ekleme</h1>
+    <button onclick="addTestRegistration()">Test Başvurusu Ekle</button>
+    <button onclick="clearRegistrations()">Başvuruları Temizle</button>
+    <button onclick="showRegistrations()">Başvuruları Göster</button>
+    
+    <div id="output"></div>
+
+    <script>
+        function addTestRegistration() {
+            const testRegistration = {
+                id: Date.now().toString(),
+                type: 'restaurant',
+                firstName: 'Test',
+                lastName: 'Restoran',
+                email: 'test@restaurant.com',
+                phone: '0532 123 45 67',
+                businessName: 'Test Restaurant',
+                businessCategory: 'Geleneksel Türk',
+                businessAddress: 'Test Mahallesi, Test Sokak No:1',
+                city: 'Antalya',
+                district: 'Muratpaşa',
+                restaurantUsername: 'testrestoran',
+                restaurantPassword: 'test123',
+                terms: true,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+            
+            const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+            registrations.push(testRegistration);
+            localStorage.setItem('registrations', JSON.stringify(registrations));
+            
+            document.getElementById('output').innerHTML = '<p style="color: green;">Test başvurusu eklendi!</p>';
+        }
+        
+        function clearRegistrations() {
+            localStorage.removeItem('registrations');
+            document.getElementById('output').innerHTML = '<p style="color: red;">Tüm başvurular temizlendi!</p>';
+        }
+        
+        function showRegistrations() {
+            const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+            document.getElementById('output').innerHTML = '<pre>' + JSON.stringify(registrations, null, 2) + '</pre>';
+        }
+    </script>
+</body>
+</html>

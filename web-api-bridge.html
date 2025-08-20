@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KapTaze API Bridge</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .api-section {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .endpoint {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .response {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 KapTaze API Bridge</h1>
+    <p>Web storage verisini mobil uygulamaya aktarmak için API bridge sistemi</p>
+
+    <div class="api-section">
+        <h2>📱 Mobil API Endpoints</h2>
+        
+        <h3>Onaylı Restoranlar</h3>
+        <div class="endpoint">GET /api/restaurants/approved</div>
+        <button onclick="getApprovedRestaurants()">Test Et</button>
+        
+        <h3>Restoran Paketleri</h3>
+        <div class="endpoint">GET /api/packages</div>
+        <button onclick="getPackages()">Test Et</button>
+        
+        <h3>Tüm Data (Combined)</h3>
+        <div class="endpoint">GET /api/mobile/restaurants</div>
+        <button onclick="getMobileData()">Test Et</button>
+    </div>
+
+    <div class="api-section">
+        <h2>🔧 Data Management</h2>
+        <button onclick="showCurrentData()">Mevcut Veriyi Göster</button>
+        <button onclick="clearData()">Veriyi Temizle</button>
+        <button onclick="addTestData()">Test Verisi Ekle</button>
+    </div>
+
+    <div class="api-section">
+        <h2>📊 API Response</h2>
+        <div id="response" class="response">API çağrısı bekleniyor...</div>
+    </div>
+
+    <script>
+        // CORS headers for mobile app access
+        const corsHeaders = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        };
+
+        function log(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const responseDiv = document.getElementById('response');
+            const logMessage = `[${timestamp}] ${message}`;
+            
+            if (data) {
+                responseDiv.textContent = logMessage + '\n\n' + JSON.stringify(data, null, 2);
+            } else {
+                responseDiv.textContent = logMessage;
+            }
+        }
+
+        // API Functions that mobile app can call
+        window.KapTazeAPI = {
+            async getApprovedRestaurants() {
+                try {
+                    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+                    const approved = registrations.filter(reg => 
+                        reg.type === 'restaurant' && reg.status === 'approved'
+                    );
+                    
+                    return {
+                        success: true,
+                        data: approved,
+                        count: approved.length,
+                        timestamp: new Date().toISOString()
+                    };
+                } catch (error) {
+                    return {
+                        success: false,
+                        error: error.message,
+                        data: []
+                    };
+                }
+            },
+
+            async getPackages() {
+                try {
+                    const packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+                    return {
+                        success: true,
+                        data: packages,
+                        count: packages.length,
+                        timestamp: new Date().toISOString()
+                    };
+                } catch (error) {
+                    return {
+                        success: false,
+                        error: error.message,
+                        data: []
+                    };
+                }
+            },
+
+            async getMobileRestaurantData() {
+                try {
+                    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+                    const packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+                    
+                    const approvedRestaurants = registrations.filter(reg => 
+                        reg.type === 'restaurant' && reg.status === 'approved'
+                    );
+
+                    const formattedRestaurants = approvedRestaurants.map(reg => {
+                        const restaurantPackages = packages.filter(pkg => pkg.restaurantId === reg.id);
+                        
+                        return {
+                            _id: reg.id,
+                            name: reg.businessName,
+                            category: reg.businessCategory || 'Genel',
+                            rating: 4.0 + Math.random(),
+                            distance: (Math.random() * 5).toFixed(1),
+                            image: getRestaurantEmoji(reg.businessCategory),
+                            imageUrl: null,
+                            location: {
+                                lat: 36.8969 + (Math.random() - 0.5) * 0.1,
+                                lng: 30.7133 + (Math.random() - 0.5) * 0.1,
+                                address: reg.businessAddress,
+                                city: reg.city,
+                                district: reg.district
+                            },
+                            phone: reg.phone,
+                            email: reg.email,
+                            description: `${reg.businessName} - ${reg.businessCategory}`,
+                            adminNote: 'Web üzerinden kayıt olmuş restoran',
+                            owner: `${reg.firstName} ${reg.lastName}`,
+                            username: reg.restaurantUsername,
+                            packages: restaurantPackages.length > 0 ? restaurantPackages.map(pkg => ({
+                                _id: pkg.id || `pkg_${Date.now()}`,
+                                name: pkg.name,
+                                description: pkg.description,
+                                quantity: pkg.quantity,
+                                originalPrice: pkg.originalPrice,
+                                salePrice: pkg.discountPrice,
+                                discount: Math.round(((pkg.originalPrice - pkg.discountPrice) / pkg.originalPrice) * 100),
+                                status: 'available',
+                                category: pkg.category,
+                                expiryTime: pkg.expiryTime,
+                                image: pkg.image
+                            })) : [{
+                                _id: `default_${reg.id}`,
+                                name: 'Sürpriz Paketi',
+                                description: 'Günün özel menüsü',
+                                quantity: Math.floor(Math.random() * 5) + 1,
+                                originalPrice: 80 + Math.floor(Math.random() * 40),
+                                salePrice: 30 + Math.floor(Math.random() * 30),
+                                discount: 35,
+                                status: 'available'
+                            }]
+                        };
+                    });
+
+                    return {
+                        success: true,
+                        data: {
+                            restaurants: formattedRestaurants,
+                            meta: {
+                                total: formattedRestaurants.length,
+                                webRegistrations: approvedRestaurants.length,
+                                packages: packages.length,
+                                lastUpdate: new Date().toISOString()
+                            }
+                        }
+                    };
+                } catch (error) {
+                    return {
+                        success: false,
+                        error: error.message,
+                        data: { restaurants: [] }
+                    };
+                }
+            }
+        };
+
+        function getRestaurantEmoji(category) {
+            const emojiMap = {
+                'Geleneksel Türk': '🍽️',
+                'Fast Food': '🍔',
+                'Pizza': '🍕',
+                'Kahve': '☕',
+                'Tatlı': '🧁',
+                'Deniz Ürünleri': '🐟',
+                'Vegan': '🥗'
+            };
+            return emojiMap[category] || '🍽️';
+        }
+
+        // UI Functions
+        async function getApprovedRestaurants() {
+            const result = await window.KapTazeAPI.getApprovedRestaurants();
+            log('Onaylı restoranlar yüklendi', result);
+        }
+
+        async function getPackages() {
+            const result = await window.KapTazeAPI.getPackages();
+            log('Paketler yüklendi', result);
+        }
+
+        async function getMobileData() {
+            const result = await window.KapTazeAPI.getMobileRestaurantData();
+            log('Mobil veri formatı hazırlandı', result);
+        }
+
+        function showCurrentData() {
+            const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+            const packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+            
+            log('Mevcut veri', {
+                registrations: registrations,
+                packages: packages
+            });
+        }
+
+        function clearData() {
+            localStorage.removeItem('registrations');
+            localStorage.removeItem('restaurantPackages');
+            log('Tüm veri temizlendi');
+        }
+
+        function addTestData() {
+            const testRegistration = {
+                id: Date.now().toString(),
+                type: 'restaurant',
+                firstName: 'Test',
+                lastName: 'Restoran',
+                email: 'test@restaurant.com',
+                phone: '0532 123 45 67',
+                businessName: 'Test Restaurant API',
+                businessCategory: 'Geleneksel Türk',
+                businessAddress: 'Test Mahallesi, Test Sokak No:1',
+                city: 'Antalya',
+                district: 'Muratpaşa',
+                restaurantUsername: 'testapi',
+                restaurantPassword: 'test123',
+                status: 'approved',
+                createdAt: new Date().toISOString(),
+                approvedAt: new Date().toISOString()
+            };
+
+            const testPackage = {
+                id: 'pkg_' + Date.now(),
+                name: 'API Test Paketi',
+                description: 'Mobil test için oluşturulmuş paket',
+                originalPrice: 100,
+                discountPrice: 65,
+                quantity: 5,
+                category: 'Ana Yemek',
+                expiryTime: '20:00',
+                restaurantId: testRegistration.id,
+                createdAt: new Date().toISOString()
+            };
+
+            const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+            const packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+
+            registrations.push(testRegistration);
+            packages.push(testPackage);
+
+            localStorage.setItem('registrations', JSON.stringify(registrations));
+            localStorage.setItem('restaurantPackages', JSON.stringify(packages));
+
+            log('Test verisi eklendi', { restaurant: testRegistration, package: testPackage });
+        }
+
+        // Page load
+        window.addEventListener('load', () => {
+            log('KapTaze API Bridge yüklendi - Mobil entegrasyon hazır! 🚀');
+            
+            // Auto-show current data
+            setTimeout(showCurrentData, 1000);
+        });
+
+        // CORS support for fetch requests
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'KAPTAZE_API_REQUEST') {
+                const { method, endpoint } = event.data;
+                
+                if (method === 'GET' && endpoint === '/restaurants/approved') {
+                    window.KapTazeAPI.getApprovedRestaurants().then(result => {
+                        event.source.postMessage({
+                            type: 'KAPTAZE_API_RESPONSE',
+                            data: result
+                        }, event.origin);
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

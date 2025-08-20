@@ -63,24 +63,41 @@ const MainScreen = ({ navigation }) => {
   const loadRestaurants = async () => {
     try {
       setLoading(true);
-      console.log('Loading restaurants from API...');
+      console.log('📱 Loading restaurants for mobile app...');
       
-      // Önce web storage'dan onaylı restoranları çek
+      // Yeni mobil API metodunu kullan
       let webRestaurants = [];
       try {
-        const webData = await apiService.getWebStorageData();
-        if (webData.success && webData.data.restaurants) {
-          webRestaurants = webData.data.restaurants;
-          console.log('Web storage restaurants loaded:', webRestaurants.length);
+        const mobileData = await apiService.getMobileRestaurants();
+        if (mobileData.success && mobileData.data.restaurants) {
+          webRestaurants = mobileData.data.restaurants;
+          console.log('✅ Mobile restaurants loaded:', webRestaurants.length);
+          
+          if (mobileData.data.meta) {
+            console.log('📊 Meta info:', mobileData.data.meta);
+          }
         }
       } catch (error) {
-        console.log('Web storage okunamadı:', error);
+        console.log('❌ Mobile data failed:', error);
+      }
+      
+      // Fallback: Web storage direct access dene
+      if (webRestaurants.length === 0) {
+        try {
+          const webData = await apiService.getWebStorageData();
+          if (webData.success && webData.data.restaurants) {
+            webRestaurants = webData.data.restaurants;
+            console.log('🔄 Fallback web storage loaded:', webRestaurants.length);
+          }
+        } catch (error) {
+          console.log('Web storage okunamadı:', error);
+        }
       }
       
       // API'den veri çekmeye çalış
       let apiRestaurants = [];
       try {
-        const response = await apiService.get('/restaurants');
+        const response = await apiService.getRestaurants();
         if (response.success && response.data.restaurants) {
           apiRestaurants = response.data.restaurants;
           console.log('API restaurants loaded:', apiRestaurants.length);
@@ -89,11 +106,11 @@ const MainScreen = ({ navigation }) => {
         console.log('API failed, using fallback data');
       }
       
-      // Web storage + API + yerel veriyi birleştir
+      // Tüm veri kaynaklarını birleştir
       const allRestaurants = [
-        ...webRestaurants,
+        ...webRestaurants, // Web'den onaylanan restoranlar öncelikli
         ...apiRestaurants,
-        ...antalyaRestaurants
+        ...antalyaRestaurants // Varsayılan demo restoranlar
       ];
       
       // Duplicate removal (by id or name)
