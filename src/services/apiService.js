@@ -314,20 +314,41 @@ class ApiService {
   // Web localStorage integration
   async getWebStorageData() {
     try {
-      // Web storage'a erişim için cross-origin problemi olabilir
-      // Bu durumda gerçek API'ye geçmek gerekir
       console.log('🌐 Web storage verisi yükleniyor...');
+      console.log('🔍 Window check:', typeof window !== 'undefined');
+      console.log('🔍 localStorage check:', typeof window !== 'undefined' ? !!window.localStorage : 'no window');
       
       // localStorage verilerine erişim yolu - browser ortamında çalışacak
       let registrations = [];
       let packages = [];
       
+      // React Native Web ortamında window.localStorage kullan
       if (typeof window !== 'undefined' && window.localStorage) {
-        registrations = JSON.parse(window.localStorage.getItem('registrations') || '[]');
-        packages = JSON.parse(window.localStorage.getItem('restaurantPackages') || '[]');
-      } else if (typeof localStorage !== 'undefined') {
-        registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
-        packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+        try {
+          const regData = window.localStorage.getItem('registrations');
+          const pkgData = window.localStorage.getItem('restaurantPackages');
+          
+          console.log('📦 Raw registration data:', regData);
+          console.log('📦 Raw package data:', pkgData);
+          
+          registrations = regData ? JSON.parse(regData) : [];
+          packages = pkgData ? JSON.parse(pkgData) : [];
+          
+          console.log('✅ Parsed registrations:', registrations.length);
+          console.log('✅ Parsed packages:', packages.length);
+        } catch (parseError) {
+          console.error('❌ Parse error:', parseError);
+          registrations = [];
+          packages = [];
+        }
+      } else {
+        console.log('⚠️ localStorage not available, trying fallback methods...');
+        
+        // Fallback: global storage varsa dene
+        if (typeof global !== 'undefined' && global.localStorage) {
+          registrations = JSON.parse(global.localStorage.getItem('registrations') || '[]');
+          packages = JSON.parse(global.localStorage.getItem('restaurantPackages') || '[]');
+        }
       }
       
       const approvedRestaurants = registrations.filter(reg => 

@@ -68,14 +68,20 @@ const MainScreen = ({ navigation }) => {
       // Yeni mobil API metodunu kullan
       let webRestaurants = [];
       try {
+        console.log('🔄 Attempting mobile restaurants load...');
         const mobileData = await apiService.getMobileRestaurants();
+        console.log('📊 Mobile data response:', mobileData);
+        
         if (mobileData.success && mobileData.data.restaurants) {
           webRestaurants = mobileData.data.restaurants;
           console.log('✅ Mobile restaurants loaded:', webRestaurants.length);
+          console.log('📋 Restaurant names:', webRestaurants.map(r => r.name || r.ad));
           
           if (mobileData.data.meta) {
             console.log('📊 Meta info:', mobileData.data.meta);
           }
+        } else {
+          console.log('⚠️ No mobile restaurants in response');
         }
       } catch (error) {
         console.log('❌ Mobile data failed:', error);
