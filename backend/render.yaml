@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: kaptaze-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET  
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://kaptaze.netlify.app,https://kaptaze-admin.netlify.app,https://kaptaze-restaurant.netlify.app

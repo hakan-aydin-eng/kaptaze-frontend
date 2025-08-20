@@ -21,6 +21,9 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
+# Backend (excluded from mobile bundle)
+kaptaze-backend/
+
 # debug
 npm-debug.*
 yarn-debug.*
@@ -35,3 +38,9 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+.vercel
+kaptaze-backend/
+node_modules/
+.expo/
+.expo-shared/
