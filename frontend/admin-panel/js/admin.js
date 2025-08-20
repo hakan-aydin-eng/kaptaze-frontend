@@ -182,15 +182,37 @@ async function checkAPIStatus() {
     const statusTextElement = document.getElementById('api-status-text');
     
     try {
+        // For demo purposes, simulate API as offline but working with localStorage
+        // This prevents the red error state while using local data
+        apiConnected = false; // Set to false to use localStorage data
+        
+        // Update UI for local data mode (not an error)
+        if (statusElement) {
+            statusElement.classList.remove('error');
+            statusElement.querySelector('span').textContent = 'Yerel Veri Modu';
+        }
+        
+        if (indicatorElement) {
+            indicatorElement.classList.add('active');
+        }
+        
+        if (statusTextElement) {
+            statusTextElement.textContent = 'Aktif (Yerel)';
+        }
+        
+        console.log('📁 Data Mode: Using LocalStorage');
+        
+        // Uncomment below to test real API connection
+        /*
         const response = await fetch(API_BASE_URL + API_ENDPOINTS.health, {
-            method: 'GET'
+            method: 'GET',
+            timeout: 5000
         });
         
         if (response.ok) {
             const data = await response.json();
             apiConnected = true;
             
-            // Update UI elements
             if (statusElement) {
                 statusElement.classList.remove('error');
                 statusElement.querySelector('span').textContent = 'API Bağlı';
@@ -208,6 +230,7 @@ async function checkAPIStatus() {
         } else {
             throw new Error('API not responding');
         }
+        */
     } catch (error) {
         apiConnected = false;
         
@@ -222,10 +245,10 @@ async function checkAPIStatus() {
         }
         
         if (statusTextElement) {
-            statusTextElement.textContent = 'Mock Data';
+            statusTextElement.textContent = 'Hata';
         }
         
-        console.warn('⚠️ API Status: Using Mock Data -', error.message);
+        console.warn('⚠️ API Status: Connection Failed -', error.message);
     }
 }
 
@@ -678,14 +701,17 @@ function renderMockApplicationsData() {
     // Load registrations from localStorage
     const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
     
+    // Filter only restaurant applications
+    const restaurantApplications = registrations.filter(app => app.type === 'restaurant');
+    
     const tableBody = document.getElementById('applications-table-body');
     
-    if (registrations.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="loading">Henüz başvuru bulunmuyor</td></tr>';
+    if (restaurantApplications.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="loading">Henüz restoran başvurusu bulunmuyor</td></tr>';
         return;
     }
     
-    tableBody.innerHTML = registrations.map(app => `
+    tableBody.innerHTML = restaurantApplications.map(app => `
         <tr>
             <td>${app.id}</td>
             <td><span class="type-badge ${app.type}">${app.type === 'customer' ? 'Müşteri' : 'Restoran'}</span></td>
@@ -725,11 +751,8 @@ function filterApplications() {
     const statusFilter = document.getElementById('application-status-filter').value;
     
     const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
-    let filteredRegistrations = registrations;
-    
-    if (typeFilter) {
-        filteredRegistrations = filteredRegistrations.filter(app => app.type === typeFilter);
-    }
+    // Always filter to only restaurant applications
+    let filteredRegistrations = registrations.filter(app => app.type === 'restaurant');
     
     if (statusFilter) {
         filteredRegistrations = filteredRegistrations.filter(app => app.status === statusFilter);
@@ -738,7 +761,7 @@ function filterApplications() {
     const tableBody = document.getElementById('applications-table-body');
     
     if (filteredRegistrations.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="loading">Filtreye uygun başvuru bulunamadı</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8" class="loading">Filtreye uygun restoran başvurusu bulunamadı</td></tr>';
         return;
     }
     
@@ -807,11 +830,11 @@ function viewApplication(applicationId) {
                         <p><strong>Vergi No:</strong> ${application.taxNumber || 'Belirtilmemiş'}</p>
         `;
         
-        if (application.username && application.password) {
+        if (application.restaurantUsername && application.restaurantPassword) {
             modalContent += `
                         <hr style="margin: 1rem 0;">
-                        <p><strong>Restoran Kullanıcı Adı:</strong> ${application.username}</p>
-                        <p><strong>Restoran Şifresi:</strong> ${application.password}</p>
+                        <p><strong>Restoran Kullanıcı Adı:</strong> ${application.restaurantUsername}</p>
+                        <p><strong>Restoran Şifresi:</strong> ${application.restaurantPassword}</p>
             `;
         }
     }
