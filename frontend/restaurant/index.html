@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAPTAZEAPPV5 - Restoran Paneli</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .restaurant-header {
+            background: linear-gradient(135deg, #059669, #10b981, #34d399);
+        }
+        .menu-item:hover {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-left: 4px solid #10b981;
+        }
+        .package-card {
+            transition: all 0.3s ease;
+        }
+        .package-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="restaurant-header text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-4">
+                        <i data-lucide="store" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">KAPTAZEAPPV5</h1>
+                        <p class="text-green-100">Restoran Yönetim Paneli</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-white hover:text-green-100 transition-colors p-2">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                    </button>
+                    <div class="text-right">
+                        <p class="font-medium" id="restaurant-name">Restoran Adı</p>
+                        <p class="text-sm text-green-100">Partner Restoran</p>
+                    </div>
+                    <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                        <i data-lucide="user" class="w-5 h-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-8">
+                <a href="#dashboard" class="menu-item flex items-center px-4 py-4 text-gray-700 hover:text-green-600 border-b-2 border-transparent hover:border-green-600 transition-all">
+                    <i data-lucide="home" class="w-4 h-4 mr-2"></i>
+                    Ana Sayfa
+                </a>
+                <a href="#packages" class="menu-item flex items-center px-4 py-4 text-gray-700 hover:text-green-600 border-b-2 border-transparent hover:border-green-600 transition-all">
+                    <i data-lucide="package" class="w-4 h-4 mr-2"></i>
+                    Paket Yönetimi
+                </a>
+                <a href="#orders" class="menu-item flex items-center px-4 py-4 text-gray-700 hover:text-green-600 border-b-2 border-transparent hover:border-green-600 transition-all">
+                    <i data-lucide="shopping-bag" class="w-4 h-4 mr-2"></i>
+                    Siparişler
+                </a>
+                <a href="#profile" class="menu-item flex items-center px-4 py-4 text-gray-700 hover:text-green-600 border-b-2 border-transparent hover:border-green-600 transition-all">
+                    <i data-lucide="settings" class="w-4 h-4 mr-2"></i>
+                    Restoran Profili
+                </a>
+                <a href="#reports" class="menu-item flex items-center px-4 py-4 text-gray-700 hover:text-green-600 border-b-2 border-transparent hover:border-green-600 transition-all">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4 mr-2"></i>
+                    Raporlar
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Dashboard Section -->
+        <div id="dashboard-content">
+            <!-- İstatistik Kartları -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Bugünkü Satış</p>
+                            <p class="text-3xl font-bold text-gray-800" id="daily-sales">₺0</p>
+                            <p class="text-xs text-green-600 mt-1">+15% dün</p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <i data-lucide="dollar-sign" class="w-6 h-6 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Aktif Paketler</p>
+                            <p class="text-3xl font-bold text-gray-800" id="active-packages">0</p>
+                            <p class="text-xs text-green-600 mt-1">Şu anda satışta</p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                            <i data-lucide="package" class="w-6 h-6 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Bekleyen Siparişler</p>
+                            <p class="text-3xl font-bold text-gray-800" id="pending-orders">0</p>
+                            <p class="text-xs text-yellow-600 mt-1">Hazırlanıyor</p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                            <i data-lucide="clock" class="w-6 h-6 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Müşteri Puanı</p>
+                            <p class="text-3xl font-bold text-gray-800" id="rating">4.5</p>
+                            <p class="text-xs text-green-600 mt-1">⭐⭐⭐⭐⭐</p>
+                        </div>
+                        <div class="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
+                            <i data-lucide="star" class="w-6 h-6 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hızlı İşlemler -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Yeni Paket Ekleme -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i data-lucide="plus-circle" class="w-5 h-5 inline mr-2"></i>
+                        Hızlı Paket Ekle
+                    </h3>
+                    <form id="quick-package-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Paket Adı</label>
+                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="Sürpriz Paketi">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Orijinal Fiyat (₺)</label>
+                                <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Satış Fiyatı (₺)</label>
+                                <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="25">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Stok Adedi</label>
+                            <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="5">
+                        </div>
+                        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            Paketi Ekle
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Son Siparişler -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">
+                            <i data-lucide="shopping-bag" class="w-5 h-5 inline mr-2"></i>
+                            Son Siparişler
+                        </h3>
+                        <button class="text-green-600 hover:text-green-700 text-sm font-medium">
+                            Tümünü Gör →
+                        </button>
+                    </div>
+                    <div id="recent-orders" class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-800">#12345 - Ahmet Y.</p>
+                                <p class="text-sm text-gray-600">Sürpriz Paketi x1</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium text-gray-800">₺25.00</p>
+                                <span class="inline-block px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                                    Hazırlanıyor
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-800">#12344 - Fatma D.</p>
+                                <p class="text-sm text-gray-600">Sürpriz Paketi x2</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium text-gray-800">₺50.00</p>
+                                <span class="inline-block px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                                    Hazır
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Günlük Aktivite -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i data-lucide="activity" class="w-5 h-5 inline mr-2"></i>
+                    Günlük Aktivite
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center p-3 border-l-4 border-green-500 bg-green-50">
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                            <i data-lucide="check" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">Yeni sipariş tamamlandı</p>
+                            <p class="text-sm text-gray-600">Sipariş #12345 - 5 dakika önce</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-3 border-l-4 border-blue-500 bg-blue-50">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                            <i data-lucide="package" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">3 yeni paket eklendi</p>
+                            <p class="text-sm text-gray-600">Sürpriz Paketleri - 1 saat önce</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-3 border-l-4 border-yellow-500 bg-yellow-50">
+                        <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                            <i data-lucide="star" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">Yeni müşteri değerlendirmesi</p>
+                            <p class="text-sm text-gray-600">5 yıldız - "Harika paketler!" - 2 saat önce</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Quick Actions Floating Button -->
+    <div class="fixed bottom-6 right-6">
+        <div class="relative">
+            <button id="fab-main" class="w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all">
+                <i data-lucide="plus" class="w-6 h-6"></i>
+            </button>
+            
+            <!-- Sub actions (hidden by default) -->
+            <div id="fab-actions" class="absolute bottom-16 right-0 space-y-2 opacity-0 pointer-events-none transition-all">
+                <button class="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center">
+                    <i data-lucide="package" class="w-4 h-4"></i>
+                </button>
+                <button class="w-12 h-12 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg flex items-center justify-center">
+                    <i data-lucide="edit" class="w-4 h-4"></i>
+                </button>
+                <button class="w-12 h-12 bg-yellow-600 hover:bg-yellow-700 text-white rounded-full shadow-lg flex items-center justify-center">
+                    <i data-lucide="camera" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Restaurant Panel Controller
+        class RestaurantPanel {
+            constructor() {
+                this.apiUrl = 'http://localhost:5000/api';
+                this.restaurantId = localStorage.getItem('restaurant_id');
+                this.init();
+            }
+
+            init() {
+                this.loadRestaurantData();
+                this.setupEventListeners();
+                this.startRealTimeUpdates();
+            }
+
+            setupEventListeners() {
+                // Navigation
+                document.querySelectorAll('.menu-item').forEach(item => {
+                    item.addEventListener('click', (e) => this.handleNavigation(e));
+                });
+
+                // Quick package form
+                document.getElementById('quick-package-form').addEventListener('submit', (e) => {
+                    this.handleQuickPackageSubmit(e);
+                });
+
+                // Floating action button
+                document.getElementById('fab-main').addEventListener('click', () => {
+                    this.toggleFabActions();
+                });
+            }
+
+            async loadRestaurantData() {
+                try {
+                    const response = await fetch(`${this.apiUrl}/restaurant/${this.restaurantId}`, {
+                        headers: this.getAuthHeaders()
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.updateDashboard(data);
+                    }
+                } catch (error) {
+                    console.error('Restoran verileri yüklenirken hata:', error);
+                }
+            }
+
+            updateDashboard(data) {
+                // Update stats
+                document.getElementById('daily-sales').textContent = `₺${data.gunlukSatis || 0}`;
+                document.getElementById('active-packages').textContent = data.aktifPaketler || 0;
+                document.getElementById('pending-orders').textContent = data.bekleyenSiparisler || 0;
+                document.getElementById('rating').textContent = data.puan || 4.5;
+                document.getElementById('restaurant-name').textContent = data.ad || 'Restoran Adı';
+            }
+
+            handleNavigation(e) {
+                e.preventDefault();
+                const href = e.target.closest('a').getAttribute('href');
+                
+                // Update active menu item
+                document.querySelectorAll('.menu-item').forEach(item => {
+                    item.classList.remove('border-green-600', 'text-green-600');
+                });
+                e.target.closest('a').classList.add('border-green-600', 'text-green-600');
+
+                // Load content based on navigation
+                this.loadContent(href);
+            }
+
+            loadContent(section) {
+                const content = document.getElementById('dashboard-content');
+                
+                switch(section) {
+                    case '#packages':
+                        content.innerHTML = this.getPackagesContent();
+                        break;
+                    case '#orders':
+                        content.innerHTML = this.getOrdersContent();
+                        break;
+                    case '#profile':
+                        content.innerHTML = this.getProfileContent();
+                        break;
+                    case '#reports':
+                        content.innerHTML = this.getReportsContent();
+                        break;
+                    default:
+                        // Dashboard content is already loaded
+                        break;
+                }
+            }
+
+            getPackagesContent() {
+                return `
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-2xl font-bold text-gray-800">Paket Yönetimi</h2>
+                            <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                                <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>
+                                Yeni Paket Ekle
+                            </button>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <p class="text-gray-500 text-center py-8">Paket listesi yükleniyor...</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getOrdersContent() {
+                return `
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-2xl font-bold text-gray-800">Sipariş Yönetimi</h2>
+                            <div class="space-x-2">
+                                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                    Yenile
+                                </button>
+                                <button class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                                    Excel'e Aktar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <p class="text-gray-500 text-center py-8">Sipariş listesi yükleniyor...</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getProfileContent() {
+                return `
+                    <div class="space-y-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Restoran Profili</h2>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-xl shadow-sm p-6">
+                                <h3 class="text-lg font-semibold mb-4">Temel Bilgiler</h3>
+                                <form class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Restoran Adı</label>
+                                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg" value="Örnek Restoran">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                            <option>Et & Kebap</option>
+                                            <option>Vegan</option>
+                                            <option>Kahve & Pasta</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
+                                        <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg" rows="4"></textarea>
+                                    </div>
+                                    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                                        Bilgileri Güncelle
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl shadow-sm p-6">
+                                <h3 class="text-lg font-semibold mb-4">İletişim Bilgileri</h3>
+                                <form class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                                        <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
+                                        <input type="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Adres</label>
+                                        <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg" rows="3"></textarea>
+                                    </div>
+                                    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                                        İletişim Güncelle
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getReportsContent() {
+                return `
+                    <div class="space-y-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Raporlar ve Analitik</h2>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-xl shadow-sm p-6">
+                                <h3 class="text-lg font-semibold mb-4">Satış Grafiği</h3>
+                                <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <p class="text-gray-500">Grafik yükleniyor...</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl shadow-sm p-6">
+                                <h3 class="text-lg font-semibold mb-4">Popüler Paketler</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span>Sürpriz Paketi</span>
+                                        <span class="font-medium">45%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Özel Menü</span>
+                                        <span class="font-medium">30%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Tatlı Paketi</span>
+                                        <span class="font-medium">25%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            async handleQuickPackageSubmit(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                // Show loading
+                this.showToast('Paket ekleniyor...', 'info');
+                
+                try {
+                    const response = await fetch(`${this.apiUrl}/packages`, {
+                        method: 'POST',
+                        headers: this.getAuthHeaders(),
+                        body: JSON.stringify({
+                            ad: formData.get('name'),
+                            orijinalFiyat: parseFloat(formData.get('originalPrice')),
+                            satisFiyati: parseFloat(formData.get('salePrice')),
+                            stokAdedi: parseInt(formData.get('stock'))
+                        })
+                    });
+
+                    if (response.ok) {
+                        this.showToast('Paket başarıyla eklendi!', 'success');
+                        e.target.reset();
+                        this.loadRestaurantData();
+                    } else {
+                        throw new Error('Paket eklenirken hata oluştu');
+                    }
+                } catch (error) {
+                    this.showToast('Paket eklenirken hata oluştu', 'error');
+                }
+            }
+
+            toggleFabActions() {
+                const actions = document.getElementById('fab-actions');
+                const isVisible = actions.classList.contains('opacity-100');
+                
+                if (isVisible) {
+                    actions.classList.remove('opacity-100', 'pointer-events-auto');
+                    actions.classList.add('opacity-0', 'pointer-events-none');
+                } else {
+                    actions.classList.remove('opacity-0', 'pointer-events-none');
+                    actions.classList.add('opacity-100', 'pointer-events-auto');
+                }
+            }
+
+            startRealTimeUpdates() {
+                // Update data every 30 seconds
+                setInterval(() => {
+                    this.loadRestaurantData();
+                }, 30000);
+            }
+
+            getAuthHeaders() {
+                return {
+                    'Authorization': `Bearer ${localStorage.getItem('restaurant_token')}`,
+                    'Content-Type': 'application/json'
+                };
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 ${
+                    type === 'success' ? 'bg-green-600' :
+                    type === 'error' ? 'bg-red-600' :
+                    type === 'warning' ? 'bg-yellow-600' : 'bg-blue-600'
+                }`;
+                toast.textContent = message;
+                
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+        }
+
+        // Initialize restaurant panel
+        document.addEventListener('DOMContentLoaded', () => {
+            new RestaurantPanel();
+        });
+    </script>
+</body>
+</html>

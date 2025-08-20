@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KapTaze - Gıda İsrafını Önleme Platformu</title>
+    <meta name="description" content="Gıda israfını önleme ve çevreyi koruma platformu. Restoranlardan uygun fiyatla yemek paketleri alın.">
+    <meta name="keywords" content="gıda israfı, yemek, restoran, çevre, tasarruf">
+    <link rel="icon" href="./assets/favicon.ico" type="image/x-icon">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="./css/style.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="KapTaze - Gıda İsrafını Önleme Platformu">
+    <meta property="og:description" content="Restoranlardan uygun fiyatla yemek paketleri alın ve gıda israfına karşı durun.">
+    <meta property="og:image" content="./assets/social-share.jpg">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kaptazeapp.com.tr">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="logo">
+                    <span class="logo-icon">🌱</span>
+                    <span class="logo-text">KapTaze</span>
+                </div>
+            </div>
+            
+            <div class="nav-menu" id="nav-menu">
+                <a href="#home" class="nav-link">Ana Sayfa</a>
+                <a href="#features" class="nav-link">Özellikler</a>
+                <a href="#about" class="nav-link">Hakkımızda</a>
+                <a href="#contact" class="nav-link">İletişim</a>
+            </div>
+            
+            <div class="nav-actions">
+                <button class="btn-secondary" onclick="openPanel('customer')">
+                    <i class="fas fa-shopping-bag"></i> Müşteri Girişi
+                </button>
+                <button class="btn-primary" onclick="openPanel('restaurant')">
+                    <i class="fas fa-store"></i> Restoran Girişi
+                </button>
+                <button class="btn-admin" onclick="openPanel('admin')">
+                    <i class="fas fa-cog"></i> Admin
+                </button>
+            </div>
+            
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-background">
+            <div class="hero-shape shape-1"></div>
+            <div class="hero-shape shape-2"></div>
+            <div class="hero-shape shape-3"></div>
+        </div>
+        
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    Gıda İsrafını <span class="highlight">Birlikte</span> Önleyelim
+                </h1>
+                <p class="hero-subtitle">
+                    Restoranlardan uygun fiyatla kaliteli yemek paketleri alın, çevreyi koruyun ve tasarruf edin.
+                    Her paket ile gıda israfına karşı fark yaratın.
+                </p>
+                
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">2,847</div>
+                        <div class="stat-label">Kurtarılan Paket</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">1.2T</div>
+                        <div class="stat-label">CO₂ Tasarrufu</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">156</div>
+                        <div class="stat-label">Partner Restoran</div>
+                    </div>
+                </div>
+                
+                <div class="hero-actions">
+                    <button class="cta-button primary" onclick="openPanel('customer')">
+                        <i class="fas fa-mobile-alt"></i>
+                        Hemen Başla
+                    </button>
+                    <button class="cta-button secondary" onclick="scrollToSection('features')">
+                        <i class="fas fa-play"></i>
+                        Nasıl Çalışır?
+                    </button>
+                </div>
+            </div>
+            
+            <div class="hero-image">
+                <div class="phone-mockup">
+                    <div class="phone-screen">
+                        <div class="app-preview">
+                            <div class="app-header">
+                                <span class="app-logo">🌱</span>
+                                <span class="app-title">KapTaze</span>
+                            </div>
+                            <div class="app-content">
+                                <div class="food-card">
+                                    <div class="food-image"></div>
+                                    <div class="food-info">
+                                        <h4>Karma Menü</h4>
+                                        <p>Seraser Restaurant</p>
+                                        <div class="price">
+                                            <span class="old-price">₺45</span>
+                                            <span class="new-price">₺18</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Platform Access Section -->
+    <section id="platforms" class="platforms">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Platform Erişimi</h2>
+                <p class="section-subtitle">İhtiyacınıza göre doğru platforma yönlendiriyoruz</p>
+            </div>
+            
+            <div class="platform-grid">
+                <!-- Customer Platform -->
+                <div class="platform-card customer-card" onclick="openPanel('customer')">
+                    <div class="card-icon customer-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Müşteri Platformu</h3>
+                        <p>Yakınınızdaki restoranlardan uygun fiyatla yemek paketleri keşfedin ve sipariş verin.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Paket keşfi ve rezervasyon</li>
+                            <li><i class="fas fa-check"></i> Güvenli ödeme sistemi</li>
+                            <li><i class="fas fa-check"></i> Sipariş takibi</li>
+                            <li><i class="fas fa-check"></i> Puan ve yorum sistemi</li>
+                        </ul>
+                        <div class="card-action">
+                            <span class="action-text">Müşteri Paneline Git</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Restaurant Platform -->
+                <div class="platform-card restaurant-card" onclick="openPanel('restaurant')">
+                    <div class="card-icon restaurant-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Restoran Platformu</h3>
+                        <p>Fazla yemeklerinizi değerlendirin, yeni müşteriler kazanın ve gıda israfını azaltın.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Paket yönetimi</li>
+                            <li><i class="fas fa-check"></i> Sipariş takibi</li>
+                            <li><i class="fas fa-check"></i> Müşteri iletişimi</li>
+                            <li><i class="fas fa-check"></i> Analiz ve raporlama</li>
+                        </ul>
+                        <div class="card-action">
+                            <span class="action-text">Restoran Paneline Git</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Platform -->
+                <div class="platform-card admin-card" onclick="openPanel('admin')">
+                    <div class="card-icon admin-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Yönetim Platformu</h3>
+                        <p>Sistem yönetimi, kullanıcı yönetimi ve platform analizleri için admin kontrolü.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Kullanıcı yönetimi</li>
+                            <li><i class="fas fa-check"></i> Sistem monitöring</li>
+                            <li><i class="fas fa-check"></i> İçerik yönetimi</li>
+                            <li><i class="fas fa-check"></i> Raporlama</li>
+                        </ul>
+                        <div class="card-action">
+                            <span class="action-text">Admin Paneline Git</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Nasıl Çalışır?</h2>
+                <p class="section-subtitle">Gıda israfını önlemek için üç basit adım</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                        <span class="step-number">1</span>
+                    </div>
+                    <h3>Keşfet</h3>
+                    <p>Yakınınızdaki restoranlardan indirimli paketleri keşfedin ve seçin.</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-credit-card"></i>
+                        <span class="step-number">2</span>
+                    </div>
+                    <h3>Rezerve Et</h3>
+                    <p>Güvenli ödeme sistemi ile paketinizi rezerve edin ve ödeme yapın.</p>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-utensils"></i>
+                        <span class="step-number">3</span>
+                    </div>
+                    <h3>Teslim Al</h3>
+                    <p>Belirlenen saatte restorandan paketinizi teslim alın ve tadını çıkarın.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>Misyonumuz</h2>
+                    <p class="about-description">
+                        KapTaze olarak, dünyada ciddi bir problem olan gıda israfını teknoloji ile çözmeyi hedefliyoruz. 
+                        Restoranların fazla yemeklerini uygun fiyatla müşterilerimizle buluşturarak hem çevreyi koruyoruz 
+                        hem de ekonomik fayda sağlıyoruz.
+                    </p>
+                    
+                    <div class="impact-stats">
+                        <div class="impact-item">
+                            <i class="fas fa-leaf"></i>
+                            <div>
+                                <h4>Çevre Etkisi</h4>
+                                <p>Her kurtardığımız paket ile CO₂ emisyonunu azaltıyoruz</p>
+                            </div>
+                        </div>
+                        <div class="impact-item">
+                            <i class="fas fa-heart"></i>
+                            <div>
+                                <h4>Sosyal Fayda</h4>
+                                <p>Kaliteli yemekleri herkes için ulaşılabilir kılıyoruz</p>
+                            </div>
+                        </div>
+                        <div class="impact-item">
+                            <i class="fas fa-chart-line"></i>
+                            <div>
+                                <h4>Ekonomik Değer</h4>
+                                <p>Restoranlara ek gelir, müşterilere tasarruf sağlıyoruz</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="about-image">
+                    <div class="about-visual">
+                        <div class="visual-element">
+                            <i class="fas fa-recycle"></i>
+                            <span>Gıda Döngüsü</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">İletişime Geçin</h2>
+                <p class="section-subtitle">Sorularınız için bizimle iletişime geçin</p>
+            </div>
+            
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h4>E-posta</h4>
+                            <p>info@kaptazeapp.com.tr</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h4>Telefon</h4>
+                            <p>+90 242 XXX XX XX</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h4>Adres</h4>
+                            <p>Antalya, Türkiye</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <span class="logo-icon">🌱</span>
+                        <span class="logo-text">KapTaze</span>
+                    </div>
+                    <p>Gıda israfını önleme ve sürdürülebilir bir gelecek için teknoloji çözümleri.</p>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="link-group">
+                        <h4>Platform</h4>
+                        <ul>
+                            <li><a href="#" onclick="openPanel('customer')">Müşteri Paneli</a></li>
+                            <li><a href="#" onclick="openPanel('restaurant')">Restoran Paneli</a></li>
+                            <li><a href="#" onclick="openPanel('admin')">Admin Paneli</a></li>
+                        </ul>
+                    </div>
+                    <div class="link-group">
+                        <h4>Kurumsal</h4>
+                        <ul>
+                            <li><a href="#about">Hakkımızda</a></li>
+                            <li><a href="#contact">İletişim</a></li>
+                            <li><a href="#">Gizlilik Politikası</a></li>
+                            <li><a href="#">Kullanım Şartları</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 KapTaze. Tüm hakları saklıdır.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Environment Configuration -->
+    <script>
+        // Free hosting domain configuration - Netlify
+        window.KAPTAZE_DOMAIN = 'kaptaze.netlify.app';
+        window.KAPTAZE_ENVIRONMENT = 'free';
+        window.KAPTAZE_PROVIDER = 'netlify';
+    </script>
+    
+    <!-- JavaScript -->
+    <script src="./js/main.js"></script>
+</body>
+</html>

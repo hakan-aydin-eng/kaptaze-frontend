@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAPTAZEAPPV5 - Gıda İsrafını Önleyin, Tasarruf Edin</title>
+    <meta name="description" content="KAPTAZEAPPV5 ile gıda israfını önleyin! Restoranlardan indirimli paketler alın, çevreyi koruyun ve tasarruf edin.">
+    <meta name="keywords" content="gıda israfı, restoran, indirim, çevre, tasarruf, sürdürülebilirlik">
+    
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#10b981">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
+    
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, #10b981, #059669, #047857);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .restaurant-card {
+            background: linear-gradient(135deg, #ffffff, #f8fafc);
+        }
+        .status-badge {
+            animation: pulse 2s infinite;
+        }
+        .filter-tab.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        /* Loading animation */
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #10b981;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .hero-text {
+                font-size: 2rem;
+            }
+            .restaurant-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Turkish font optimization */
+        body {
+            font-feature-settings: "liga" 1, "calt" 1, "kern" 1;
+            text-rendering: optimizeLegibility;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold">K</span>
+                        </div>
+                        <span class="text-xl font-bold text-gray-800">KAPTAZEAPPV5</span>
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#" class="text-gray-700 hover:text-green-600 transition-colors">Ana Sayfa</a>
+                    <a href="#restaurants" class="text-gray-700 hover:text-green-600 transition-colors">Restoranlar</a>
+                    <a href="#about" class="text-gray-700 hover:text-green-600 transition-colors">Hakkımızda</a>
+                    <a href="#contact" class="text-gray-700 hover:text-green-600 transition-colors">İletişim</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button id="location-btn" class="flex items-center text-gray-700 hover:text-green-600 transition-colors">
+                        <i data-lucide="map-pin" class="w-4 h-4 mr-1"></i>
+                        <span id="user-location">Antalya</span>
+                    </button>
+                    <button id="login-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        Giriş Yap
+                    </button>
+                    <button id="mobile-menu-btn" class="md:hidden p-2">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="hero-text text-4xl md:text-6xl font-bold mb-6">
+                Gıda İsrafını Önleyin
+                <span class="block text-green-200">Tasarruf Edin! 🥗</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-green-100 mb-8 max-w-3xl mx-auto">
+                Restoranlardan indirimli paketler alın, çevreyi koruyun ve cebinizi doldurun. 
+                Her yıl üretilen gıdaların 1/3'ü çöpe gidiyor - Bu misyona katılın!
+            </p>
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <button id="explore-btn" class="bg-white text-green-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-green-50 transition-colors">
+                    <i data-lucide="search" class="w-5 h-5 inline mr-2"></i>
+                    Restoranları Keşfet
+                </button>
+                <button id="register-btn" class="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-green-600 transition-colors">
+                    <i data-lucide="user-plus" class="w-5 h-5 inline mr-2"></i>
+                    Ücretsiz Kayıt Ol
+                </button>
+            </div>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16 max-w-4xl mx-auto">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white" id="saved-packages">1,247</div>
+                    <div class="text-green-200 text-sm">Kurtarılan Paket</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white" id="partner-restaurants">89</div>
+                    <div class="text-green-200 text-sm">Partner Restoran</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white" id="total-savings">₺45,680</div>
+                    <div class="text-green-200 text-sm">Toplam Tasarruf</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white" id="co2-saved">2.4 ton</div>
+                    <div class="text-green-200 text-sm">CO₂ Tasarrufu</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filter Section -->
+    <section class="bg-white shadow-sm py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Teklifler</h2>
+                    <p class="text-gray-600">Size en yakın restoranlardan indirimli paketler</p>
+                </div>
+                
+                <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                    <button id="map-view-btn" class="flex items-center text-gray-700 hover:text-green-600 transition-colors">
+                        <i data-lucide="map" class="w-4 h-4 mr-2"></i>
+                        Harita Görünümü
+                    </button>
+                    <select id="sort-select" class="border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="distance">Uzaklığa Göre</option>
+                        <option value="price">Fiyata Göre</option>
+                        <option value="rating">Puana Göre</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Category Filters -->
+            <div class="flex space-x-3 overflow-x-auto pb-2 mt-6" id="category-filters">
+                <button class="filter-tab active flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors text-white" data-category="all">
+                    <span>🍽️</span>
+                    <span>Tümü</span>
+                </button>
+                <button class="filter-tab flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="local">
+                    <span>🏠</span>
+                    <span>Yerel</span>
+                </button>
+                <button class="filter-tab flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="sweet">
+                    <span>🧁</span>
+                    <span>Tatlı</span>
+                </button>
+                <button class="filter-tab flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="vegan">
+                    <span>🥗</span>
+                    <span>Vegan</span>
+                </button>
+                <button class="filter-tab flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200" data-category="turkish">
+                    <span>🇹🇷</span>
+                    <span>Türk Mutfağı</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Promoted Restaurants -->
+    <section class="py-12 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Keşfettin mi? 🤔</h2>
+                    <p class="text-gray-600">Yöneticinin önerdiği yakın yerler (2km çevren)</p>
+                </div>
+                <button class="text-green-600 hover:text-green-700 font-medium">
+                    Tümünü Gör →
+                </button>
+            </div>
+            
+            <div class="flex overflow-x-auto space-x-4 pb-4" id="promoted-restaurants">
+                <!-- Promoted restaurant cards will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Restaurants -->
+    <section class="py-12" id="restaurants">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-8">Şimdi teslim al 🍽️</h2>
+            <p class="text-gray-600 mb-8">Bu paketler hazır ve sizi bekliyor.</p>
+            
+            <div class="restaurant-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="restaurants-grid">
+                <!-- Restaurant cards will be loaded here -->
+            </div>
+            
+            <!-- Loading indicator -->
+            <div id="loading-indicator" class="text-center py-8 hidden">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <p class="text-gray-500">Yeni restoranlar yükleniyor...</p>
+            </div>
+            
+            <!-- Load more button -->
+            <div class="text-center mt-8">
+                <button id="load-more-btn" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors">
+                    Daha Fazla Yükle
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">KAPTAZEAPPV5 Nedir?</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Gıda israfını önlemek ve sürdürülebilir bir gelecek için çalışan platformuz, 
+                    restoranların fazla yemeklerini uygun fiyatlara satmasını sağlar.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="recycle" class="w-10 h-10 text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3">Çevre Dostu</h3>
+                    <p class="text-gray-600">Gıda israfını azaltarak çevreyi koruyoruz ve sürdürülebilir bir gelecek yaratıyoruz.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="piggy-bank" class="w-10 h-10 text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3">Ekonomik</h3>
+                    <p class="text-gray-600">Kaliteli yemekleri %50'ye varan indirimlerle satın alın ve büyük tasarruf yapın.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="heart" class="w-10 h-10 text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3">Sosyal Sorumluluk</h3>
+                    <p class="text-gray-600">Gıda israfına karşı bilinçli bir toplum oluşturmak için sosyal sorumluluk projelerimiz var.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center mr-3">
+                            <span class="text-white font-bold">K</span>
+                        </div>
+                        <span class="text-xl font-bold">KAPTAZEAPPV5</span>
+                    </div>
+                    <p class="text-gray-300 mb-4">Gıda israfını önleyin, tasarruf edin ve çevreyi koruyun.</p>
+                    <div class="flex space-x-4">
+                        <button class="text-gray-300 hover:text-white transition-colors">
+                            <i data-lucide="facebook" class="w-5 h-5"></i>
+                        </button>
+                        <button class="text-gray-300 hover:text-white transition-colors">
+                            <i data-lucide="twitter" class="w-5 h-5"></i>
+                        </button>
+                        <button class="text-gray-300 hover:text-white transition-colors">
+                            <i data-lucide="instagram" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Hızlı Linkler</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Ana Sayfa</a></li>
+                        <li><a href="#restaurants" class="text-gray-300 hover:text-white transition-colors">Restoranlar</a></li>
+                        <li><a href="#about" class="text-gray-300 hover:text-white transition-colors">Hakkımızda</a></li>
+                        <li><a href="#contact" class="text-gray-300 hover:text-white transition-colors">İletişim</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Destek</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Yardım Merkezi</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">SSS</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Gizlilik Politikası</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Kullanım Şartları</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">İletişim</h3>
+                    <div class="space-y-2">
+                        <p class="text-gray-300">
+                            <i data-lucide="mail" class="w-4 h-4 inline mr-2"></i>
+                            info@kaptazeapp.com
+                        </p>
+                        <p class="text-gray-300">
+                            <i data-lucide="phone" class="w-4 h-4 inline mr-2"></i>
+                            +90 555 123 4567
+                        </p>
+                        <p class="text-gray-300">
+                            <i data-lucide="map-pin" class="w-4 h-4 inline mr-2"></i>
+                            Antalya, Türkiye
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+                <p class="text-gray-300">
+                    © 2025 KAPTAZEAPPV5. Tüm hakları saklıdır. 
+                    <span class="text-green-400">Gıda israfına karşı birlikte mücadele ediyoruz! 🌱</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="./js/app.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

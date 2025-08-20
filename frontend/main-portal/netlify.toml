@@ -1,0 +1,41 @@
+[build]
+  publish = "."
+  command = "echo 'Static site ready'"
+
+[build.environment]
+  NODE_ENV = "production"
+  KAPTAZE_DOMAIN = "kaptaze.netlify.app"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer-when-downgrade"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[context.production.environment]
+  KAPTAZE_ENV = "production"
+
+[context.deploy-preview.environment]
+  KAPTAZE_ENV = "preview"

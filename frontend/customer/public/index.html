@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#16a34a" />
+    <meta
+      name="description"
+      content="KapTaze - Gıda İsrafını Önleme Uygulaması. Restoranlardan uygun fiyatla yemek paketleri alın ve gıda israfına karşı durun."
+    />
+    <meta name="keywords" content="gıda israfı, restoran, yemek paketi, çevre, tasarruf" />
+    <meta name="author" content="KapTaze" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="KapTaze - Gıda İsrafını Önleme Uygulaması" />
+    <meta property="og:description" content="Restoranlardan uygun fiyatla yemek paketleri alın ve gıda israfına karşı durun." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="%PUBLIC_URL%/social-image.png" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="KapTaze - Gıda İsrafını Önleme Uygulaması" />
+    <meta name="twitter:description" content="Restoranlardan uygun fiyatla yemek paketleri alın ve gıda israfına karşı durun." />
+    
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <title>KapTaze - Gıda İsrafını Önleme Uygulaması</title>
+    
+    <style>
+      /* Loading Screen */
+      .loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease-out;
+      }
+      
+      .loading-logo {
+        font-size: 64px;
+        margin-bottom: 24px;
+        animation: bounce 1s infinite;
+      }
+      
+      .loading-text {
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      
+      .loading-subtitle {
+        color: rgba(255, 255, 255, 0.8);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        font-size: 14px;
+      }
+      
+      @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-20px); }
+        60% { transform: translateY(-10px); }
+      }
+      
+      .loading-spinner {
+        margin-top: 32px;
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h1>JavaScript Gerekli</h1>
+        <p>KapTaze uygulamasını kullanabilmek için JavaScript'i etkinleştirmeniz gerekiyor.</p>
+        <p>Lütfen tarayıcı ayarlarınızdan JavaScript'i açın ve sayfayı yenileyin.</p>
+      </div>
+    </noscript>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-logo">🌱</div>
+      <div class="loading-text">KapTaze</div>
+      <div class="loading-subtitle">Gıda israfına karşı birlikte</div>
+      <div class="loading-spinner"></div>
+    </div>
+    
+    <div id="root"></div>
+    
+    <script>
+      // Hide loading screen when React app loads
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loadingScreen = document.getElementById('loading-screen');
+          if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            setTimeout(function() {
+              loadingScreen.style.display = 'none';
+            }, 500);
+          }
+        }, 1000);
+      });
+    </script>
+  </body>
+</html>
