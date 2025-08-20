@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Müşteri Kayıt - KapTaze</title>
+    <title>Restoran/Esnaf Kayıt - KapTaze</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -204,7 +204,7 @@
 
         .business-type-selector {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
@@ -267,8 +267,8 @@
                 <span class="logo-icon">🌱</span>
                 <span class="logo-text">KapTaze</span>
             </div>
-            <h1>Platformumuza Katılın</h1>
-            <p>Gıda israfına karşı durun, tasarruf edin!</p>
+            <h1>Restoran/Esnaf Kayıt</h1>
+            <p>İşletmenizi platformumuza ekleyin ve gıda israfına karşı durun!</p>
         </div>
 
         <div class="form-container">
@@ -279,18 +279,13 @@
                 <div class="form-group">
                     <label>Hesap Türü Seçin:</label>
                     <div class="business-type-selector">
-                        <div class="business-type-option" onclick="selectBusinessType('customer')" id="customer-type">
-                            <i class="fas fa-user"></i>
-                            <h3>Müşteri</h3>
-                            <p>Uygun fiyatla yemek paketi alın</p>
-                        </div>
-                        <div class="business-type-option" onclick="selectBusinessType('restaurant')" id="restaurant-type">
+                        <div class="business-type-option selected" onclick="selectBusinessType('restaurant')" id="restaurant-type">
                             <i class="fas fa-store"></i>
-                            <h3>Restoran</h3>
+                            <h3>Restoran/Esnaf Kayıt</h3>
                             <p>İşletmenizi platformda tanıtın</p>
                         </div>
                     </div>
-                    <input type="hidden" id="businessType" name="businessType" required>
+                    <input type="hidden" id="businessType" name="businessType" value="restaurant" required>
                 </div>
 
                 <div class="form-row">
@@ -319,15 +314,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="phone">Telefon *</label>
+                    <label for="phone">Telefon <span id="phoneRequired" style="display: none;">*</span></label>
                     <div class="input-wrapper">
                         <i class="fas fa-phone input-icon"></i>
-                        <input type="tel" id="phone" name="phone" placeholder="05XX XXX XX XX" required>
+                        <input type="tel" id="phone" name="phone" placeholder="05XX XXX XX XX">
                     </div>
                 </div>
 
                 <!-- Restoran için ek alanlar -->
-                <div id="restaurantFields" style="display: none;">
+                <div id="restaurantFields" style="display: block;">
                     <div class="form-group">
                         <label for="businessName">İşletme Adı *</label>
                         <div class="input-wrapper">
@@ -360,6 +355,23 @@
                         <div class="input-wrapper">
                             <i class="fas fa-map-marker-alt input-icon"></i>
                             <input type="text" id="businessAddress" name="businessAddress">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="restaurantUsername">Restoran Kullanıcı Adı *</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user-cog input-icon"></i>
+                                <input type="text" id="restaurantUsername" name="restaurantUsername" placeholder="Panele giriş için kullanıcı adı">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="restaurantPassword">Restoran Şifresi *</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock input-icon"></i>
+                                <input type="password" id="restaurantPassword" name="restaurantPassword" placeholder="Minimum 6 karakter">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -426,7 +438,7 @@
     </div>
 
     <script>
-        let selectedBusinessType = '';
+        let selectedBusinessType = 'restaurant';
 
         // İlçe verileri
         const districts = {
@@ -448,6 +460,10 @@
             });
             document.getElementById(type + '-type').classList.add('selected');
             
+            // Update phone requirement and label
+            const phoneInput = document.getElementById('phone');
+            const phoneRequired = document.getElementById('phoneRequired');
+            
             // Show/hide restaurant fields
             const restaurantFields = document.getElementById('restaurantFields');
             if (type === 'restaurant') {
@@ -456,12 +472,24 @@
                 document.getElementById('businessName').required = true;
                 document.getElementById('businessCategory').required = true;
                 document.getElementById('businessAddress').required = true;
+                document.getElementById('restaurantUsername').required = true;
+                document.getElementById('restaurantPassword').required = true;
+                
+                // Make phone optional for restaurants
+                phoneInput.required = false;
+                phoneRequired.style.display = 'none';
             } else {
                 restaurantFields.style.display = 'none';
                 // Remove required from restaurant fields
                 document.getElementById('businessName').required = false;
                 document.getElementById('businessCategory').required = false;
                 document.getElementById('businessAddress').required = false;
+                document.getElementById('restaurantUsername').required = false;
+                document.getElementById('restaurantPassword').required = false;
+                
+                // Make phone required for customers
+                phoneInput.required = true;
+                phoneRequired.style.display = 'inline';
             }
         }
 
@@ -509,6 +537,33 @@
             if (!selectedBusinessType) {
                 showError('Lütfen hesap türü seçin');
                 return;
+            }
+            
+            // Restaurant-specific validations
+            if (selectedBusinessType === 'restaurant') {
+                const username = document.getElementById('restaurantUsername').value;
+                const password = document.getElementById('restaurantPassword').value;
+                
+                if (!username || username.length < 3) {
+                    showError('Restoran kullanıcı adı en az 3 karakter olmalıdır');
+                    return;
+                }
+                
+                if (!password || password.length < 6) {
+                    showError('Restoran şifresi en az 6 karakter olmalıdır');
+                    return;
+                }
+                
+                // Check if username already exists
+                const existingRegistrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+                const usernameExists = existingRegistrations.some(reg => 
+                    reg.type === 'restaurant' && reg.restaurantUsername === username
+                );
+                
+                if (usernameExists) {
+                    showError('Bu kullanıcı adı zaten kullanılıyor. Lütfen farklı bir kullanıcı adı seçin.');
+                    return;
+                }
             }
             
             // Show loading

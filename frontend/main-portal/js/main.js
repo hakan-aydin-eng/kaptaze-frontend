@@ -112,13 +112,24 @@ document.addEventListener('DOMContentLoaded', function() {
 function openPanel(panelType) {
     const loadingOverlay = showLoadingOverlay(`${getPanelDisplayName(panelType)} açılıyor...`);
     
+    let targetUrl = currentDomains[panelType];
+    
+    // For restaurant panel, redirect to login page
+    if (panelType === 'restaurant') {
+        if (isDevelopment) {
+            targetUrl = 'http://localhost:3002/login.html';
+        } else {
+            targetUrl = 'https://kaptaze-restaurant.netlify.app/login.html';
+        }
+    }
+    
     // Check if the target domain is accessible
     checkDomainHealth(currentDomains[panelType])
         .then(isHealthy => {
             if (isHealthy) {
                 // Add slight delay for better UX
                 setTimeout(() => {
-                    window.open(currentDomains[panelType], '_blank');
+                    window.open(targetUrl, '_blank');
                     hideLoadingOverlay(loadingOverlay);
                 }, 1000);
             } else {

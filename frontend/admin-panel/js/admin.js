@@ -128,6 +128,9 @@ function loadSectionData(sectionId) {
         case 'dashboard':
             loadDashboardData();
             break;
+        case 'applications':
+            loadApplicationsData();
+            break;
         case 'users':
             loadUsersData();
             break;
@@ -646,6 +649,248 @@ async function testAPIConnection() {
     showNotification('API bağlantı testi tamamlandı', 'success');
 }
 
+// Applications functions
+async function loadApplicationsData() {
+    const tableBody = document.getElementById('applications-table-body');
+    
+    tableBody.innerHTML = '<tr><td colspan="8" class="loading">Başvurular yükleniyor...</td></tr>';
+    
+    try {
+        if (apiConnected) {
+            // Try to get real data from API
+            const applicationsData = await makeAPICall('/api/admin/basvurular');
+            
+            if (applicationsData && applicationsData.success) {
+                renderApplicationsTable(applicationsData.data.basvurular);
+            } else {
+                renderMockApplicationsData();
+            }
+        } else {
+            renderMockApplicationsData();
+        }
+    } catch (error) {
+        renderMockApplicationsData();
+        console.error('Applications loading failed, using mock data:', error);
+    }
+}
+
+function renderMockApplicationsData() {
+    // Load registrations from localStorage
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    
+    const tableBody = document.getElementById('applications-table-body');
+    
+    if (registrations.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="loading">Henüz başvuru bulunmuyor</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = registrations.map(app => `
+        <tr>
+            <td>${app.id}</td>
+            <td><span class="type-badge ${app.type}">${app.type === 'customer' ? 'Müşteri' : 'Restoran'}</span></td>
+            <td>${app.firstName} ${app.lastName}</td>
+            <td>${app.email}</td>
+            <td>${app.type === 'restaurant' ? app.businessName : '-'}</td>
+            <td>${new Date(app.createdAt).toLocaleDateString('tr-TR')}</td>
+            <td><span class="status-badge ${app.status}">${getApplicationStatusText(app.status)}</span></td>
+            <td>
+                <button class="btn-secondary" onclick="viewApplication('${app.id}')" title="Detay">
+                    <i class="fas fa-eye"></i>
+                </button>
+                ${app.status === 'pending' ? `
+                <button class="btn-primary" onclick="approveApplication('${app.id}')" title="Onayla">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button class="btn-danger" onclick="rejectApplication('${app.id}')" title="Reddet">
+                    <i class="fas fa-times"></i>
+                </button>
+                ` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
+
+function getApplicationStatusText(status) {
+    const statusMap = {
+        'pending': 'Beklemede',
+        'approved': 'Onaylı',
+        'rejected': 'Reddedildi'
+    };
+    return statusMap[status] || status;
+}
+
+function filterApplications() {
+    const typeFilter = document.getElementById('application-type-filter').value;
+    const statusFilter = document.getElementById('application-status-filter').value;
+    
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    let filteredRegistrations = registrations;
+    
+    if (typeFilter) {
+        filteredRegistrations = filteredRegistrations.filter(app => app.type === typeFilter);
+    }
+    
+    if (statusFilter) {
+        filteredRegistrations = filteredRegistrations.filter(app => app.status === statusFilter);
+    }
+    
+    const tableBody = document.getElementById('applications-table-body');
+    
+    if (filteredRegistrations.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="loading">Filtreye uygun başvuru bulunamadı</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = filteredRegistrations.map(app => `
+        <tr>
+            <td>${app.id}</td>
+            <td><span class="type-badge ${app.type}">${app.type === 'customer' ? 'Müşteri' : 'Restoran'}</span></td>
+            <td>${app.firstName} ${app.lastName}</td>
+            <td>${app.email}</td>
+            <td>${app.type === 'restaurant' ? app.businessName : '-'}</td>
+            <td>${new Date(app.createdAt).toLocaleDateString('tr-TR')}</td>
+            <td><span class="status-badge ${app.status}">${getApplicationStatusText(app.status)}</span></td>
+            <td>
+                <button class="btn-secondary" onclick="viewApplication('${app.id}')" title="Detay">
+                    <i class="fas fa-eye"></i>
+                </button>
+                ${app.status === 'pending' ? `
+                <button class="btn-primary" onclick="approveApplication('${app.id}')" title="Onayla">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button class="btn-danger" onclick="rejectApplication('${app.id}')" title="Reddet">
+                    <i class="fas fa-times"></i>
+                </button>
+                ` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
+
+function viewApplication(applicationId) {
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    const application = registrations.find(app => app.id === applicationId);
+    
+    if (!application) {
+        showNotification('Başvuru bulunamadı', 'error');
+        return;
+    }
+    
+    let modalContent = `
+        <div class="modal-overlay" onclick="closeApplicationModal()">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3>Başvuru Detayları</h3>
+                    <button class="modal-close" onclick="closeApplicationModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="application-details">
+                        <p><strong>ID:</strong> ${application.id}</p>
+                        <p><strong>Tür:</strong> ${application.type === 'customer' ? 'Müşteri' : 'Restoran'}</p>
+                        <p><strong>Ad Soyad:</strong> ${application.firstName} ${application.lastName}</p>
+                        <p><strong>E-posta:</strong> ${application.email}</p>
+                        <p><strong>Telefon:</strong> ${application.phone || 'Belirtilmemiş'}</p>
+                        <p><strong>Başvuru Tarihi:</strong> ${new Date(application.createdAt).toLocaleDateString('tr-TR')}</p>
+                        <p><strong>Durum:</strong> ${getApplicationStatusText(application.status)}</p>
+    `;
+    
+    if (application.type === 'restaurant') {
+        modalContent += `
+                        <hr style="margin: 1rem 0;">
+                        <p><strong>İşletme Adı:</strong> ${application.businessName}</p>
+                        <p><strong>İşletme Kategorisi:</strong> ${application.businessCategory}</p>
+                        <p><strong>İşletme Adresi:</strong> ${application.businessAddress}</p>
+                        <p><strong>İlçe/Şehir:</strong> ${application.district}/${application.city}</p>
+                        <p><strong>Vergi No:</strong> ${application.taxNumber || 'Belirtilmemiş'}</p>
+        `;
+        
+        if (application.username && application.password) {
+            modalContent += `
+                        <hr style="margin: 1rem 0;">
+                        <p><strong>Restoran Kullanıcı Adı:</strong> ${application.username}</p>
+                        <p><strong>Restoran Şifresi:</strong> ${application.password}</p>
+            `;
+        }
+    }
+    
+    modalContent += `
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    ${application.status === 'pending' ? `
+                    <button class="btn-primary" onclick="approveApplication('${application.id}'); closeApplicationModal();">
+                        <i class="fas fa-check"></i> Onayla
+                    </button>
+                    <button class="btn-danger" onclick="rejectApplication('${application.id}'); closeApplicationModal();">
+                        <i class="fas fa-times"></i> Reddet
+                    </button>
+                    ` : ''}
+                    <button class="btn-secondary" onclick="closeApplicationModal()">
+                        Kapat
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to body
+    const modal = document.createElement('div');
+    modal.id = 'applicationModal';
+    modal.innerHTML = modalContent;
+    document.body.appendChild(modal);
+}
+
+function closeApplicationModal() {
+    const modal = document.getElementById('applicationModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function approveApplication(applicationId) {
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    const updatedRegistrations = registrations.map(app => {
+        if (app.id === applicationId) {
+            app.status = 'approved';
+            app.approvedAt = new Date().toISOString();
+        }
+        return app;
+    });
+    
+    localStorage.setItem('registrations', JSON.stringify(updatedRegistrations));
+    
+    showNotification('Başvuru başarıyla onaylandı!', 'success');
+    loadApplicationsData(); // Reload applications
+    
+    // Also reload restaurants and users data to show approved items
+    if (currentSection === 'restaurants') {
+        loadRestaurantsData();
+    } else if (currentSection === 'users') {
+        loadUsersData();
+    }
+}
+
+function rejectApplication(applicationId) {
+    if (confirm('Bu başvuruyu reddetmek istediğinizden emin misiniz?')) {
+        const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+        const updatedRegistrations = registrations.map(app => {
+            if (app.id === applicationId) {
+                app.status = 'rejected';
+                app.rejectedAt = new Date().toISOString();
+            }
+            return app;
+        });
+        
+        localStorage.setItem('registrations', JSON.stringify(updatedRegistrations));
+        
+        showNotification('Başvuru reddedildi.', 'error');
+        loadApplicationsData(); // Reload applications
+    }
+}
+
 // Mock action functions (these would connect to actual API)
 function editUser(userId) {
     showNotification(`Kullanıcı düzenleme özelliği yakında aktif olacak (ID: ${userId})`, 'info');
@@ -660,7 +905,21 @@ function editRestaurant(restaurantId) {
 }
 
 function approveRestaurant(restaurantId) {
-    showNotification(`Restoran onaylama özelliği yakında aktif olacak (ID: ${restaurantId})`, 'info');
+    if (confirm('Bu restoranı onaylamak istediğinizden emin misiniz?')) {
+        // Update registration status
+        const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+        const updatedRegistrations = registrations.map(reg => {
+            if (reg.id === restaurantId) {
+                reg.status = 'approved';
+                reg.approvedAt = new Date().toISOString();
+            }
+            return reg;
+        });
+        localStorage.setItem('registrations', JSON.stringify(updatedRegistrations));
+        
+        showNotification(`Restoran başarıyla onaylandı!`, 'success');
+        loadRestaurantsData(); // Reload restaurants
+    }
 }
 
 function viewOrder(orderId) {

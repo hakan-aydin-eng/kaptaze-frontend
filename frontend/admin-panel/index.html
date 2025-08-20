@@ -21,6 +21,10 @@
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
+            <a href="#applications" class="nav-item" onclick="showSection('applications')">
+                <i class="fas fa-file-alt"></i>
+                <span>Başvurular</span>
+            </a>
             <a href="#users" class="nav-item" onclick="showSection('users')">
                 <i class="fas fa-users"></i>
                 <span>Kullanıcılar</span>
@@ -142,6 +146,48 @@
                         <canvas id="restaurantsChart"></canvas>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Applications Section -->
+        <section id="applications" class="content-section">
+            <div class="section-header">
+                <h2>Başvuru Yönetimi</h2>
+                <div class="filters">
+                    <select id="application-type-filter" onchange="filterApplications()">
+                        <option value="">Tüm Başvurular</option>
+                        <option value="customer">Müşteri Başvuruları</option>
+                        <option value="restaurant">Restoran Başvuruları</option>
+                    </select>
+                    <select id="application-status-filter" onchange="filterApplications()">
+                        <option value="">Tüm Durumlar</option>
+                        <option value="pending">Beklemede</option>
+                        <option value="approved">Onaylandı</option>
+                        <option value="rejected">Reddedildi</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Başvuru ID</th>
+                            <th>Tür</th>
+                            <th>Ad Soyad</th>
+                            <th>E-posta</th>
+                            <th>İşletme Adı</th>
+                            <th>Başvuru Tarihi</th>
+                            <th>Durum</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applications-table-body">
+                        <tr>
+                            <td colspan="8" class="loading">Başvurular yükleniyor...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 

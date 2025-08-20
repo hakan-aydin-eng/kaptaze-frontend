@@ -1,5 +1,60 @@
 // KapTaze Restaurant Panel JavaScript
 
+// Authentication check
+function checkAuthentication() {
+    const token = localStorage.getItem('restaurantToken');
+    const user = localStorage.getItem('restaurantUser');
+    
+    if (!token || !user) {
+        // Redirect to login
+        window.location.href = './login.html';
+        return false;
+    }
+    
+    try {
+        const userData = JSON.parse(user);
+        const loginTime = new Date(userData.loginTime);
+        const now = new Date();
+        const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+        
+        // Token expires after 24 hours
+        if (hoursDiff > 24) {
+            localStorage.removeItem('restaurantToken');
+            localStorage.removeItem('restaurantUser');
+            window.location.href = './login.html';
+            return false;
+        }
+        
+        // Update restaurant info in header
+        const restaurantNameEl = document.getElementById('restaurant-name');
+        const userInfoEl = document.querySelector('.user-info span');
+        
+        if (restaurantNameEl) {
+            restaurantNameEl.textContent = userData.name || 'Restoran Paneli';
+        }
+        
+        if (userInfoEl) {
+            userInfoEl.textContent = userData.ownerName || userData.username;
+        }
+        
+        return true;
+    } catch (error) {
+        localStorage.removeItem('restaurantToken');
+        localStorage.removeItem('restaurantUser');
+        window.location.href = './login.html';
+        return false;
+    }
+}
+
+// Logout function
+function logout() {
+    if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+        localStorage.removeItem('restaurantToken');
+        localStorage.removeItem('restaurantUser');
+        window.location.href = './login.html';
+    }
+}
+
 // API Configuration
 const API_BASE_URL = 'https://kaptaze-api.onrender.com';
 const API_ENDPOINTS = {

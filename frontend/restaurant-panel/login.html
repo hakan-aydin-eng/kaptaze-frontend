@@ -268,19 +268,50 @@
                 // Simulate API call delay
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 
+                // Check registrations in localStorage
+                const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+                const restaurantUser = registrations.find(reg => 
+                    reg.type === 'restaurant' && 
+                    reg.status === 'approved' && 
+                    reg.restaurantUsername === username && 
+                    reg.restaurantPassword === password
+                );
+                
                 // Check demo credentials
-                const restaurant = DEMO_RESTAURANTS[username];
-                if (restaurant && restaurant.password === password) {
+                const demoRestaurant = DEMO_RESTAURANTS[username];
+                const isDemoValid = demoRestaurant && demoRestaurant.password === password;
+                
+                if (restaurantUser || isDemoValid) {
+                    let userData;
+                    
+                    if (restaurantUser) {
+                        userData = {
+                            username: restaurantUser.restaurantUsername,
+                            name: restaurantUser.businessName,
+                            id: restaurantUser.id,
+                            ownerName: `${restaurantUser.firstName} ${restaurantUser.lastName}`,
+                            category: restaurantUser.businessCategory,
+                            address: restaurantUser.businessAddress,
+                            city: restaurantUser.city,
+                            district: restaurantUser.district,
+                            status: 'approved',
+                            role: 'restaurant',
+                            loginTime: new Date().toISOString()
+                        };
+                    } else {
+                        userData = {
+                            username: username,
+                            name: demoRestaurant.name,
+                            id: demoRestaurant.id,
+                            status: demoRestaurant.status,
+                            role: 'restaurant',
+                            loginTime: new Date().toISOString()
+                        };
+                    }
+                    
                     // Store login state
-                    localStorage.setItem('restaurantToken', `demo-restaurant-token-${restaurant.id}`);
-                    localStorage.setItem('restaurantUser', JSON.stringify({
-                        username: username,
-                        name: restaurant.name,
-                        id: restaurant.id,
-                        status: restaurant.status,
-                        role: 'restaurant',
-                        loginTime: new Date().toISOString()
-                    }));
+                    localStorage.setItem('restaurantToken', `restaurant-token-${userData.id}`);
+                    localStorage.setItem('restaurantUser', JSON.stringify(userData));
                     
                     // Show success message
                     loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı!';
@@ -291,7 +322,7 @@
                         window.location.href = './index.html';
                     }, 1000);
                 } else {
-                    throw new Error('Kullanıcı adı veya şifre hatalı');
+                    throw new Error('Kullanıcı adı veya şifre hatalı. Lütfen admin onayından sonra kullanabilirsiniz.');
                 }
             } catch (error) {
                 // Show error
