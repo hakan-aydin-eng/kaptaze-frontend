@@ -26,6 +26,21 @@
   status = 200
 
 [[redirects]]
+  from = "/customer-registration.html"
+  to = "/frontend/main-portal/customer-registration.html"
+  status = 200
+
+[[redirects]]
+  from = "/register"
+  to = "/frontend/main-portal/customer-registration.html"
+  status = 200
+
+[[redirects]]
+  from = "/kayit"
+  to = "/frontend/main-portal/customer-registration.html"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/frontend/main-portal/:splat"
   status = 200

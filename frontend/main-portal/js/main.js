@@ -574,22 +574,48 @@ if ('serviceWorker' in navigator) {
 
 // Customer registration function
 function openCustomerRegistration() {
-    // Production'da ve development'da çalışacak şekilde
-    const currentDomain = window.location.origin;
-    const currentPath = window.location.pathname;
+    const loadingOverlay = showLoadingOverlay('Restoran kayıt sayfası açılıyor...');
     
-    // Eğer production'da ise (netlify)
-    if (currentDomain.includes('netlify.app') || currentDomain.includes('kaptazeapp.com')) {
-        window.open(`${currentDomain}/customer-registration.html`, '_blank');
-    } 
-    // Eğer development'da ise
-    else if (currentDomain.includes('localhost') || currentDomain.includes('127.0.0.1')) {
-        window.open('./customer-registration.html', '_blank');
-    }
-    // Fallback - relative path
-    else {
-        window.open('./customer-registration.html', '_blank');
-    }
+    // Production Netlify domain'de customer registration URL
+    const registrationUrl = 'https://kaptaze.netlify.app/customer-registration.html';
+    
+    // Check if registration page is accessible
+    checkDomainHealth(registrationUrl)
+        .then(isHealthy => {
+            if (isHealthy) {
+                setTimeout(() => {
+                    window.open(registrationUrl, '_blank');
+                    hideLoadingOverlay(loadingOverlay);
+                }, 1000);
+            } else {
+                hideLoadingOverlay(loadingOverlay);
+                
+                // Fallback: relative path for development
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    window.open('./customer-registration.html', '_blank');
+                } else {
+                    showErrorModal(
+                        'Kayıt Sayfası Erişim Hatası',
+                        'Restoran kayıt sayfası şu anda erişilemiyor. Lütfen daha sonra tekrar deneyin.',
+                        'registration'
+                    );
+                }
+            }
+        })
+        .catch(() => {
+            hideLoadingOverlay(loadingOverlay);
+            
+            // Fallback for local development
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                window.open('./customer-registration.html', '_blank');
+            } else {
+                showErrorModal(
+                    'Kayıt Sayfası Erişim Hatası',
+                    'Restoran kayıt sayfası şu anda erişilemiyor. Lütfen daha sonra tekrar deneyin.',
+                    'registration'
+                );
+            }
+        });
 }
 
 // Export functions for global access

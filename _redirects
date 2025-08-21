@@ -1,5 +1,10 @@
 # Netlify redirects for KapTaze Single Domain Architecture
 
+# Customer Registration - Main portal customer registration page
+/customer-registration.html /frontend/main-portal/customer-registration.html 200
+/register /frontend/main-portal/customer-registration.html 200
+/kayit /frontend/main-portal/customer-registration.html 200
+
 # Admin Panel
 /admin-panel/* /frontend/admin-panel/:splat 200
 /admin/* /frontend/admin-panel/:splat 200
@@ -14,6 +19,10 @@
 
 # API endpoints (to be implemented)
 /api/* /.netlify/functions/:splat 200
+
+# Main portal static files
+/css/* /frontend/main-portal/css/:splat 200
+/js/* /frontend/main-portal/js/:splat 200
 
 # Main portal (default)
 /* /frontend/main-portal/:splat 200
