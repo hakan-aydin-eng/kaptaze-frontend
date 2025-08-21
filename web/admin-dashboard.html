@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KapTaze Admin Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Shared Data System -->
+    <script src="./js/shared.js?v=2025.08.21.7"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #16a34a;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #374151;
+        }
+
+        .logout-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: #b91c1c;
+            transform: translateY(-1px);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 80px;
+            padding: 2rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.users { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-icon.restaurants { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .stat-icon.orders { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .stat-icon.revenue { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+        .stat-content h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-content p {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* Platform Cards */
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .platform-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .platform-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .card-icon.applications { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .card-icon.users { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .card-icon.restaurants { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .card-icon.analytics { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .card-content {
+            margin-bottom: 2rem;
+        }
+
+        .card-description {
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        .feature-list i {
+            color: #16a34a;
+        }
+
+        .card-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-actions h3 {
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .dashboard-title {
+                font-size: 2rem;
+            }
+
+            .stats-grid,
+            .platform-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card,
+        .platform-card,
+        .quick-actions {
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .stat-card:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card:nth-child(3) { animation-delay: 0.2s; }
+        .stat-card:nth-child(4) { animation-delay: 0.3s; }
+
+        .platform-card:nth-child(2) { animation-delay: 0.2s; }
+        .platform-card:nth-child(3) { animation-delay: 0.4s; }
+        .platform-card:nth-child(4) { animation-delay: 0.6s; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🌱</span>
+                <span class="logo-text">KapTaze Admin</span>
+            </div>
+            
+            <div class="nav-actions">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Admin</span>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Çıkış
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Admin Dashboard</h1>
+            <p class="dashboard-subtitle">KapTaze Platform Yönetim Merkezi</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon users">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="total-users">1,247</h3>
+                    <p>Toplam Kullanıcı</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon restaurants">
+                    <i class="fas fa-store"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="total-restaurants">156</h3>
+                    <p>Aktif Restoran</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon orders">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="total-orders">2,847</h3>
+                    <p>Toplam Sipariş</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon revenue">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="total-revenue">₺89,420</h3>
+                    <p>Bu Ay Gelir</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Platform Management -->
+        <div class="platform-grid">
+            <!-- Applications Management -->
+            <div class="platform-card" onclick="openAdminSection('applications')">
+                <div class="card-header">
+                    <div class="card-icon applications">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3 class="card-title">Başvuru Yönetimi</h3>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">Restoran başvurularını inceleyin, onaylayın veya reddedin. Yeni başvurular için bildirim alın.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Restoran başvuru onayı</li>
+                        <li><i class="fas fa-check"></i> Belge doğrulama</li>
+                        <li><i class="fas fa-check"></i> Hesap oluşturma</li>
+                        <li><i class="fas fa-check"></i> Bildirim sistemi</li>
+                    </ul>
+                </div>
+                <div class="card-action">
+                    <span>Başvurular Paneline Git</span>
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+
+            <!-- User Management -->
+            <div class="platform-card" onclick="openAdminSection('users')">
+                <div class="card-header">
+                    <div class="card-icon users">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="card-title">Kullanıcı Yönetimi</h3>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">Müşteri ve restoran hesaplarını yönetin. Kullanıcı aktivitelerini takip edin.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Kullanıcı listesi</li>
+                        <li><i class="fas fa-check"></i> Hesap durumu</li>
+                        <li><i class="fas fa-check"></i> Aktivite takibi</li>
+                        <li><i class="fas fa-check"></i> Destek talepleri</li>
+                    </ul>
+                </div>
+                <div class="card-action">
+                    <span>Kullanıcılar Paneline Git</span>
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+
+            <!-- Restaurant Management -->
+            <div class="platform-card" onclick="openAdminSection('restaurants')">
+                <div class="card-header">
+                    <div class="card-icon restaurants">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <h3 class="card-title">Restoran Yönetimi</h3>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">Aktif restoranları yönetin. Performans analizi ve destek sağlayın.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Restoran listesi</li>
+                        <li><i class="fas fa-check"></i> Performans metrikleri</li>
+                        <li><i class="fas fa-check"></i> Paket yönetimi</li>
+                        <li><i class="fas fa-check"></i> Kalite kontrol</li>
+                    </ul>
+                </div>
+                <div class="card-action">
+                    <span>Restoranlar Paneline Git</span>
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+
+            <!-- Analytics -->
+            <div class="platform-card" onclick="openAdminSection('analytics')">
+                <div class="card-header">
+                    <div class="card-icon analytics">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3 class="card-title">Analiz & Raporlar</h3>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">Platform performansını analiz edin. Detaylı raporlar ve istatistikler görüntüleyin.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Gelir analizi</li>
+                        <li><i class="fas fa-check"></i> Kullanıcı istatistikleri</li>
+                        <li><i class="fas fa-check"></i> Trend analizi</li>
+                        <li><i class="fas fa-check"></i> Performans metrikleri</li>
+                    </ul>
+                </div>
+                <div class="card-action">
+                    <span>Analiz Paneline Git</span>
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h3>Hızlı İşlemler</h3>
+            <div class="actions-grid">
+                <button class="action-btn" onclick="openAdminSection('applications')">
+                    <i class="fas fa-plus"></i>
+                    Yeni Başvuru İncele
+                </button>
+                <button class="action-btn" onclick="openAdminSection('users')">
+                    <i class="fas fa-user-plus"></i>
+                    Kullanıcı Ekle
+                </button>
+                <button class="action-btn" onclick="openAdminSection('restaurants')">
+                    <i class="fas fa-store"></i>
+                    Restoran Onayla
+                </button>
+                <button class="action-btn" onclick="generateReport()">
+                    <i class="fas fa-file-export"></i>
+                    Rapor Oluştur
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Authentication check
+        function checkAuth() {
+            const token = localStorage.getItem('adminToken');
+            const user = localStorage.getItem('adminUser');
+            
+            if (!token || !user) {
+                window.location.href = '/admin-login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Çıkış yapmak istediğiniz emin misiniz?')) {
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.href = '/admin-login.html';
+            }
+        }
+
+        // Open admin sections
+        function openAdminSection(section) {
+            window.location.href = `/admin-panel.html#${section}`;
+        }
+
+        // Generate report
+        function generateReport() {
+            alert('Rapor oluşturma özelliği geliştiriliyor...');
+        }
+
+        // Load dashboard data
+        function loadDashboardData() {
+            // Simulate API calls
+            updateStats();
+        }
+
+        function updateStats() {
+            // Get data from localStorage for demo
+            const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+            const approvedRestaurants = registrations.filter(r => r.status === 'approved').length;
+            
+            document.getElementById('total-restaurants').textContent = approvedRestaurants || '3';
+            document.getElementById('total-users').textContent = registrations.length || '12';
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkAuth()) return;
+            
+            loadDashboardData();
+            
+            // Auto-update stats every 30 seconds
+            setInterval(updateStats, 30000);
+        });
+    </script>
+</body>
+</html>
