@@ -1,6 +1,14 @@
 // KapTaze Main Portal JavaScript
 
-// Free hosting domain configuration - Netlify + Render
+// Single domain configuration - All under kaptaze.netlify.app
+const SINGLE_DOMAIN = {
+    customer: 'https://kaptaze.netlify.app/mobile',
+    restaurant: 'https://kaptaze.netlify.app/restaurant-panel', 
+    admin: 'https://kaptaze.netlify.app/admin-panel',
+    api: 'https://kaptaze.netlify.app/api'
+};
+
+// Free hosting domain configuration - Netlify + Render  
 const FREE_DOMAINS = {
     customer: 'https://kaptaze-customer.netlify.app',
     restaurant: 'https://kaptaze-restaurant.netlify.app', 
@@ -17,7 +25,7 @@ const PAID_DOMAINS = {
 };
 
 // Auto-detect environment and set domains
-let DOMAINS = FREE_DOMAINS;
+let DOMAINS = SINGLE_DOMAIN; // Use single domain to fix localStorage issues
 
 // Production domain override from environment
 if (typeof window.KAPTAZE_DOMAIN !== 'undefined') {

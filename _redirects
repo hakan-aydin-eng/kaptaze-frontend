@@ -1,0 +1,19 @@
+# Netlify redirects for KapTaze Single Domain Architecture
+
+# Admin Panel
+/admin-panel/* /frontend/admin-panel/:splat 200
+/admin/* /frontend/admin-panel/:splat 200
+
+# Restaurant Panel  
+/restaurant-panel/* /frontend/restaurant-panel/:splat 200
+/restaurant/* /frontend/restaurant-panel/:splat 200
+
+# Mobile App (Expo Web Build)
+/mobile/* /dist/:splat 200
+/app/* /dist/:splat 200
+
+# API endpoints (to be implemented)
+/api/* /.netlify/functions/:splat 200
+
+# Main portal (default)
+/* /frontend/main-portal/:splat 200

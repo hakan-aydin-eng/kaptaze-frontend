@@ -3,8 +3,8 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'https://kaptaze-backend.herokuapp.com/api'; // Production URL
-const FALLBACK_URL = 'http://localhost:5000/api'; // Development URL
+const API_BASE_URL = 'https://kaptaze.netlify.app/api'; // Production URL  
+const FALLBACK_URL = 'https://kaptaze-backend.herokuapp.com/api'; // Fallback URL
 
 class ApiService {
   constructor() {
