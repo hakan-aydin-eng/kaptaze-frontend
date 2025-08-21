@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KapTaze Admin Panel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/admin.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <span class="logo-icon">🌱</span>
+            <span class="logo-text">KapTaze Admin</span>
+        </div>
+        
+        <nav class="nav-menu">
+            <a href="#dashboard" class="nav-item active" onclick="showSection('dashboard')">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#applications" class="nav-item" onclick="showSection('applications')">
+                <i class="fas fa-file-alt"></i>
+                <span>Başvurular</span>
+            </a>
+            <a href="#users" class="nav-item" onclick="showSection('users')">
+                <i class="fas fa-users"></i>
+                <span>Kullanıcılar</span>
+            </a>
+            <a href="#restaurants" class="nav-item" onclick="showSection('restaurants')">
+                <i class="fas fa-store"></i>
+                <span>Restoranlar</span>
+            </a>
+            <a href="#orders" class="nav-item" onclick="showSection('orders')">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Siparişler</span>
+            </a>
+            <a href="#packages" class="nav-item" onclick="showSection('packages')">
+                <i class="fas fa-box"></i>
+                <span>Paketler</span>
+            </a>
+            <a href="#analytics" class="nav-item" onclick="showSection('analytics')">
+                <i class="fas fa-chart-bar"></i>
+                <span>Analizler</span>
+            </a>
+            <a href="#settings" class="nav-item" onclick="showSection('settings')">
+                <i class="fas fa-cog"></i>
+                <span>Ayarlar</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="https://kaptaze.netlify.app" class="footer-link">
+                <i class="fas fa-home"></i>
+                Ana Portal
+            </a>
+            <a href="https://kaptaze-restaurant.netlify.app" class="footer-link">
+                <i class="fas fa-store"></i>
+                Restoran Panel
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>Admin Panel</h1>
+            </div>
+            <div class="header-right">
+                <div class="api-status" id="api-status">
+                    <i class="fas fa-circle"></i>
+                    <span>API Bağlantısı</span>
+                </div>
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Admin</span>
+                    <button class="logout-btn" onclick="logout()" title="Çıkış Yap">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-users">-</h3>
+                        <p>Toplam Kullanıcı</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-restaurants">-</h3>
+                        <p>Aktif Restoran</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-packages">-</h3>
+                        <p>Toplam Paket</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-orders">-</h3>
+                        <p>Toplam Sipariş</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Günlük Sipariş Trendi</h3>
+                    <div class="chart-placeholder">
+                        <canvas id="ordersChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Restoran Performansı</h3>
+                    <div class="chart-placeholder">
+                        <canvas id="restaurantsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Applications Section -->
+        <section id="applications" class="content-section">
+            <div class="section-header">
+                <h2>Başvuru Yönetimi</h2>
+                <button class="btn-secondary" onclick="loadApplicationsData()" style="margin-right: 1rem;">
+                    <i class="fas fa-sync-alt"></i>
+                    Yenile
+                </button>
+                <div class="filters">
+                    <select id="application-type-filter" onchange="filterApplications()">
+                        <option value="">Tüm Başvurular</option>
+                        <option value="restaurant">Restoran Başvuruları</option>
+                    </select>
+                    <select id="application-status-filter" onchange="filterApplications()">
+                        <option value="">Tüm Durumlar</option>
+                        <option value="pending">Beklemede</option>
+                        <option value="approved">Onaylandı</option>
+                        <option value="rejected">Reddedildi</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Başvuru ID</th>
+                            <th>Tür</th>
+                            <th>Ad Soyad</th>
+                            <th>E-posta</th>
+                            <th>İşletme Adı</th>
+                            <th>Başvuru Tarihi</th>
+                            <th>Durum</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applications-table-body">
+                        <tr>
+                            <td colspan="8" class="loading">Başvurular yükleniyor...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Users Section -->
+        <section id="users" class="content-section">
+            <div class="section-header">
+                <h2>Kullanıcı Yönetimi</h2>
+                <button class="btn-primary" onclick="showAddUserModal()">
+                    <i class="fas fa-plus"></i>
+                    Yeni Kullanıcı
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Ad Soyad</th>
+                            <th>E-posta</th>
+                            <th>Telefon</th>
+                            <th>Kayıt Tarihi</th>
+                            <th>Durum</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <tr>
+                            <td colspan="7" class="loading">Kullanıcılar yükleniyor...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Restaurants Section -->
+        <section id="restaurants" class="content-section">
+            <div class="section-header">
+                <h2>Restoran Yönetimi</h2>
+                <button class="btn-primary" onclick="showAddRestaurantModal()">
+                    <i class="fas fa-plus"></i>
+                    Restoran Ekle
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Restoran Adı</th>
+                            <th>E-posta</th>
+                            <th>Adres</th>
+                            <th>Onay Durumu</th>
+                            <th>Aktif Paket</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="restaurants-table-body">
+                        <tr>
+                            <td colspan="7" class="loading">Restoranlar yükleniyor...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Orders Section -->
+        <section id="orders" class="content-section">
+            <div class="section-header">
+                <h2>Sipariş Yönetimi</h2>
+                <div class="filters">
+                    <select id="order-status-filter" onchange="filterOrders()">
+                        <option value="">Tüm Durumlar</option>
+                        <option value="beklemede">Beklemede</option>
+                        <option value="onaylandi">Onaylandı</option>
+                        <option value="hazirlaniyor">Hazırlanıyor</option>
+                        <option value="hazir">Hazır</option>
+                        <option value="teslim_edildi">Teslim Edildi</option>
+                        <option value="iptal_edildi">İptal</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Sipariş ID</th>
+                            <th>Kullanıcı</th>
+                            <th>Restoran</th>
+                            <th>Tutar</th>
+                            <th>Durum</th>
+                            <th>Tarih</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                        <tr>
+                            <td colspan="7" class="loading">Siparişler yükleniyor...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Packages Section -->
+        <section id="packages" class="content-section">
+            <div class="section-header">
+                <h2>Paket Yönetimi</h2>
+            </div>
+            
+            <div class="packages-grid" id="packages-grid">
+                <div class="loading-card">
+                    <p>Paketler yükleniyor...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section id="analytics" class="content-section">
+            <div class="section-header">
+                <h2>Sistem Analizleri</h2>
+            </div>
+            
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h3>Bugünkü Aktivite</h3>
+                    <div class="activity-stats">
+                        <div class="activity-item">
+                            <span class="activity-label">Yeni Kullanıcı:</span>
+                            <span class="activity-value" id="today-users">-</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="activity-label">Yeni Sipariş:</span>
+                            <span class="activity-value" id="today-orders">-</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="activity-label">Gelir:</span>
+                            <span class="activity-value" id="today-revenue">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="analytics-card">
+                    <h3>Sistem Durumu</h3>
+                    <div class="system-status">
+                        <div class="status-item">
+                            <span class="status-indicator active"></span>
+                            <span>Database: Aktif</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-indicator" id="api-indicator"></span>
+                            <span>API: <span id="api-status-text">Kontrol ediliyor...</span></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-indicator active"></span>
+                            <span>Frontend: Aktif</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="content-section">
+            <div class="section-header">
+                <h2>Sistem Ayarları</h2>
+            </div>
+            
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3>Genel Ayarlar</h3>
+                    <form class="settings-form">
+                        <div class="form-group">
+                            <label>Site Başlığı:</label>
+                            <input type="text" value="KapTaze" />
+                        </div>
+                        <div class="form-group">
+                            <label>Destek E-posta:</label>
+                            <input type="email" value="info@kaptazeapp.com.tr" />
+                        </div>
+                        <button type="submit" class="btn-primary">Kaydet</button>
+                    </form>
+                </div>
+                
+                <div class="settings-card">
+                    <h3>API Ayarları</h3>
+                    <div class="api-config">
+                        <p><strong>Backend URL:</strong> https://kaptaze-api.onrender.com</p>
+                        <p><strong>Database:</strong> MongoDB Atlas</p>
+                        <p><strong>Version:</strong> v1.0.0</p>
+                        <button class="btn-secondary" onclick="testAPIConnection()">
+                            <i class="fas fa-wifi"></i>
+                            Bağlantı Testi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="./js/admin.js"></script>
+    <script>
+        // Authentication check - redirect to login if not authenticated
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!isAuthenticated()) {
+                window.location.href = './login.html';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KapTaze Restoran Girişi</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        h1 {
+            color: #1e293b;
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem;
+            padding-left: 3rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 1.1rem;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .demo-info {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+            font-size: 0.875rem;
+            color: #0369a1;
+        }
+
+        .demo-info strong {
+            color: #0c4a6e;
+        }
+
+        .footer-links {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer-link {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 1rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-link:hover {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <span class="logo-icon">🏪</span>
+            <span class="logo-text">KapTaze</span>
+        </div>
+        
+        <h1>Restoran Panel Girişi</h1>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="username">Restoran Kullanıcı Adı</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-store input-icon"></i>
+                    <input type="text" id="username" name="username" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Şifre</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" id="password" name="password" required>
+                </div>
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i>
+                Giriş Yap
+            </button>
+        </form>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <div class="demo-info">
+            <strong>Demo Restoran Hesapları:</strong><br><br>
+            
+            <strong>Seraser Restaurant:</strong><br>
+            Kullanıcı: <strong>seraser</strong> | Şifre: <strong>rest123</strong><br><br>
+            
+            <strong>Lara Balık Evi:</strong><br>
+            Kullanıcı: <strong>larabalik</strong> | Şifre: <strong>rest123</strong><br><br>
+            
+            <strong>Köşe Kebap:</strong><br>
+            Kullanıcı: <strong>kosekebap</strong> | Şifre: <strong>rest123</strong>
+        </div>
+        
+        <div class="footer-links">
+            <a href="https://kaptaze.netlify.app" class="footer-link">
+                <i class="fas fa-home"></i>
+                Ana Portal
+            </a>
+            <a href="../admin-panel/login.html" class="footer-link">
+                <i class="fas fa-shield-alt"></i>
+                Admin Panel
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Restaurant login logic
+        const DEMO_RESTAURANTS = {
+            'seraser': {
+                password: 'rest123',
+                name: 'Seraser Restaurant',
+                id: 'rest_001',
+                status: 'approved'
+            },
+            'larabalik': {
+                password: 'rest123',
+                name: 'Lara Balık Evi',
+                id: 'rest_002',
+                status: 'pending'
+            },
+            'kosekebap': {
+                password: 'rest123',
+                name: 'Köşe Kebap',
+                id: 'rest_003',
+                status: 'approved'
+            }
+        };
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Giriş yapılıyor...';
+            errorMessage.style.display = 'none';
+            
+            try {
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Check registrations in localStorage
+                const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+                const restaurantUser = registrations.find(reg => 
+                    reg.type === 'restaurant' && 
+                    reg.status === 'approved' && 
+                    reg.restaurantUsername === username && 
+                    reg.restaurantPassword === password
+                );
+                
+                // Check demo credentials
+                const demoRestaurant = DEMO_RESTAURANTS[username];
+                const isDemoValid = demoRestaurant && demoRestaurant.password === password;
+                
+                if (restaurantUser || isDemoValid) {
+                    let userData;
+                    
+                    if (restaurantUser) {
+                        userData = {
+                            username: restaurantUser.restaurantUsername,
+                            name: restaurantUser.businessName,
+                            id: restaurantUser.id,
+                            ownerName: `${restaurantUser.firstName} ${restaurantUser.lastName}`,
+                            category: restaurantUser.businessCategory,
+                            address: restaurantUser.businessAddress,
+                            city: restaurantUser.city,
+                            district: restaurantUser.district,
+                            status: 'approved',
+                            role: 'restaurant',
+                            loginTime: new Date().toISOString()
+                        };
+                    } else {
+                        userData = {
+                            username: username,
+                            name: demoRestaurant.name,
+                            id: demoRestaurant.id,
+                            status: demoRestaurant.status,
+                            role: 'restaurant',
+                            loginTime: new Date().toISOString()
+                        };
+                    }
+                    
+                    // Store login state
+                    localStorage.setItem('restaurantToken', `restaurant-token-${userData.id}`);
+                    localStorage.setItem('restaurantUser', JSON.stringify(userData));
+                    
+                    // Show success message
+                    loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı!';
+                    loginBtn.style.background = '#059669';
+                    
+                    // Redirect to restaurant panel
+                    setTimeout(() => {
+                        window.location.href = './index.html';
+                    }, 1000);
+                } else {
+                    throw new Error('Kullanıcı adı veya şifre hatalı. Lütfen admin onayından sonra kullanabilirsiniz.');
+                }
+            } catch (error) {
+                // Show error
+                errorMessage.textContent = error.message;
+                errorMessage.style.display = 'block';
+                
+                // Reset button
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Giriş Yap';
+            }
+        }
+        
+        // Check if already logged in
+        if (localStorage.getItem('restaurantToken')) {
+            window.location.href = './index.html';
+        }
+    </script>
+</body>
+</html>
