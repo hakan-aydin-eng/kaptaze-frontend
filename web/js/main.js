@@ -585,5 +585,31 @@ window.handleContactForm = handleContactForm;
 // DOM Ready initialization
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📱 KapTaze Ana Portal yüklendi');
-    console.log('✅ All customer registration buttons now use onclick="openPanel(\'customer\')"');
+    console.log('✅ openCustomerRegistration fonksiyonu:', typeof openCustomerRegistration);
+    
+    // Bind customer registration buttons (both nav and hero)
+    const customerBtns = [
+        document.getElementById('customerRegistrationBtn'),
+        document.getElementById('heroCustomerRegistrationBtn')
+    ];
+    
+    customerBtns.forEach((btn, index) => {
+        if (btn) {
+            btn.addEventListener('click', function() {
+                console.log(`🔘 Customer registration button ${index + 1} clicked`);
+                console.log('🚀 Opening: https://kaptaze-customer.netlify.app');
+                window.open('https://kaptaze-customer.netlify.app', '_blank');
+            });
+            console.log(`✅ Customer registration button ${index + 1} event listener added`);
+        } else {
+            console.error(`❌ Customer registration button ${index + 1} not found`);
+        }
+    });
+    
+    // Test if function is available globally
+    if (typeof window.openCustomerRegistration === 'function') {
+        console.log('✅ Global openCustomerRegistration function is available');
+    } else {
+        console.error('❌ Global openCustomerRegistration function is NOT available');
+    }
 });
