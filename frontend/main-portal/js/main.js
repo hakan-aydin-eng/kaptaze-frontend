@@ -4,7 +4,7 @@
 const SINGLE_DOMAIN = {
     customer: 'https://kaptaze.netlify.app/mobile',
     restaurant: 'https://kaptaze.netlify.app/restaurant-panel', 
-    admin: 'https://kaptaze.netlify.app/admin-panel',
+    admin: 'https://kaptaze.netlify.app/admin-login.html',
     api: 'https://kaptaze.netlify.app/api'
 };
 
@@ -12,7 +12,7 @@ const SINGLE_DOMAIN = {
 const FREE_DOMAINS = {
     customer: 'https://kaptaze-customer.netlify.app',
     restaurant: 'https://kaptaze-restaurant.netlify.app', 
-    admin: 'https://kaptaze-admin.netlify.app',
+    admin: 'https://kaptaze.netlify.app/admin-login.html',
     api: 'https://kaptaze-api.onrender.com'
 };
 

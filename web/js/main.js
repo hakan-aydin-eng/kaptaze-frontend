@@ -12,7 +12,7 @@ const SINGLE_DOMAIN = {
 const FREE_DOMAINS = {
     customer: 'https://kaptaze-customer.netlify.app',
     restaurant: 'https://kaptaze-restaurant.netlify.app', 
-    admin: 'https://kaptaze-admin.netlify.app',
+    admin: 'https://kaptaze.netlify.app/admin-login.html',
     api: 'https://kaptaze-api.onrender.com'
 };
 
@@ -128,7 +128,7 @@ function openPanel(panelType) {
     } else if (panelType === 'restaurant') {
         targetUrl = '/restaurant-login.html';
     } else if (panelType === 'admin') {
-        targetUrl = '/admin-panel.html';
+        targetUrl = '/admin-login.html';
     } else {
         targetUrl = `/${panelType}.html`;
     }
