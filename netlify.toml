@@ -1,6 +1,6 @@
 [build]
-  publish = "."
-  command = "npm run build"
+  publish = "web"
+  command = "echo 'Static site ready'"
   functions = "netlify/functions"
 
 [build.environment]
@@ -8,47 +8,47 @@
 
 [[redirects]]
   from = "/admin-panel/*"
-  to = "web/admin-login.html"
+  to = "/admin-login.html"
   status = 200
 
 [[redirects]]
   from = "/admin/*"
-  to = "web/admin-login.html"
+  to = "/admin-login.html"
   status = 200
 
 [[redirects]]
   from = "/restaurant-panel/*"
-  to = "web/restaurant-panel.html"
+  to = "/restaurant-panel.html"
   status = 200
 
 [[redirects]]
   from = "/restaurant-login/*"
-  to = "web/restaurant-login.html"
+  to = "/restaurant-login.html"
   status = 200
 
 [[redirects]]
   from = "/restaurant/*"
-  to = "web/restaurant-login.html"
+  to = "/restaurant-login.html"
   status = 200
 
 [[redirects]]
   from = "/customer-registration.html"
-  to = "web/customer-registration.html"
+  to = "/customer-registration.html"
   status = 200
 
 [[redirects]]
   from = "/customer-registration"
-  to = "web/customer-registration.html"
+  to = "/customer-registration.html"
   status = 200
 
 [[redirects]]
   from = "/register"
-  to = "web/customer-registration.html"
+  to = "/customer-registration.html"
   status = 200
 
 [[redirects]]
   from = "/kayit"
-  to = "web/customer-registration.html"
+  to = "/customer-registration.html"
   status = 200
 
 [[redirects]]
@@ -58,7 +58,7 @@
 
 [[redirects]]
   from = "/*"
-  to = "web/index.html"
+  to = "/index.html"
   status = 200
 
 # Headers for CORS
