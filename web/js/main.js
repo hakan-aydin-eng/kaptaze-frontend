@@ -10,10 +10,10 @@ const SINGLE_DOMAIN = {
 
 // Free hosting domain configuration - Netlify + Render  
 const FREE_DOMAINS = {
-    customer: 'https://kaptaze-customer.netlify.app',
-    restaurant: 'https://kaptaze-restaurant.netlify.app', 
-    admin: 'https://kaptaze-admin.netlify.app',
-    api: 'https://kaptaze-api.onrender.com'
+    customer: 'https://kaptaze.netlify.app/mobile',
+    restaurant: 'https://kaptaze.netlify.app/restaurant-login.html', 
+    admin: 'https://kaptaze.netlify.app/admin-login.html',
+    api: 'https://kaptaze.netlify.app/api'
 };
 
 // Paid domain configuration  
