@@ -40,10 +40,12 @@ app.use(express.urlencoded({ extended: true }));
 // MongoDB Bağlantısı (Database Manager ile)
 const { databaseManager } = require('./config/database');
 
+// Try to connect to MongoDB, but don't exit if it fails (for demo purposes)
 databaseManager.connect(process.env.NODE_ENV || 'development')
   .catch(err => {
-    console.error('❌ MongoDB bağlantı hatası:', err);
-    process.exit(1);
+    console.error('❌ MongoDB bağlantı hatası:', err.message);
+    console.log('⚠️ MongoDB olmadan devam ediliyor (demo mode)...');
+    // Don't exit, continue without database for demo
   });
 
 // API Rotaları

@@ -12,8 +12,8 @@ services:
       - key: PORT
         value: 10000
       - key: MONGODB_URI
-        sync: false
+        value: mongodb+srv://kaptaze-admin:kaptaze2024@kaptaze.v8dqkng.mongodb.net/kaptazeappv5?retryWrites=true&w=majority
       - key: JWT_SECRET  
-        sync: false
+        value: kaptaze_jwt_secret_production_2024_secure_key_v1
       - key: CORS_ORIGIN
         value: https://kaptaze.netlify.app,https://kaptaze-admin.netlify.app,https://kaptaze-restaurant.netlify.app
