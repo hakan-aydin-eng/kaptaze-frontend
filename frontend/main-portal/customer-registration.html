@@ -574,26 +574,59 @@
                 const formData = new FormData(event.target);
                 const data = Object.fromEntries(formData.entries());
                 
-                // API call simulation
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // Store registration data
-                const registrationId = Date.now().toString();
-                const registrationData = {
-                    id: registrationId,
-                    ...data,
-                    status: 'pending',
-                    createdAt: new Date().toISOString(),
-                    type: selectedBusinessType
+                // Prepare API request data
+                const apiData = {
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    email: data.email,
+                    phone: data.phone || '',
+                    businessName: data.businessName,
+                    businessCategory: data.businessCategory,
+                    businessAddress: data.businessAddress,
+                    username: data.restaurantUsername,
+                    password: data.restaurantPassword,
+                    businessType: selectedBusinessType
                 };
+
+                // Try API first, fallback to localStorage
+                let apiSuccess = false;
+                try {
+                    const response = await fetch('https://kaptaze-backend.render.com/api/restoran/web-basvuru', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(apiData)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        apiSuccess = true;
+                        showSuccess(`${result.mesaj} Başvuru numaranız: ${result.basvuruId}`);
+                    }
+                } catch (apiError) {
+                    console.log('API call failed, falling back to localStorage:', apiError);
+                }
                 
-                // Store in localStorage (simulating database)
-                const existingRegistrations = JSON.parse(localStorage.getItem('registrations') || '[]');
-                existingRegistrations.push(registrationData);
-                localStorage.setItem('registrations', JSON.stringify(existingRegistrations));
-                
-                // Show success
-                showSuccess(`Başvurunuz başarıyla alındı! Başvuru numaranız: ${registrationId}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
+                // Fallback to localStorage if API failed
+                if (!apiSuccess) {
+                    const registrationId = Date.now().toString();
+                    const registrationData = {
+                        id: registrationId,
+                        ...apiData,
+                        status: 'pending',
+                        createdAt: new Date().toISOString(),
+                        type: selectedBusinessType
+                    };
+                    
+                    // Store in localStorage as fallback
+                    const existingRegistrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+                    existingRegistrations.push(registrationData);
+                    localStorage.setItem('registrations', JSON.stringify(existingRegistrations));
+                    
+                    // Show success
+                    showSuccess(`Başvurunuz başarıyla alındı! Başvuru numaranız: ${registrationId}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
+                }
                 
                 // Reset form
                 event.target.reset();
