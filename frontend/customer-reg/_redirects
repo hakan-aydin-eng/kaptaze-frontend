@@ -1,0 +1,6 @@
+# Customer Registration Redirects
+# Ana sayfa index.html'i gösterir
+/    /index.html   200
+
+# Tüm diğer path'ler de index.html'e yönlendir (SPA behavior)
+/*   /index.html   200

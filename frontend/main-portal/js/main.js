@@ -576,8 +576,8 @@ if ('serviceWorker' in navigator) {
 function openCustomerRegistration() {
     const loadingOverlay = showLoadingOverlay('Restoran kayıt sayfası açılıyor...');
     
-    // Direkt Netlify URL'e yönlendir
-    const registrationUrl = 'https://kaptaze.netlify.app/customer-registration.html';
+    // Yeni customer registration domain'e yönlendir
+    const registrationUrl = 'https://kaptaze-customer-reg.netlify.app';
     
     // Kısa loading sonrası yönlendir
     setTimeout(() => {
