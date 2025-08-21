@@ -10,10 +10,10 @@ const SINGLE_DOMAIN = {
 
 // Free hosting domain configuration - Netlify + Render  
 const FREE_DOMAINS = {
-    customer: 'https://kaptaze-customer.netlify.app',
-    restaurant: 'https://kaptaze-restaurant.netlify.app', 
+    customer: 'https://kaptaze.netlify.app/mobile',
+    restaurant: 'https://kaptaze.netlify.app/restaurant-login.html', 
     admin: 'https://kaptaze.netlify.app/admin-login.html',
-    api: 'https://kaptaze-api.onrender.com'
+    api: 'https://kaptaze.netlify.app/api'
 };
 
 // Paid domain configuration  
@@ -121,8 +121,7 @@ function openPanel(panelType) {
     const loadingOverlay = showLoadingOverlay(`${getPanelDisplayName(panelType)} açılıyor...`);
     
     let targetUrl;
-    
-    // All navigation stays in same tab - web/ folder structure
+
     if (panelType === 'customer') {
         targetUrl = '/customer-registration.html';
     } else if (panelType === 'restaurant') {
@@ -132,7 +131,7 @@ function openPanel(panelType) {
     } else {
         targetUrl = `/${panelType}.html`;
     }
-    
+
     // Single-page navigation - same tab
     setTimeout(() => {
         hideLoadingOverlay(loadingOverlay);
