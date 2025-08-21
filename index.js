@@ -1,6 +1,8 @@
 
-// Mobile app entry point
-import { registerRootComponent } from 'expo';
-import App from './App';
+// Expo frontend kodu aşağıda yorum satırı olarak bırakıldı.
+// import { registerRootComponent } from 'expo';
+// import App from './App';
+// registerRootComponent(App);
 
-registerRootComponent(App);
+// Render için sunucu başlatıcı kod:
+require('./kaptaze-backend/src/server');

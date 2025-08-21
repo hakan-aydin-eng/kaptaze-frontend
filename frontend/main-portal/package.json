@@ -7,8 +7,8 @@
     "dev": "python -m http.server 8080",
     "build": "echo 'Static site - no build needed'",
     "start": "python -m http.server 8080",
-    "deploy": "vercel --prod",
-    "preview": "vercel"
+    "deploy": "netlify deploy --prod",
+    "preview": "netlify deploy"
   },
   "keywords": [
     "kaptaze",
@@ -20,7 +20,7 @@
   ],
   "author": "KapTaze Team",
   "license": "MIT",
-  "homepage": "https://kaptaze.vercel.app",
+  "homepage": "https://kaptaze.netlify.app",
   "repository": {
     "type": "git",
     "url": "https://github.com/kaptaze/kaptaze-app"

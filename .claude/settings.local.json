@@ -56,7 +56,15 @@
       "Bash(start index.html)",
       "WebFetch(domain:render.com)",
       "WebFetch(domain:kaptaze-admin.netlify.app)",
-      "WebFetch(domain:kaptaze.netlify.app)"
+      "WebFetch(domain:kaptaze.netlify.app)",
+      "Bash(start https://kaptaze.netlify.app/customer-registration.html)",
+      "Bash(start https://kaptaze.netlify.app/admin-panel/login.html)",
+      "Bash(netlify:*)",
+      "Bash(del \"C:\\Users\\hakan\\KapTazeApp\\frontend\\main-portal\\vercel.json\")",
+      "Bash(del \"C:\\Users\\hakan\\KapTazeApp\\deploy-free.bat\")",
+      "Bash(del \"C:\\Users\\hakan\\KapTazeApp\\DEPLOY_FREE.md\")",
+      "Bash(del \"C:\\Users\\hakan\\KapTazeApp\\FREE_HOSTING_GUIDE.md\")",
+      "Bash(mongo:*)"
     ],
     "deny": [],
     "ask": [],

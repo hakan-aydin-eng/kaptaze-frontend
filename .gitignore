@@ -39,8 +39,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-.vercel
 kaptaze-backend/
 node_modules/
 .expo/
 .expo-shared/
+# Local Netlify folder
+.netlify

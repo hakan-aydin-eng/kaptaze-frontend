@@ -137,8 +137,7 @@ function openPanel(panelType) {
             if (isHealthy) {
                 // Add slight delay for better UX
                 setTimeout(() => {
-                    window.open(targetUrl, '_blank');
-                    hideLoadingOverlay(loadingOverlay);
+                    window.location.href = targetUrl;
                 }, 1000);
             } else {
                 hideLoadingOverlay(loadingOverlay);
