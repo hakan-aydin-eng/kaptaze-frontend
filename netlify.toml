@@ -8,7 +8,7 @@
 
 [[redirects]]
   from = "/admin-panel/*"
-  to = "/frontend/admin-panel/:splat"
+  to = "web/admin-login.html"
   status = 200
 
 [[redirects]]
@@ -48,7 +48,7 @@
 
 [[redirects]]
   from = "/*"
-  to = "/frontend/main-portal/:splat"
+  to = "web/index.html"
   status = 200
 
 # Headers for CORS
