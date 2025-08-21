@@ -184,18 +184,41 @@ async function checkAPIStatus() {
     const statusTextElement = document.getElementById('api-status-text');
     
     try {
-        // For demo purposes, simulate API as offline but working with localStorage
-        // This prevents the red error state while using local data
-        apiConnected = false; // Set to false to use localStorage data
+        // Test Netlify Functions API connection
+        console.log('🔄 Testing API connection...');
+        const response = await fetch('/.netlify/functions/shared-storage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get' })
+        });
         
-        // Update UI for local data mode (not an error)
-        if (statusElement) {
-            statusElement.classList.remove('error');
-            statusElement.querySelector('span').textContent = 'Yerel Veri Modu';
+        if (response.ok) {
+            console.log('✅ API connection successful');
+            apiConnected = true;
+        } else {
+            console.log('❌ API connection failed:', response.status);
+            apiConnected = false;
         }
         
-        if (indicatorElement) {
-            indicatorElement.classList.add('active');
+        // Update UI based on API connection status
+        if (apiConnected) {
+            if (statusElement) {
+                statusElement.classList.remove('error');
+                statusElement.querySelector('span').textContent = 'API (Canlı Veri)';
+            }
+            
+            if (indicatorElement) {
+                indicatorElement.classList.add('active');
+            }
+        } else {
+            if (statusElement) {
+                statusElement.classList.remove('error');
+                statusElement.querySelector('span').textContent = 'API (Yerel Veri)';
+            }
+            
+            if (indicatorElement) {
+                indicatorElement.classList.remove('active');
+            }
         }
         
         if (statusTextElement) {
