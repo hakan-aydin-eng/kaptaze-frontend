@@ -605,3 +605,16 @@ window.closeErrorModal = closeErrorModal;
 window.retryConnection = retryConnection;
 window.scrollToSection = scrollToSection;
 window.handleContactForm = handleContactForm;
+
+// DOM Ready initialization
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📱 KapTaze Ana Portal yüklendi');
+    console.log('✅ openCustomerRegistration fonksiyonu:', typeof openCustomerRegistration);
+    
+    // Test if function is available globally
+    if (typeof window.openCustomerRegistration === 'function') {
+        console.log('✅ Global openCustomerRegistration function is available');
+    } else {
+        console.error('❌ Global openCustomerRegistration function is NOT available');
+    }
+});
