@@ -531,6 +531,11 @@ body {
     animation: pulse 2s infinite;
 }
 
+.status-indicator.warning {
+    background: #f59e0b;
+    animation: pulse 2s infinite;
+}
+
 /* Settings */
 .settings-grid {
     display: grid;

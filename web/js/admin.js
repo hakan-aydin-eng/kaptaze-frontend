@@ -37,7 +37,7 @@ function checkAuthentication() {
     
     if (!token || !user) {
         // Redirect to login
-        window.location.href = './login.html';
+        window.location.href = '/admin-login.html';
         return false;
     }
     
@@ -51,7 +51,7 @@ function checkAuthentication() {
         if (hoursDiff > 24) {
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminUser');
-            window.location.href = './login.html';
+            window.location.href = '/admin-login.html';
             return false;
         }
         
@@ -65,7 +65,7 @@ function checkAuthentication() {
     } catch (error) {
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminUser');
-        window.location.href = './login.html';
+        window.location.href = '/admin-login.html';
         return false;
     }
 }
@@ -75,7 +75,7 @@ function logout() {
     if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminUser');
-        window.location.href = './login.html';
+        window.location.href = '/admin-login.html';
     }
 }
 
@@ -160,19 +160,25 @@ async function makeAPICall(endpoint, options = {}) {
                 'Content-Type': 'application/json',
                 ...(authToken && { 'Authorization': `Bearer ${authToken}` })
             },
+            timeout: 10000, // 10 second timeout
             ...options
         };
+        
+        console.log(`🌐 Making API call to: ${url}`);
         
         const response = await fetch(url, config);
         
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
         }
         
-        return await response.json();
+        const data = await response.json();
+        console.log(`✅ API call successful: ${endpoint}`);
+        return data;
     } catch (error) {
-        console.error('API Call failed:', error);
-        showNotification('API bağlantı hatası: ' + error.message, 'error');
+        console.warn(`⚠️ API Call failed for ${endpoint}:`, error.message);
+        // Don't show error notification for expected API failures
+        // showNotification('API bağlantı hatası: ' + error.message, 'error');
         return null;
     }
 }
@@ -184,63 +190,30 @@ async function checkAPIStatus() {
     const statusTextElement = document.getElementById('api-status-text');
     
     try {
-        // Test Netlify Functions API connection
         console.log('🔄 Testing API connection...');
+        
+        // Test Netlify Functions API connection with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
         const response = await fetch('/.netlify/functions/shared-storage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'get' })
+            body: JSON.stringify({ action: 'get' }),
+            signal: controller.signal
         });
         
-        if (response.ok) {
-            console.log('✅ API connection successful');
-            apiConnected = true;
-        } else {
-            console.log('❌ API connection failed:', response.status);
-            apiConnected = false;
-        }
-        
-        // Update UI based on API connection status
-        if (apiConnected) {
-            if (statusElement) {
-                statusElement.classList.remove('error');
-                statusElement.querySelector('span').textContent = 'API (Canlı Veri)';
-            }
-            
-            if (indicatorElement) {
-                indicatorElement.classList.add('active');
-            }
-        } else {
-            if (statusElement) {
-                statusElement.classList.remove('error');
-                statusElement.querySelector('span').textContent = 'API (Yerel Veri)';
-            }
-            
-            if (indicatorElement) {
-                indicatorElement.classList.remove('active');
-            }
-        }
-        
-        if (statusTextElement) {
-            statusTextElement.textContent = 'Aktif (Yerel)';
-        }
-        
-        console.log('📁 Data Mode: Using LocalStorage');
-        
-        // Uncomment below to test real API connection
-        /*
-        const response = await fetch(API_BASE_URL + API_ENDPOINTS.health, {
-            method: 'GET',
-            timeout: 5000
-        });
+        clearTimeout(timeoutId);
         
         if (response.ok) {
-            const data = await response.json();
+            const result = await response.json();
+            console.log('✅ API connection successful, data received');
             apiConnected = true;
             
+            // Update UI for successful API connection
             if (statusElement) {
                 statusElement.classList.remove('error');
-                statusElement.querySelector('span').textContent = 'API Bağlı';
+                statusElement.querySelector('span').textContent = 'API Bağlı (Canlı)';
             }
             
             if (indicatorElement) {
@@ -248,32 +221,32 @@ async function checkAPIStatus() {
             }
             
             if (statusTextElement) {
-                statusTextElement.textContent = 'Aktif';
+                statusTextElement.textContent = 'Aktif (Netlify)';
             }
-            
-            console.log('✅ API Status: Healthy');
         } else {
-            throw new Error('API not responding');
+            throw new Error(`API responded with status: ${response.status}`);
         }
-        */
+        
     } catch (error) {
+        console.log('⚠️ API connection failed, using localStorage:', error.name);
         apiConnected = false;
         
-        // Update UI for error state
+        // Update UI for localStorage mode (not error state)
         if (statusElement) {
-            statusElement.classList.add('error');
-            statusElement.querySelector('span').textContent = 'API Bağlantı Sorunu';
+            statusElement.classList.remove('error');
+            statusElement.querySelector('span').textContent = 'Yerel Veri Modu';
         }
         
         if (indicatorElement) {
             indicatorElement.classList.remove('active');
+            indicatorElement.classList.add('warning');
         }
         
         if (statusTextElement) {
-            statusTextElement.textContent = 'Hata';
+            statusTextElement.textContent = 'LocalStorage';
         }
         
-        console.warn('⚠️ API Status: Connection Failed -', error.message);
+        console.log('📁 Data Mode: Using LocalStorage fallback');
     }
 }
 
