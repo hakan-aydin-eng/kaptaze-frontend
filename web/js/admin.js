@@ -389,8 +389,10 @@ function renderUsersTable(users) {
 }
 
 function renderMockUsersData() {
-    // Load registrations from localStorage
-    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    // Load registrations from shared data system (with fallback)
+    const registrations = window.KapTazeData ? 
+        window.KapTazeData.getRegistrations() : 
+        JSON.parse(localStorage.getItem('registrations') || '[]');
     const customerRegistrations = registrations.filter(reg => reg.type === 'customer');
     
     const mockUsers = [
