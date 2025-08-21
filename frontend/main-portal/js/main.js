@@ -559,15 +559,26 @@ function trackPlatformAccess(panelType) {
     console.log(`Platform access tracked: ${panelType}`);
 }
 
-// Service Worker registration (for PWA features)
+// Service Worker registration (for PWA features) - Optional
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js')
+        // Check if sw.js exists before registering
+        fetch('/sw.js', { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    return navigator.serviceWorker.register('/sw.js');
+                } else {
+                    console.log('⚠️ ServiceWorker file not found, skipping registration');
+                    return null;
+                }
+            })
             .then(function(registration) {
-                console.log('ServiceWorker registration successful');
+                if (registration) {
+                    console.log('✅ ServiceWorker registration successful');
+                }
             })
             .catch(function(err) {
-                console.log('ServiceWorker registration failed');
+                console.log('⚠️ ServiceWorker registration failed:', err.message);
             });
     });
 }
@@ -610,6 +621,18 @@ window.handleContactForm = handleContactForm;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📱 KapTaze Ana Portal yüklendi');
     console.log('✅ openCustomerRegistration fonksiyonu:', typeof openCustomerRegistration);
+    
+    // Bind customer registration button
+    const customerBtn = document.getElementById('customerRegistrationBtn');
+    if (customerBtn) {
+        customerBtn.addEventListener('click', function() {
+            console.log('🔘 Customer registration button clicked');
+            openCustomerRegistration();
+        });
+        console.log('✅ Customer registration button event listener added');
+    } else {
+        console.error('❌ Customer registration button not found');
+    }
     
     // Test if function is available globally
     if (typeof window.openCustomerRegistration === 'function') {
