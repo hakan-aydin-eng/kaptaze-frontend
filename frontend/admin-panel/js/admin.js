@@ -718,6 +718,9 @@ async function renderMockApplicationsData() {
             if (result.basarili && result.basvurular) {
                 registrations = result.basvurular;
                 console.log('✅ Başvurular API\'den yüklendi:', registrations);
+            } else {
+                console.log('📋 API response:', result);
+                registrations = result.basvurular || [];
             }
         }
     } catch (error) {

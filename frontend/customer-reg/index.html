@@ -591,18 +591,23 @@
                 // Try API first, fallback to localStorage
                 let apiSuccess = false;
                 try {
-                    const response = await fetch('/.netlify/functions/register', {
+                    const response = await fetch('https://kaptaze-admin.netlify.app/.netlify/functions/shared-storage', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify(apiData)
+                        body: JSON.stringify({
+                            action: 'add',
+                            data: apiData
+                        })
                     });
 
                     if (response.ok) {
                         const result = await response.json();
-                        apiSuccess = true;
-                        showSuccess(`${result.mesaj} Başvuru numaranız: ${result.basvuruId}`);
+                        if (result.success) {
+                            apiSuccess = true;
+                            showSuccess(`Başvurunuz başarıyla kaydedildi! Admin onayından sonra bilgilendirileceksiniz.`);
+                        }
                     }
                 } catch (apiError) {
                     console.log('API call failed, falling back to localStorage:', apiError);

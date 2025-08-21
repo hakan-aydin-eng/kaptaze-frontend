@@ -16,6 +16,9 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'https://kaptaze.netlify.app',
+    'https://kaptaze-admin.netlify.app',
+    'https://kaptaze-customer.netlify.app',
+    'https://kaptaze-restaurant.netlify.app',
     'https://kaptaze.render.com',
     process.env.FRONTEND_URL || 'http://localhost:3000'
   ],
