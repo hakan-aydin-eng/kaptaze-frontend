@@ -22,11 +22,6 @@
   status = 200
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-[[redirects]]
   from = "/customer-registration.html"
   to = "/frontend/customer-reg/index.html"
   status = 200
@@ -44,6 +39,11 @@
 [[redirects]]
   from = "/kayit"
   to = "/frontend/customer-reg/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
   status = 200
 
 [[redirects]]
