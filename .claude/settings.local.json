@@ -67,7 +67,8 @@
       "Bash(mongo:*)",
       "Bash(git pull:*)",
       "Bash(start https://app.netlify.com/projects/kaptaze)",
-      "Bash(del netlify.toml)"
+      "Bash(del netlify.toml)",
+      "Bash(git revert:*)"
     ],
     "deny": [],
     "ask": [],
