@@ -576,46 +576,26 @@ if ('serviceWorker' in navigator) {
 function openCustomerRegistration() {
     const loadingOverlay = showLoadingOverlay('Restoran kayıt sayfası açılıyor...');
     
-    // Production Netlify domain'de customer registration URL
+    // Direkt Netlify URL'e yönlendir
     const registrationUrl = 'https://kaptaze.netlify.app/customer-registration.html';
     
-    // Check if registration page is accessible
-    checkDomainHealth(registrationUrl)
-        .then(isHealthy => {
-            if (isHealthy) {
-                setTimeout(() => {
-                    window.open(registrationUrl, '_blank');
-                    hideLoadingOverlay(loadingOverlay);
-                }, 1000);
-            } else {
-                hideLoadingOverlay(loadingOverlay);
-                
-                // Fallback: relative path for development
-                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                    window.open('./customer-registration.html', '_blank');
-                } else {
-                    showErrorModal(
-                        'Kayıt Sayfası Erişim Hatası',
-                        'Restoran kayıt sayfası şu anda erişilemiyor. Lütfen daha sonra tekrar deneyin.',
-                        'registration'
-                    );
-                }
-            }
-        })
-        .catch(() => {
+    // Kısa loading sonrası yönlendir
+    setTimeout(() => {
+        try {
+            window.open(registrationUrl, '_blank');
+            hideLoadingOverlay(loadingOverlay);
+        } catch (error) {
             hideLoadingOverlay(loadingOverlay);
             
-            // Fallback for local development
+            // Fallback for development
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 window.open('./customer-registration.html', '_blank');
             } else {
-                showErrorModal(
-                    'Kayıt Sayfası Erişim Hatası',
-                    'Restoran kayıt sayfası şu anda erişilemiyor. Lütfen daha sonra tekrar deneyin.',
-                    'registration'
-                );
+                // Direct navigation fallback
+                window.location.href = registrationUrl;
             }
-        });
+        }
+    }, 800);
 }
 
 // Export functions for global access
