@@ -127,7 +127,7 @@ function openPanel(panelType) {
         if (isDevelopment) {
             targetUrl = 'http://localhost:3002/login.html';
         } else {
-            targetUrl = 'https://kaptaze-restaurant.netlify.app/login.html';
+            targetUrl = 'https://kaptaze.netlify.app/restaurant-login.html';
         }
     }
     
@@ -587,8 +587,8 @@ if ('serviceWorker' in navigator) {
 function openCustomerRegistration() {
     const loadingOverlay = showLoadingOverlay('Restoran kayıt sayfası açılıyor...');
     
-    // Customer registration domain'e yönlendir
-    const registrationUrl = 'https://kaptaze-customer.netlify.app';
+    // Customer registration unified domain'e yönlendir
+    const registrationUrl = 'https://kaptaze.netlify.app/customer-registration.html';
     
     // Kısa loading sonrası yönlendir
     setTimeout(() => {
