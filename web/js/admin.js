@@ -639,6 +639,15 @@ function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('active');
 }
 
+function generateRandomPassword(length = 8) {
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let password = '';
+    for (let i = 0; i < length; i++) {
+        password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+}
+
 function showNotification(message, type = 'info') {
     // Simple notification system
     const notification = document.createElement('div');
@@ -935,12 +944,10 @@ async function approveApplication(applicationId) {
                 showNotification(result.mesaj, 'success');
                 loadApplicationsData(); // Reload applications
                 
-                // Also reload restaurants and users data to show approved items
-                if (currentSection === 'restaurants') {
-                    loadRestaurantsData();
-                } else if (currentSection === 'users') {
-                    loadUsersData();
-                }
+                // Reload all related sections
+                loadRestaurantsData();
+                loadUsersData();
+                loadDashboardData(); // Update dashboard stats
                 return;
             }
         }
@@ -950,42 +957,74 @@ async function approveApplication(applicationId) {
 
     // Fallback to localStorage
     const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    const application = registrations.find(app => app.id === applicationId);
+    
+    if (!application) {
+        showNotification('Başvuru bulunamadı!', 'error');
+        return;
+    }
+    
     const updatedRegistrations = registrations.map(app => {
         if (app.id === applicationId) {
             app.status = 'approved';
             app.approvedAt = new Date().toISOString();
+            
+            // If it's a restaurant application, create restaurant credentials
+            if (app.type === 'restaurant' && !app.restaurantUsername) {
+                const businessName = app.businessName.toLowerCase().replace(/\s+/g, '');
+                app.restaurantUsername = businessName;
+                app.restaurantPassword = generateRandomPassword();
+                console.log(`🏪 Restaurant credentials created: ${app.restaurantUsername} / ${app.restaurantPassword}`);
+            }
         }
         return app;
     });
     
     localStorage.setItem('registrations', JSON.stringify(updatedRegistrations));
     
-    showNotification('Başvuru başarıyla onaylandı!', 'success');
-    loadApplicationsData(); // Reload applications
+    const successMessage = application.type === 'restaurant' 
+        ? 'Restoran başvurusu onaylandı! Giriş bilgileri oluşturuldu.' 
+        : 'Müşteri başvurusu onaylandı!';
     
-    // Also reload restaurants and users data to show approved items
-    if (currentSection === 'restaurants') {
-        loadRestaurantsData();
-    } else if (currentSection === 'users') {
-        loadUsersData();
-    }
+    showNotification(successMessage, 'success');
+    
+    // Reload all related sections
+    loadApplicationsData();
+    loadRestaurantsData();
+    loadUsersData(); 
+    loadDashboardData(); // Update dashboard stats
 }
 
 function rejectApplication(applicationId) {
     if (confirm('Bu başvuruyu reddetmek istediğinizden emin misiniz?')) {
         const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+        const application = registrations.find(app => app.id === applicationId);
+        
+        if (!application) {
+            showNotification('Başvuru bulunamadı!', 'error');
+            return;
+        }
+        
         const updatedRegistrations = registrations.map(app => {
             if (app.id === applicationId) {
                 app.status = 'rejected';
                 app.rejectedAt = new Date().toISOString();
+                app.rejectionReason = 'Admin tarafından reddedildi';
             }
             return app;
         });
         
         localStorage.setItem('registrations', JSON.stringify(updatedRegistrations));
         
-        showNotification('Başvuru reddedildi.', 'error');
-        loadApplicationsData(); // Reload applications
+        const rejectionMessage = application.type === 'restaurant' 
+            ? 'Restoran başvurusu reddedildi.' 
+            : 'Müşteri başvurusu reddedildi.';
+        
+        showNotification(rejectionMessage, 'error');
+        
+        // Reload applications data
+        loadApplicationsData();
+        loadDashboardData(); // Update dashboard stats
     }
 }
 
