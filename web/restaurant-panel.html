@@ -51,14 +51,18 @@
         </nav>
 
         <div class="sidebar-footer">
-            <a href="https://kaptaze.netlify.app" class="footer-link">
+            <a href="/" class="footer-link">
                 <i class="fas fa-home"></i>
                 Ana Portal
             </a>
-            <a href="./admin-login.html" class="footer-link">
+            <a href="/admin-login.html" class="footer-link">
                 <i class="fas fa-shield-alt"></i>
                 Admin Panel
             </a>
+            <button class="footer-link logout-btn" onclick="logout()" style="background: none; border: none; color: inherit; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; width: 100%; text-align: left;">
+                <i class="fas fa-sign-out-alt"></i>
+                Çıkış Yap
+            </button>
         </div>
     </div>
 
@@ -487,5 +491,38 @@
     </div>
 
     <script src="./js/restaurant.js"></script>
+    <script>
+        // Logout function for restaurant panel
+        function logout() {
+            if (confirm('Çıkış yapmak istediğiniz emin misiniz?')) {
+                // Clear authentication data
+                localStorage.removeItem('restaurantToken');
+                localStorage.removeItem('restaurantUser');
+                
+                // Redirect to restaurant login - same tab navigation
+                window.location.href = '/restaurant-login.html';
+            }
+        }
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('restaurantToken');
+            const user = localStorage.getItem('restaurantUser');
+            
+            if (!token || !user) {
+                // Not authenticated, redirect to login
+                window.location.href = '/restaurant-login.html';
+                return;
+            }
+            
+            // Load user data and update UI
+            try {
+                const userData = JSON.parse(user);
+                document.getElementById('restaurant-name').textContent = userData.name || 'Restoran Paneli';
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        });
+    </script>
 </body>
 </html>

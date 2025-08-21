@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Shared Data System -->
-    <script src="./js/shared.js"></script>
+    <script src="./js/shared.js?v=2025.08.21"></script>
     
     <style>
         * {
@@ -214,11 +214,11 @@
         </div>
         
         <div class="footer-links">
-            <a href="https://kaptaze.netlify.app" class="footer-link">
+            <a href="/" class="footer-link">
                 <i class="fas fa-home"></i>
                 Ana Portal
             </a>
-            <a href="https://kaptaze.netlify.app/restaurant-login.html" class="footer-link">
+            <a href="/restaurant-login.html" class="footer-link">
                 <i class="fas fa-store"></i>
                 Restoran Panel
             </a>
@@ -294,9 +294,9 @@
                         loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı!';
                         loginBtn.style.background = '#059669';
                         
-                        // Redirect to admin panel
+                        // Redirect to admin panel - same tab navigation
                         setTimeout(() => {
-                            window.location.href = './index.html';
+                            window.location.href = '/admin-panel.html';
                         }, 1000);
                     } else {
                         throw new Error('Kullanıcı adı veya şifre hatalı');

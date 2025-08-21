@@ -398,6 +398,22 @@
 
     <script src="./js/admin.js"></script>
     <script>
+        // Authentication check and logout function
+        function isAuthenticated() {
+            return localStorage.getItem('adminToken') && localStorage.getItem('adminUser');
+        }
+
+        function logout() {
+            if (confirm('Çıkış yapmak istediğiniz emin misiniz?')) {
+                // Clear authentication data
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                
+                // Redirect to admin login - same tab navigation
+                window.location.href = '/admin-login.html';
+            }
+        }
+
         // Authentication check - redirect to login if not authenticated
         document.addEventListener('DOMContentLoaded', function() {
             if (!isAuthenticated()) {
