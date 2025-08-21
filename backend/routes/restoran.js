@@ -355,4 +355,98 @@ router.get('/kategoriler/liste', async (req, res) => {
   }
 });
 
+// @route   POST /api/restoran/web-basvuru
+// @desc    Web'den restoran başvurusu
+// @access  Public
+router.post('/web-basvuru', [
+  body('firstName')
+    .notEmpty()
+    .withMessage('Ad zorunludur')
+    .isLength({ min: 2 })
+    .withMessage('Ad en az 2 karakter olmalıdır'),
+  body('lastName')
+    .notEmpty()
+    .withMessage('Soyad zorunludur')
+    .isLength({ min: 2 })
+    .withMessage('Soyad en az 2 karakter olmalıdır'),
+  body('email')
+    .isEmail()
+    .withMessage('Geçerli bir e-posta adresi girin')
+    .normalizeEmail(),
+  body('phone')
+    .optional()
+    .isMobilePhone('tr-TR')
+    .withMessage('Geçerli bir telefon numarası girin'),
+  body('businessName')
+    .notEmpty()
+    .withMessage('İşletme adı zorunludur')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('İşletme adı 2-100 karakter arasında olmalıdır'),
+  body('businessCategory')
+    .notEmpty()
+    .withMessage('İşletme kategorisi zorunludur'),
+  body('businessAddress')
+    .notEmpty()
+    .withMessage('İşletme adresi zorunludur'),
+  body('username')
+    .notEmpty()
+    .withMessage('Kullanıcı adı zorunludur')
+    .isLength({ min: 3, max: 50 })
+    .withMessage('Kullanıcı adı 3-50 karakter arasında olmalıdır'),
+  body('password')
+    .isLength({ min: 6 })
+    .withMessage('Şifre en az 6 karakter olmalıdır')
+], validasyonKontrol, async (req, res) => {
+  try {
+    const { 
+      firstName, 
+      lastName, 
+      email, 
+      phone, 
+      businessName, 
+      businessCategory, 
+      businessAddress,
+      username,
+      password 
+    } = req.body;
+
+    // Registration ID oluştur
+    const registrationId = Date.now().toString();
+    
+    // Başvuru verisini oluştur
+    const basvuruData = {
+      id: registrationId,
+      firstName,
+      lastName,
+      email,
+      phone: phone || '',
+      businessName,
+      businessCategory,
+      businessAddress,
+      username,
+      password, // Production'da hashlenecek
+      type: 'restaurant',
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+
+    // TODO: Production'da MongoDB'a kaydet
+    console.log('Yeni restoran başvurusu:', basvuruData);
+
+    res.status(201).json({
+      basarili: true,
+      mesaj: 'Restoran başvurunuz başarıyla alındı. İnceleme sonrası e-posta ile bilgilendirileceksiniz.',
+      basvuruId: registrationId,
+      durum: 'pending'
+    });
+
+  } catch (error) {
+    console.error('Web başvuru hatası:', error);
+    res.status(500).json({
+      hata: true,
+      mesaj: 'Başvuru işlemi sırasında hata oluştu. Lütfen daha sonra tekrar deneyin.'
+    });
+  }
+});
+
 module.exports = router;
