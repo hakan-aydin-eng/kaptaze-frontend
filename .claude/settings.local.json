@@ -65,7 +65,9 @@
       "Bash(del \"C:\\Users\\hakan\\KapTazeApp\\DEPLOY_FREE.md\")",
       "Bash(del \"C:\\Users\\hakan\\KapTazeApp\\FREE_HOSTING_GUIDE.md\")",
       "Bash(mongo:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(start https://app.netlify.com/projects/kaptaze)",
+      "Bash(del netlify.toml)"
     ],
     "deny": [],
     "ask": [],
