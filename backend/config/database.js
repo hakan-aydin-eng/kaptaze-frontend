@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const DatabaseConfig = {
     // Default connection settings (Atlas)
     default: {
-        uri: process.env.MONGODB_URI || 'mongodb+srv://kaptaze-admin:kaptaze2024@kaptaze.v8dqkng.mongodb.net/kaptazeappv5?retryWrites=true&w=majority',
+        uri: process.env.MONGODB_URI || 'mongodb+srv://<db_username>:<db_password>@kaptaze-cluster.ra9padd.mongodb.net/kaptazeappv5?retryWrites=true&w=majority&appName=kaptaze-cluster',
         options: {
             useNewUrlParser: true,
             useUnifiedTopology: true,
@@ -21,7 +21,7 @@ const DatabaseConfig = {
     
     // Development environment (Atlas)
     development: {
-        uri: process.env.MONGODB_URI || 'mongodb+srv://kaptaze-admin:kaptaze2024@kaptaze.v8dqkng.mongodb.net/kaptaze_dev?retryWrites=true&w=majority',
+        uri: process.env.MONGODB_URI || 'mongodb+srv://<db_username>:<db_password>@kaptaze-cluster.ra9padd.mongodb.net/kaptaze_dev?retryWrites=true&w=majority&appName=kaptaze-cluster',
         options: {
             useNewUrlParser: true,
             useUnifiedTopology: true,
@@ -34,7 +34,7 @@ const DatabaseConfig = {
     
     // Production environment (Atlas)
     production: {
-        uri: process.env.MONGODB_URI || 'mongodb+srv://kaptaze-admin:kaptaze2024@kaptaze.v8dqkng.mongodb.net/kaptazeappv5?retryWrites=true&w=majority',
+        uri: process.env.MONGODB_URI || 'mongodb+srv://<db_username>:<db_password>@kaptaze-cluster.ra9padd.mongodb.net/kaptazeappv5?retryWrites=true&w=majority&appName=kaptaze-cluster',
         options: {
             useNewUrlParser: true,
             useUnifiedTopology: true,
@@ -48,7 +48,7 @@ const DatabaseConfig = {
     
     // Test environment (Atlas)
     test: {
-        uri: process.env.MONGODB_TEST_URI || 'mongodb+srv://kaptaze-admin:kaptaze2024@kaptaze.v8dqkng.mongodb.net/kaptaze_test?retryWrites=true&w=majority',
+        uri: process.env.MONGODB_TEST_URI || 'mongodb+srv://<db_username>:<db_password>@kaptaze-cluster.ra9padd.mongodb.net/kaptaze_test?retryWrites=true&w=majority&appName=kaptaze-cluster',
         options: {
             useNewUrlParser: true,
             useUnifiedTopology: true,

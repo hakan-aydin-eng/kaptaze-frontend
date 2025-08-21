@@ -1,5 +1,5 @@
 // API Service for React Native App
-const API_BASE_URL = 'https://kaptaze.netlify.app/.netlify/functions'; // Netlify functions URL
+const API_BASE_URL = 'https://kaptaze-backend.onrender.com/api'; // Render backend URL
 
 class ApiService {
   constructor() {
