@@ -574,7 +574,22 @@ if ('serviceWorker' in navigator) {
 
 // Customer registration function
 function openCustomerRegistration() {
-    window.open('./customer-registration.html', '_blank');
+    // Production'da ve development'da çalışacak şekilde
+    const currentDomain = window.location.origin;
+    const currentPath = window.location.pathname;
+    
+    // Eğer production'da ise (netlify)
+    if (currentDomain.includes('netlify.app') || currentDomain.includes('kaptazeapp.com')) {
+        window.open(`${currentDomain}/customer-registration.html`, '_blank');
+    } 
+    // Eğer development'da ise
+    else if (currentDomain.includes('localhost') || currentDomain.includes('127.0.0.1')) {
+        window.open('./customer-registration.html', '_blank');
+    }
+    // Fallback - relative path
+    else {
+        window.open('./customer-registration.html', '_blank');
+    }
 }
 
 // Export functions for global access
