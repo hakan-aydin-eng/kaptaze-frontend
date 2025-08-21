@@ -413,30 +413,89 @@ class ApiService {
     }
   }
 
-  // Mock data fallback (API çalışmazsa)
+  // Mock data fallback (API çalışmazsa) + Web Test Data
   getMockRestaurants() {
+    // Test için web onaylı restoran mock'u ekle
+    const webMockRestaurants = [
+      {
+        _id: 'web_approved_1',
+        name: 'Admin Onaylı Test Restaurant',
+        category: 'Türk Mutfağı',
+        rating: 4.8,
+        distance: '0.5',
+        image: '🍽️',
+        imageUrl: null,
+        location: {
+          lat: 36.8969,
+          lng: 30.7133,
+          address: 'Web Test Mahallesi, Admin Sokak No:5, Antalya',
+          city: 'Antalya',
+          district: 'Muratpaşa'
+        },
+        phone: '+90 532 111 22 33',
+        email: 'webtest@kaptaze.com',
+        description: 'Web admin panelinden onaylanmış test restoranı',
+        adminNote: 'Web to mobile test - Sistem çalışıyor!',
+        owner: 'Web Test Sahibi',
+        username: 'webtest',
+        packages: [{
+          _id: 'web_pkg_1',
+          name: 'Web Test Paketi',
+          description: 'Admin onaylı paket - Web to Mobile',
+          quantity: 7,
+          originalPrice: 95,
+          salePrice: 60,
+          discount: 37,
+          status: 'available',
+          category: 'Ana Yemek',
+          expiryTime: '19:30'
+        }]
+      },
+      {
+        _id: 'web_approved_2', 
+        name: 'Mobil Entegrasyon Cafe',
+        category: 'Kahve & Atıştırmalık',
+        rating: 4.6,
+        distance: '1.1',
+        image: '☕',
+        imageUrl: null,
+        location: {
+          lat: 36.8945,
+          lng: 30.7098,
+          address: 'Entegrasyon Cad. No:42, Antalya',
+          city: 'Antalya',
+          district: 'Kepez'
+        },
+        phone: '+90 532 444 55 66',
+        email: 'mobile@integration.com',
+        description: 'Mobil entegrasyon test kafesi',
+        adminNote: 'Cross-platform veri akış testi',
+        owner: 'Mobile Test',
+        username: 'mobiletest',
+        packages: [{
+          _id: 'mobile_pkg_1',
+          name: 'Kahve + Kek Seti',
+          description: 'Özel kahve + ev yapımı kek',
+          quantity: 4,
+          originalPrice: 65,
+          salePrice: 40,
+          discount: 38,
+          status: 'available',
+          category: 'Kahve',
+          expiryTime: '17:00'
+        }]
+      }
+    ];
+
     return {
       success: true,
       data: {
-        restaurants: [
-          {
-            _id: 'mock1',
-            ad: 'Demo Restoran',
-            kategori: 'Türk Mutfağı',
-            puan: 4.5,
-            konum: { mesafe: '1.2km' },
-            resimUrl: null,
-            packages: [{
-              _id: 'p1',
-              ad: 'Sürpriz Paketi',
-              aciklama: 'Demo paket',
-              orijinalFiyat: 100,
-              satisFiyati: 60,
-              stokAdedi: 3,
-              durum: 'pickup_now'
-            }]
-          }
-        ]
+        restaurants: webMockRestaurants,
+        meta: {
+          source: 'mock_with_web_test',
+          note: 'Mock data includes web-approved restaurant simulation',
+          total: webMockRestaurants.length
+        }
       }
     };
   }

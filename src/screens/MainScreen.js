@@ -112,10 +112,24 @@ const MainScreen = ({ navigation }) => {
         console.log('API failed, using fallback data');
       }
       
+      // Mock data'dan web test restoranları al
+      let mockRestaurants = [];
+      try {
+        const mockData = await apiService.getMockRestaurants();
+        if (mockData.success && mockData.data.restaurants) {
+          mockRestaurants = mockData.data.restaurants;
+          console.log('🎭 Mock restaurants loaded:', mockRestaurants.length);
+          console.log('📋 Mock restaurant names:', mockRestaurants.map(r => r.name));
+        }
+      } catch (error) {
+        console.log('Mock data failed:', error);
+      }
+      
       // Tüm veri kaynaklarını birleştir
       const allRestaurants = [
         ...webRestaurants, // Web'den onaylanan restoranlar öncelikli
         ...apiRestaurants,
+        ...mockRestaurants, // Web test simülasyonu
         ...antalyaRestaurants // Varsayılan demo restoranlar
       ];
       
@@ -128,7 +142,7 @@ const MainScreen = ({ navigation }) => {
       setDisplayedRestaurants(uniqueRestaurants.slice(0, ITEMS_PER_PAGE));
       setHasMore(uniqueRestaurants.length > ITEMS_PER_PAGE);
       
-      console.log(`📱 Toplam ${uniqueRestaurants.length} restoran yüklendi (${webRestaurants.length} web + ${apiRestaurants.length} API + ${antalyaRestaurants.length} yerel)`);
+      console.log(`📱 Toplam ${uniqueRestaurants.length} restoran yüklendi (${webRestaurants.length} web + ${apiRestaurants.length} API + ${mockRestaurants.length} mock + ${antalyaRestaurants.length} yerel)`);
       
     } catch (error) {
       console.error('Restaurant loading error:', error);

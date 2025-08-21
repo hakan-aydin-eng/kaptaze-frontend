@@ -20,23 +20,52 @@
                 lastName: 'Restoran',
                 email: 'test@restaurant.com',
                 phone: '0532 123 45 67',
-                businessName: 'Test Restaurant',
+                businessName: 'Test Restaurant - Mobile',
                 businessCategory: 'Geleneksel Türk',
                 businessAddress: 'Test Mahallesi, Test Sokak No:1',
                 city: 'Antalya',
                 district: 'Muratpaşa',
-                restaurantUsername: 'testrestoran',
+                restaurantUsername: 'testmobile',
                 restaurantPassword: 'test123',
                 terms: true,
-                status: 'pending',
+                status: 'approved', // Direkt approved olarak ekle
+                createdAt: new Date().toISOString(),
+                approvedAt: new Date().toISOString()
+            };
+            
+            const testPackage = {
+                id: 'pkg_' + Date.now(),
+                name: 'Mobile Test Paketi',
+                description: 'Mobil uygulama test paketi',
+                originalPrice: 120,
+                discountPrice: 75,
+                quantity: 3,
+                category: 'Ana Yemek',
+                expiryTime: '20:00',
+                restaurantId: testRegistration.id,
                 createdAt: new Date().toISOString()
             };
             
             const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
-            registrations.push(testRegistration);
-            localStorage.setItem('registrations', JSON.stringify(registrations));
+            const packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
             
-            document.getElementById('output').innerHTML = '<p style="color: green;">Test başvurusu eklendi!</p>';
+            registrations.push(testRegistration);
+            packages.push(testPackage);
+            
+            localStorage.setItem('registrations', JSON.stringify(registrations));
+            localStorage.setItem('restaurantPackages', JSON.stringify(packages));
+            
+            document.getElementById('output').innerHTML = '<p style="color: green;">Test başvurusu + paket eklendi! (Status: approved)</p>';
+            
+            // Mobil uygulamaya da cross-domain mesaj gönder
+            try {
+                window.postMessage({
+                    type: 'NEW_RESTAURANT_DATA',
+                    data: { restaurant: testRegistration, package: testPackage }
+                }, '*');
+            } catch (e) {
+                console.log('Cross-domain message failed:', e);
+            }
         }
         
         function clearRegistrations() {

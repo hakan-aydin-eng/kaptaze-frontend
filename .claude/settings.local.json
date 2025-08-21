@@ -50,7 +50,9 @@
       "Bash(npx netlify-cli deploy:*)",
       "Bash(start frontend/main-portal/customer-registration.html)",
       "Bash(start test-registration.html)",
-      "Bash(start frontend/admin-panel/login.html)"
+      "Bash(start frontend/admin-panel/login.html)",
+      "Bash(xcopy:*)",
+      "Bash(robocopy:*)"
     ],
     "deny": [],
     "ask": [],
