@@ -27,8 +27,10 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // TODO: Production'da MongoDB'dan çek
-    // Şimdilik mock data dön
+    // Get real registrations from global store + add mock data
+    const realRegistrations = global.registrations || [];
+    
+    // Add some mock data for demo
     const mockRegistrations = [
       {
         id: '1734789123456',
@@ -59,13 +61,20 @@ exports.handler = async (event, context) => {
         createdAt: new Date(Date.now() - 86400000).toISOString() // 1 gün önce
       }
     ];
+    
+    // Combine real + mock data
+    const allRegistrations = [...realRegistrations, ...mockRegistrations];
+    
+    console.log('📋 Total registrations returned:', allRegistrations.length);
+    console.log('🔄 Real registrations:', realRegistrations.length);
+    console.log('🎭 Mock registrations:', mockRegistrations.length);
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         basarili: true,
-        basvurular: mockRegistrations
+        basvurular: allRegistrations
       }),
     };
 

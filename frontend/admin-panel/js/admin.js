@@ -708,7 +708,11 @@ async function renderMockApplicationsData() {
     
     try {
         // Try to fetch from Netlify Functions API first
-        const response = await fetch('https://kaptaze.netlify.app/.netlify/functions/get-registrations');
+        const response = await fetch('/.netlify/functions/shared-storage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get' })
+        });
         if (response.ok) {
             const result = await response.json();
             if (result.basarili && result.basvurular) {

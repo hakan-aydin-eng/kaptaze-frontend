@@ -55,13 +55,13 @@ exports.handler = async (event, context) => {
       type: data.businessType || 'restaurant'
     };
 
-    // Store in environment variable (temporary solution)
-    // In production, this would go to MongoDB
-    console.log('New registration:', registrationData);
-
-    // Simulate database storage
-    // For now, we'll use a simple file-based storage
-    // In production, integrate with MongoDB Atlas
+    // Store in a simple global array (will reset on each deploy)
+    // This is a temporary solution for demo purposes
+    global.registrations = global.registrations || [];
+    global.registrations.push(registrationData);
+    
+    console.log('✅ Yeni kayıt eklendi:', registrationData.businessName);
+    console.log('📊 Toplam kayıt:', global.registrations.length);
 
     return {
       statusCode: 200,
