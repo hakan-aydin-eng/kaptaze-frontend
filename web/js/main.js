@@ -3,8 +3,8 @@
 // Single domain configuration - All under kaptaze.netlify.app
 const SINGLE_DOMAIN = {
     customer: 'https://kaptaze.netlify.app/mobile',
-    restaurant: 'https://kaptaze.netlify.app/restaurant-panel', 
-    admin: 'https://kaptaze.netlify.app/admin-panel',
+    restaurant: 'https://kaptaze.netlify.app/restaurant-login.html', 
+    admin: 'https://kaptaze.netlify.app/admin-login.html',
     api: 'https://kaptaze.netlify.app/api'
 };
 
