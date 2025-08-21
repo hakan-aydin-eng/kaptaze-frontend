@@ -695,17 +695,36 @@ async function loadApplicationsData() {
             }
         } else {
             console.log('📁 Using localStorage data...');
-            renderMockApplicationsData();
+            await renderMockApplicationsData();
         }
     } catch (error) {
-        renderMockApplicationsData();
+        await renderMockApplicationsData();
         console.error('Applications loading failed, using mock data:', error);
     }
 }
 
-function renderMockApplicationsData() {
-    // Load registrations from localStorage
-    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+async function renderMockApplicationsData() {
+    let registrations = [];
+    
+    try {
+        // Try to fetch from Netlify Functions API first
+        const response = await fetch('/.netlify/functions/get-registrations');
+        if (response.ok) {
+            const result = await response.json();
+            if (result.basarili && result.basvurular) {
+                registrations = result.basvurular;
+                console.log('✅ Başvurular API\'den yüklendi:', registrations);
+            }
+        }
+    } catch (error) {
+        console.log('⚠️ API call failed, falling back to localStorage:', error);
+    }
+    
+    // Fallback to localStorage if API failed or no data
+    if (registrations.length === 0) {
+        registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+        console.log('📋 LocalStorage\'dan yüklenen başvurular:', registrations);
+    }
     
     // Debug: Log the registrations data
     console.log('📋 All Registrations:', registrations);
