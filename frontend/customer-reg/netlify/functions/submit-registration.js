@@ -47,6 +47,7 @@ exports.handler = async (event, context) => {
     // Try to forward to admin panel API
     let forwardSuccess = false;
     try {
+      console.log('🔄 Forwarding to admin panel API...');
       const adminResponse = await fetch('https://kaptaze-admin.netlify.app/.netlify/functions/shared-storage', {
         method: 'POST',
         headers: {
@@ -58,12 +59,18 @@ exports.handler = async (event, context) => {
         })
       });
 
+      console.log('📡 Admin API Response Status:', adminResponse.status);
+      
       if (adminResponse.ok) {
+        const adminResult = await adminResponse.json();
+        console.log('📋 Admin API Response:', adminResult);
         forwardSuccess = true;
         console.log('✅ Data forwarded to admin panel successfully');
+      } else {
+        console.error('❌ Admin API HTTP Error:', adminResponse.status);
       }
     } catch (forwardError) {
-      console.log('⚠️ Failed to forward to admin panel:', forwardError.message);
+      console.error('⚠️ Failed to forward to admin panel:', forwardError.message, forwardError);
     }
 
     // Store locally as backup

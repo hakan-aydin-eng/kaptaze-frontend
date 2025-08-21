@@ -708,20 +708,29 @@ async function renderMockApplicationsData() {
     
     try {
         // Try to fetch from Netlify Functions API first
+        console.log('🔄 Admin panel API call başlatılıyor...');
         const response = await fetch('/.netlify/functions/shared-storage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'get' })
         });
+        
+        console.log('📡 API Response Status:', response.status, response.statusText);
+        
         if (response.ok) {
             const result = await response.json();
+            console.log('📋 Full API response:', result);
+            
             if (result.basarili && result.basvurular) {
                 registrations = result.basvurular;
-                console.log('✅ Başvurular API\'den yüklendi:', registrations);
+                console.log('✅ Başvurular API\'den yüklendi:', registrations.length, 'adet');
+                console.log('📄 İlk başvuru örneği:', registrations[0]);
             } else {
-                console.log('📋 API response:', result);
+                console.log('⚠️ API response format unexpected:', result);
                 registrations = result.basvurular || [];
             }
+        } else {
+            console.error('❌ API HTTP Error:', response.status);
         }
     } catch (error) {
         console.log('⚠️ API call failed, falling back to localStorage:', error);
