@@ -116,46 +116,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Platform navigation functions
+// Platform navigation functions - NO NEW TABS
 function openPanel(panelType) {
     const loadingOverlay = showLoadingOverlay(`${getPanelDisplayName(panelType)} açılıyor...`);
     
-    let targetUrl = currentDomains[panelType];
+    let targetUrl;
     
-    // For restaurant panel, redirect to login page
-    if (panelType === 'restaurant') {
-        if (isDevelopment) {
-            targetUrl = 'http://localhost:3002/login.html';
-        } else {
-            targetUrl = 'https://kaptaze.netlify.app/restaurant-login.html';
-        }
+    // All navigation stays in same tab - web/ folder structure
+    if (panelType === 'customer') {
+        targetUrl = '/customer-registration.html';
+    } else if (panelType === 'restaurant') {
+        targetUrl = '/restaurant-login.html';
+    } else if (panelType === 'admin') {
+        targetUrl = '/admin-panel.html';
+    } else {
+        targetUrl = `/${panelType}.html`;
     }
     
-    // Check if the target domain is accessible
-    checkDomainHealth(currentDomains[panelType])
-        .then(isHealthy => {
-            if (isHealthy) {
-                // Add slight delay for better UX
-                setTimeout(() => {
-                    window.location.href = targetUrl;
-                }, 1000);
-            } else {
-                hideLoadingOverlay(loadingOverlay);
-                showErrorModal(
-                    `${getPanelDisplayName(panelType)} Erişim Hatası`,
-                    `${getPanelDisplayName(panelType)} şu anda erişilemiyor. Lütfen daha sonra tekrar deneyin.`,
-                    panelType
-                );
-            }
-        })
-        .catch(() => {
-            hideLoadingOverlay(loadingOverlay);
-            showErrorModal(
-                `${getPanelDisplayName(panelType)} Erişim Hatası`,
-                `${getPanelDisplayName(panelType)} şu anda erişilemiyor. Lütfen daha sonra tekrar deneyin.`,
-                panelType
-            );
-        });
+    // Single-page navigation - same tab
+    setTimeout(() => {
+        hideLoadingOverlay(loadingOverlay);
+        window.location.href = targetUrl;
+    }, 800);
 }
 
 // Get display name for panel type
@@ -582,29 +564,14 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Customer registration function
+// Customer registration function - NO NEW TABS
 function openCustomerRegistration() {
-    const loadingOverlay = showLoadingOverlay('Restoran kayıt sayfası açılıyor...');
+    const loadingOverlay = showLoadingOverlay('Müşteri kayıt sayfası açılıyor...');
     
-    // Customer registration unified domain'e yönlendir
-    const registrationUrl = 'https://kaptaze.netlify.app/customer-registration.html';
-    
-    // Kısa loading sonrası yönlendir
+    // Same tab navigation to customer registration
     setTimeout(() => {
-        try {
-            window.open(registrationUrl, '_blank');
-            hideLoadingOverlay(loadingOverlay);
-        } catch (error) {
-            hideLoadingOverlay(loadingOverlay);
-            
-            // Fallback for development
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                window.open('./customer-registration.html', '_blank');
-            } else {
-                // Direct navigation fallback
-                window.location.href = registrationUrl;
-            }
-        }
+        hideLoadingOverlay(loadingOverlay);
+        window.location.href = '/customer-registration.html';
     }, 800);
 }
 

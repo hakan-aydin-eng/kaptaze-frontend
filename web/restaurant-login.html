@@ -221,11 +221,11 @@
         </div>
         
         <div class="footer-links">
-            <a href="https://kaptaze.netlify.app" class="footer-link">
+            <a href="/" class="footer-link">
                 <i class="fas fa-home"></i>
                 Ana Portal
             </a>
-            <a href="./admin-login.html" class="footer-link">
+            <a href="/admin-panel.html" class="footer-link">
                 <i class="fas fa-shield-alt"></i>
                 Admin Panel
             </a>
@@ -323,7 +323,7 @@
                     
                     // Redirect to restaurant panel
                     setTimeout(() => {
-                        window.location.href = './index.html';
+                        window.location.href = '/restaurant-panel.html';
                     }, 1000);
                 } else {
                     throw new Error('Kullanıcı adı veya şifre hatalı. Lütfen admin onayından sonra kullanabilirsiniz.');
@@ -341,7 +341,7 @@
         
         // Check if already logged in
         if (localStorage.getItem('restaurantToken')) {
-            window.location.href = './index.html';
+            window.location.href = '/restaurant-panel.html';
         }
     </script>
 </body>

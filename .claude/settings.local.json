@@ -64,7 +64,8 @@
       "Bash(del \"C:\\Users\\hakan\\KapTazeApp\\deploy-free.bat\")",
       "Bash(del \"C:\\Users\\hakan\\KapTazeApp\\DEPLOY_FREE.md\")",
       "Bash(del \"C:\\Users\\hakan\\KapTazeApp\\FREE_HOSTING_GUIDE.md\")",
-      "Bash(mongo:*)"
+      "Bash(mongo:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": [],

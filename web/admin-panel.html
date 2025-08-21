@@ -55,11 +55,11 @@
         </nav>
 
         <div class="sidebar-footer">
-            <a href="https://kaptaze.netlify.app" class="footer-link">
+            <a href="/" class="footer-link">
                 <i class="fas fa-home"></i>
                 Ana Portal
             </a>
-            <a href="https://kaptaze.netlify.app/restaurant-login.html" class="footer-link">
+            <a href="/restaurant-login.html" class="footer-link">
                 <i class="fas fa-store"></i>
                 Restoran Panel
             </a>
@@ -401,7 +401,7 @@
         // Authentication check - redirect to login if not authenticated
         document.addEventListener('DOMContentLoaded', function() {
             if (!isAuthenticated()) {
-                window.location.href = './login.html';
+                window.location.href = '/admin-login.html';
             }
         });
     </script>

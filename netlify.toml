@@ -12,33 +12,43 @@
   status = 200
 
 [[redirects]]
-  from = "/restaurant-panel/*"
-  to = "/frontend/restaurant-panel/:splat"
+  from = "/admin/*"
+  to = "web/admin-login.html"
   status = 200
 
 [[redirects]]
-  from = "/mobile/*"
-  to = "/dist/:splat"
+  from = "/restaurant-panel/*"
+  to = "web/restaurant-panel.html"
+  status = 200
+
+[[redirects]]
+  from = "/restaurant-login/*"
+  to = "web/restaurant-login.html"
+  status = 200
+
+[[redirects]]
+  from = "/restaurant/*"
+  to = "web/restaurant-login.html"
   status = 200
 
 [[redirects]]
   from = "/customer-registration.html"
-  to = "/frontend/customer-reg/index.html"
+  to = "web/customer-registration.html"
   status = 200
 
 [[redirects]]
   from = "/customer-registration"
-  to = "/frontend/customer-reg/index.html"
+  to = "web/customer-registration.html"
   status = 200
 
 [[redirects]]
   from = "/register"
-  to = "/frontend/customer-reg/index.html"
+  to = "web/customer-registration.html"
   status = 200
 
 [[redirects]]
   from = "/kayit"
-  to = "/frontend/customer-reg/index.html"
+  to = "web/customer-registration.html"
   status = 200
 
 [[redirects]]
