@@ -708,7 +708,7 @@ async function renderMockApplicationsData() {
     
     try {
         // Try to fetch from Netlify Functions API first
-        const response = await fetch('/.netlify/functions/get-registrations');
+        const response = await fetch('https://kaptaze.netlify.app/.netlify/functions/get-registrations');
         if (response.ok) {
             const result = await response.json();
             if (result.basarili && result.basvurular) {
@@ -904,7 +904,37 @@ function closeApplicationModal() {
     }
 }
 
-function approveApplication(applicationId) {
+async function approveApplication(applicationId) {
+    try {
+        // Try API first
+        const response = await fetch('https://kaptaze.netlify.app/.netlify/functions/approve-registration', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ applicationId: applicationId })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.basarili) {
+                showNotification(result.mesaj, 'success');
+                loadApplicationsData(); // Reload applications
+                
+                // Also reload restaurants and users data to show approved items
+                if (currentSection === 'restaurants') {
+                    loadRestaurantsData();
+                } else if (currentSection === 'users') {
+                    loadUsersData();
+                }
+                return;
+            }
+        }
+    } catch (error) {
+        console.log('API approval failed, falling back to localStorage:', error);
+    }
+
+    // Fallback to localStorage
     const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
     const updatedRegistrations = registrations.map(app => {
         if (app.id === applicationId) {
