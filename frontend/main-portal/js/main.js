@@ -627,7 +627,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (customerBtn) {
         customerBtn.addEventListener('click', function() {
             console.log('🔘 Customer registration button clicked');
-            openCustomerRegistration();
+            console.log('🚀 Opening: https://kaptaze-customer.netlify.app');
+            window.open('https://kaptaze-customer.netlify.app', '_blank');
         });
         console.log('✅ Customer registration button event listener added');
     } else {
