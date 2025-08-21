@@ -1,0 +1,6 @@
+# Admin Panel Redirects
+# Ana sayfada login.html'i göster
+/    /login.html   200
+
+# Diğer static dosyalar
+/*   /:splat   200

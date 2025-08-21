@@ -54,7 +54,8 @@
       "Bash(xcopy:*)",
       "Bash(robocopy:*)",
       "Bash(start index.html)",
-      "WebFetch(domain:render.com)"
+      "WebFetch(domain:render.com)",
+      "WebFetch(domain:kaptaze-admin.netlify.app)"
     ],
     "deny": [],
     "ask": [],

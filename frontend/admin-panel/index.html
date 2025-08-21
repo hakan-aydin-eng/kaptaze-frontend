@@ -394,5 +394,13 @@
     </div>
 
     <script src="./js/admin.js"></script>
+    <script>
+        // Authentication check - redirect to login if not authenticated
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!isAuthenticated()) {
+                window.location.href = './login.html';
+            }
+        });
+    </script>
 </body>
 </html>
