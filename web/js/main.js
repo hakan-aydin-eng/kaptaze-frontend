@@ -121,8 +121,7 @@ function openPanel(panelType) {
     const loadingOverlay = showLoadingOverlay(`${getPanelDisplayName(panelType)} açılıyor...`);
     
     let targetUrl;
-    
-    // All navigation stays in same tab - web/ folder structure
+
     if (panelType === 'customer') {
         targetUrl = '/customer-registration.html';
     } else if (panelType === 'restaurant') {
@@ -132,6 +131,10 @@ function openPanel(panelType) {
     } else {
         targetUrl = `/${panelType}.html`;
     }
+
+    // Yönlendir
+    window.location.href = targetUrl;
+}
     
     // Single-page navigation - same tab
     setTimeout(() => {
