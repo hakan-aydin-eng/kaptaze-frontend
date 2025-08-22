@@ -6,8 +6,9 @@
 window.KapTazeConfig = {
     // Google Maps API Configuration
     maps: {
-        // Production API key for KapTaze
-        apiKey: 'AIzaSyBTPj8fON_ie4OjJUFi1FCDCRD6V6d4xWk',
+        // API key from environment variables (Netlify)
+        // Set GOOGLE_MAPS_API_KEY in Netlify dashboard
+        apiKey: window.GOOGLE_MAPS_API_KEY || null,
         
         // Map configuration
         defaultCenter: { lat: 39.925533, lng: 32.866287 }, // Turkey center
@@ -69,5 +70,14 @@ if (window.KapTazeConfig.features.debugMode) {
         config.maps.apiKey = `${key.substring(0, 4)}...${key.substring(key.length - 4)}`;
     }
     console.log('🔧 KapTaze Config loaded:', config);
-    console.log('🗺️ Maps API: Ready to load');
+    console.log('🗺️ Maps API:', config.maps?.apiKey ? 'Ready to load' : 'Using fallback mode');
+}
+
+// Check API key availability
+if (!window.KapTazeConfig.maps.apiKey) {
+    console.warn('⚠️ Google Maps API key not found. Using fallback map system.');
+    console.info('💡 To enable real maps: Set GOOGLE_MAPS_API_KEY in Netlify environment variables');
+    
+    // Disable maps features if no API key
+    window.KapTazeConfig.features.mapsEnabled = false;
 }
