@@ -596,43 +596,11 @@ async function loadRestaurantsData() {
     try {
         let restaurants = [];
         
-        // Try shared storage first
+        // Try shared storage first using service
         try {
-            console.log('🌐 Loading restaurants from shared storage...');
-            const response = await fetch('/.netlify/functions/shared-storage', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'get'
-                })
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                console.log('📥 Shared storage response:', result);
-                
-                if (result.success && result.data) {
-                    // Get approved restaurants from shared data
-                    const approvedApplications = result.data.applications.filter(app => app.status === 'approved');
-                    const restaurantUsers = result.data.restaurantUsers || [];
-                    const restaurantProfiles = result.data.restaurantProfiles || [];
-                    
-                    restaurants = restaurantProfiles.map(profile => {
-                        const user = restaurantUsers.find(u => u.id === profile.userId);
-                        const application = approvedApplications.find(app => app.id === profile.applicationId);
-                        
-                        return {
-                            ...profile,
-                            user: user,
-                            application: application
-                        };
-                    });
-                    
-                    console.log('✅ Found restaurants from shared storage:', restaurants.length);
-                }
-            }
+            console.log('🌐 Loading restaurants from shared storage service...');
+            restaurants = await window.KapTazeShared.getRestaurants();
+            console.log('✅ Found restaurants from shared storage:', restaurants.length);
         } catch (sharedError) {
             console.log('⚠️ Shared storage failed, trying local database:', sharedError);
         }
@@ -1045,25 +1013,9 @@ async function loadApplicationsData() {
         let applications = [];
         
         try {
-            console.log('🌐 Trying shared storage (Netlify Functions)...');
-            const response = await fetch('/.netlify/functions/shared-storage', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'get'
-                })
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                if (result.success && result.data && result.data.applications) {
-                    applications = result.data.applications;
-                    console.log('📊 Applications from shared storage:', applications.length);
-                    console.log('📋 Shared storage data:', result.data);
-                }
-            }
+            console.log('🌐 Trying shared storage service...');
+            applications = await window.KapTazeShared.getApplications();
+            console.log('📊 Applications from shared storage:', applications.length);
         } catch (sharedError) {
             console.log('⚠️ Shared storage failed, falling back to local database:', sharedError);
         }
@@ -1400,38 +1352,12 @@ async function approveApplication(applicationId) {
         let approvalSuccess = false;
         let approvalResult = null;
         
-        // Try shared storage first
+        // Try shared storage first using service
         try {
-            console.log('🌐 Trying approval in shared storage...');
-            const response = await fetch('/.netlify/functions/shared-storage', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'approveApplication',
-                    data: {
-                        applicationId: applicationId,
-                        credentials: credentials
-                    }
-                })
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                console.log('📥 Shared storage response:', result);
-                if (result.success) {
-                    approvalSuccess = true;
-                    approvalResult = result.data;
-                    console.log('✅ Application approved in shared storage:', approvalResult);
-                } else {
-                    console.error('❌ Shared storage approval failed:', result.error);
-                }
-            } else {
-                console.error('❌ HTTP error:', response.status, response.statusText);
-                const errorText = await response.text();
-                console.error('❌ Response body:', errorText);
-            }
+            console.log('🌐 Trying approval in shared storage service...');
+            approvalResult = await window.KapTazeShared.approveApplication(applicationId, credentials);
+            approvalSuccess = true;
+            console.log('✅ Application approved in shared storage:', approvalResult);
         } catch (sharedError) {
             console.log('⚠️ Shared storage approval failed, trying local database:', sharedError);
         }

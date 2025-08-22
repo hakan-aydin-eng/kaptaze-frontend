@@ -13,6 +13,7 @@
     <!-- Shared Data System -->
     <script src="./js/shared.js?v=2025.08.21.14"></script>
     <script src="./js/database.js"></script>
+    <script src="./js/shared-storage-service.js"></script>
     
     <!-- Configuration -->
     <script src="./js/config.js?v=2025.08.21.14"></script>
@@ -665,42 +666,18 @@
                     businessType: selectedBusinessType
                 };
 
-                // Try shared storage first, fallback to localStorage
+                // Try shared storage first using service, fallback to localStorage
                 let apiSuccess = false;
                 try {
-                    console.log('🌐 Trying shared storage registration...', navigator.userAgent.includes('iPhone') ? '[iOS Device]' : '[Non-iOS Device]');
+                    console.log('🌐 Trying shared storage service...', navigator.userAgent.includes('iPhone') ? '[iOS Device]' : '[Non-iOS Device]');
                     
-                    const response = await fetch('/.netlify/functions/shared-storage', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: 'addApplication',
-                            data: apiData
-                        })
-                    });
-
-                    console.log('📡 Response status:', response.status, response.statusText);
+                    const result = await window.KapTazeShared.addApplication(apiData);
+                    apiSuccess = true;
+                    console.log('✅ Registration service success:', result.id);
+                    showSuccess(`Başvurunuz başarıyla kaydedildi! Başvuru numaranız: ${result.id}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
                     
-                    if (response.ok) {
-                        const result = await response.json();
-                        console.log('📥 Response data:', result);
-                        
-                        if (result.success) {
-                            apiSuccess = true;
-                            console.log('✅ Registration API success:', result.data.id);
-                            showSuccess(`Başvurunuz başarıyla kaydedildi! Başvuru numaranız: ${result.data.id}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
-                        } else {
-                            console.error('❌ Registration API failed:', result);
-                        }
-                    } else {
-                        console.error('❌ HTTP Error:', response.status, response.statusText);
-                        const errorText = await response.text();
-                        console.error('❌ Error body:', errorText);
-                    }
                 } catch (apiError) {
-                    console.error('❌ API call failed, falling back to localStorage:', apiError);
+                    console.error('❌ Shared storage service failed, falling back to localStorage:', apiError);
                     console.error('Error details:', apiError.name, apiError.message);
                 }
                 
