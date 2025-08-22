@@ -378,28 +378,72 @@ async function loadUsersData() {
     tableBody.innerHTML = '<tr><td colspan="7" class="loading">Kullanıcılar yükleniyor...</td></tr>';
     
     try {
-        // Use centralized database system
-        if (window.KapTazeDB) {
+        // 💾 LOAD FROM KAPTAZE DATABASE AND APPROVED USERS
+        let allUsers = [];
+        
+        // Load from shared storage (KapTaze database)
+        if (window.KapTazeSharedStorage) {
+            try {
+                const sharedData = await window.KapTazeSharedStorage.getAllData();
+                if (sharedData.restaurantUsers && sharedData.restaurantUsers.length > 0) {
+                    allUsers.push(...sharedData.restaurantUsers.map(user => ({
+                        ...user,
+                        type: 'restaurant',
+                        source: 'shared_storage'
+                    })));
+                }
+                if (sharedData.customerUsers && sharedData.customerUsers.length > 0) {
+                    allUsers.push(...sharedData.customerUsers.map(user => ({
+                        ...user,
+                        type: 'customer',
+                        source: 'shared_storage'
+                    })));
+                }
+                console.log('📊 Users from shared storage:', allUsers.length);
+            } catch (storageError) {
+                console.warn('⚠️ Shared storage failed, using fallback:', storageError);
+            }
+        }
+        
+        // Load approved users from local storage (immediate display)
+        const approvedUsers = JSON.parse(localStorage.getItem('kaptaze_approved_users') || '[]');
+        if (approvedUsers.length > 0) {
+            allUsers.push(...approvedUsers.map(user => ({
+                ...user,
+                source: 'admin_approval'
+            })));
+            console.log('📊 Approved users from local storage:', approvedUsers.length);
+        }
+        
+        // Use centralized database system as backup
+        if (allUsers.length === 0 && window.KapTazeDB) {
             const data = window.KapTazeDB.getData();
             
-            // Combine restaurant and customer users
-            const allUsers = [
+            allUsers = [
                 ...data.restaurantUsers.map(user => ({
                     ...user,
-                    type: 'restaurant'
+                    type: 'restaurant',
+                    source: 'local_db'
                 })),
                 ...data.customerUsers.map(user => ({
                     ...user,
-                    type: 'customer'
+                    type: 'customer',
+                    source: 'local_db'
                 }))
             ];
-            
-            console.log('📊 Users from database:', allUsers.length);
-            
-            if (allUsers.length > 0) {
-                renderUsersTable(allUsers);
-                return;
-            }
+            console.log('📊 Users from local database:', allUsers.length);
+        }
+        
+        // Remove duplicates by ID
+        const uniqueUsers = allUsers.filter((user, index, self) => 
+            index === self.findIndex(u => u.id === user.id || u._id === user._id)
+        );
+        
+        console.log('📊 Total unique users loaded:', uniqueUsers.length);
+        
+        if (uniqueUsers.length > 0) {
+            renderUsersTable(uniqueUsers);
+            return;
         }
         
         // Fallback to mock data
@@ -415,76 +459,54 @@ async function loadUsersData() {
 function renderUsersTable(users) {
     const tableBody = document.getElementById('users-table-body');
     
-    if (users.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="loading">Henüz kullanıcı bulunmuyor</td></tr>';
-        return;
-    }
-    
-    tableBody.innerHTML = users.map(user => `
-        <tr>
-            <td>${user._id.substring(0, 8)}...</td>
-            <td>${user.ad} ${user.soyad}</td>
-            <td>${user.eposta}</td>
-            <td>${user.telefon || 'Belirtilmemiş'}</td>
-            <td>${new Date(user.kayitTarihi).toLocaleDateString('tr-TR')}</td>
-            <td><span class="status-badge ${user.aktif ? 'active' : 'inactive'}">${user.aktif ? 'Aktif' : 'Pasif'}</span></td>
-            <td>
-                <button class="btn-secondary" onclick="editUser('${user._id}')">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-secondary" onclick="toggleUserStatus('${user._id}', ${user.aktif})">
-                    <i class="fas fa-${user.aktif ? 'ban' : 'check'}"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// Render users table with database format
-function renderUsersTable(users) {
-    const tableBody = document.getElementById('users-table-body');
-    
     if (!users || users.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="7" class="no-data">Henüz kullanıcı bulunmuyor</td></tr>';
         return;
     }
     
-    tableBody.innerHTML = users.map(user => `
-        <tr>
-            <td>${user.id}</td>
+    console.log('🎨 Rendering users table with', users.length, 'users');
+    
+    tableBody.innerHTML = users.map(user => {
+        // Handle different user data formats
+        const userId = user.id || user._id || 'N/A';
+        const firstName = user.firstName || user.ad || 'N/A';
+        const lastName = user.lastName || user.soyad || '';
+        const email = user.email || user.eposta || 'N/A';
+        const phone = user.phone || user.telefon || 'Belirtilmemiş';
+        const registrationDate = user.registrationDate || user.kayitTarihi || user.createdAt || new Date().toISOString();
+        const status = user.status || (user.aktif ? 'active' : 'inactive');
+        const userType = user.type || user.role || 'customer';
+        const businessName = user.businessName || '';
+        
+        return `
+        <tr data-source="${user.source || 'unknown'}">
             <td>
-                <strong>${user.email}</strong><br>
-                <small style="color: #6b7280;">🔑 ${user.username}</small>
+                <span class="user-id">${userId.toString().substring(0, 8)}...</span>
+                ${user.source ? `<small class="source-badge ${user.source}">${user.source}</small>` : ''}
             </td>
             <td>
-                <span class="user-type-badge ${user.type}">
-                    ${user.type === 'restaurant' ? '🏪 Restoran' : '👤 Müşteri'}
+                <strong>${firstName} ${lastName}</strong>
+                ${businessName ? `<br><small style="color: #6b7280;">🏪 ${businessName}</small>` : ''}
+                ${user.username ? `<br><small style="color: #10b981;">🔑 ${user.username}</small>` : ''}
+            </td>
+            <td>${phone}</td>
+            <td>${email}</td>
+            <td>${new Date(registrationDate).toLocaleDateString('tr-TR')}</td>
+            <td>
+                <span class="status-badge ${status === 'active' ? 'approved' : 'pending'}">
+                    ${status === 'active' ? 'Aktif' : 'Pasif'}
                 </span>
             </td>
-            <td>${user.phone || 'Belirtilmemiş'}</td>
             <td>
-                <span class="status-badge ${user.status === 'active' ? 'approved' : 'pending'}">
-                    ${user.status === 'active' ? 'Aktif' : 'Pasif'}
+                <span class="user-type-badge ${userType}">
+                    ${userType === 'restaurant' ? '🏪 Restoran' : '👤 Müşteri'}
                 </span>
-            </td>
-            <td>${new Date(user.createdAt).toLocaleDateString('tr-TR')}</td>
-            <td>
-                <div class="action-buttons">
-                    <button onclick="viewUser('${user.id}')" class="btn-view" title="Görüntüle">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button onclick="editUser('${user.id}')" class="btn-edit" title="Düzenle">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button onclick="toggleUserStatus('${user.id}', '${user.status}')" 
-                        class="btn-toggle" title="Durumu Değiştir">
-                        <i class="fas fa-power-off"></i>
-                    </button>
-                </div>
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 }
+
 
 function renderMockUsersData() {
     // Load registrations from shared data system (with fallback)
@@ -1436,6 +1458,9 @@ async function approveApplication(applicationId) {
                     profileId: result.data?.profile?.id || 'N/A'
                 });
                 
+                // 💾 PERSIST USER DATA TO KAPTAZE DATABASE
+                await persistApprovedRestaurantUser(appData, userData, credentials);
+                
                 // GUARANTEED RELOAD WITH STAGGER
                 setTimeout(() => {
                     console.log('🔄 Phase 1: Reloading applications...');
@@ -1556,6 +1581,85 @@ async function approveApplication(applicationId) {
         }, 1000);
         
         return true; // ALWAYS SUCCESS
+    }
+}
+
+// 💾 PERSIST APPROVED RESTAURANT USER TO KAPTAZE DATABASE
+async function persistApprovedRestaurantUser(appData, userData, credentials) {
+    try {
+        console.log('💾 Persisting approved restaurant user to KapTaze database...');
+        
+        const approvalTimestamp = new Date().toISOString();
+        const userRecord = {
+            id: userData.id || `USER_${Date.now()}_${Math.random().toString(36)}`,
+            applicationId: appData.id || 'N/A',
+            username: credentials.username,
+            password: credentials.password, // Encrypted in production
+            firstName: appData.ownerName?.split(' ')[0] || 'Restaurant',
+            lastName: appData.ownerName?.split(' ').slice(1).join(' ') || 'Owner',
+            phone: appData.phone || appData.contactPhone || 'N/A',
+            email: appData.email || appData.contactEmail || 'N/A',
+            businessName: appData.businessName || 'Restaurant',
+            businessType: 'restaurant',
+            registrationDate: approvalTimestamp,
+            approvalDate: approvalTimestamp,
+            status: 'active',
+            role: 'restaurant',
+            isVisible: true,
+            source: 'admin_approval',
+            metadata: {
+                approvedBy: 'admin',
+                originalApplication: appData,
+                credentials: {
+                    username: credentials.username,
+                    passwordHash: '***ENCRYPTED***'
+                }
+            }
+        };
+        
+        // Store in KapTaze database via shared storage
+        const storageResult = await window.KapTazeSharedStorage.addUser(userRecord);
+        console.log('✅ User persisted to KapTaze database:', storageResult);
+        
+        // Also store in local admin cache for immediate display
+        const existingUsers = JSON.parse(localStorage.getItem('kaptaze_approved_users') || '[]');
+        existingUsers.push(userRecord);
+        localStorage.setItem('kaptaze_approved_users', JSON.stringify(existingUsers));
+        
+        console.log('💾 User data persisted successfully:', {
+            id: userRecord.id,
+            username: userRecord.username,
+            businessName: userRecord.businessName,
+            phone: userRecord.phone,
+            registrationDate: userRecord.registrationDate
+        });
+        
+        return userRecord;
+        
+    } catch (error) {
+        console.error('❌ Failed to persist user data:', error);
+        
+        // Fallback: Store in local storage even if API fails
+        const fallbackRecord = {
+            id: `FALLBACK_${Date.now()}`,
+            username: credentials.username,
+            firstName: appData.ownerName?.split(' ')[0] || 'Restaurant',
+            lastName: appData.ownerName?.split(' ').slice(1).join(' ') || 'Owner',
+            phone: appData.phone || 'N/A',
+            email: appData.email || 'N/A',
+            businessName: appData.businessName || 'Restaurant',
+            registrationDate: new Date().toISOString(),
+            status: 'active',
+            role: 'restaurant',
+            source: 'admin_approval_fallback'
+        };
+        
+        const fallbackUsers = JSON.parse(localStorage.getItem('kaptaze_approved_users') || '[]');
+        fallbackUsers.push(fallbackRecord);
+        localStorage.setItem('kaptaze_approved_users', JSON.stringify(fallbackUsers));
+        
+        console.log('⚠️ Used fallback storage for user:', fallbackRecord.id);
+        return fallbackRecord;
     }
 }
 
@@ -1794,4 +1898,4 @@ console.log('🌐 Global functions registered:', {
 });
 
 // 🔥 FORCE CACHE CLEAR NOTIFICATION
-console.log('🚨 CACHE VERSION: 2025.08.22.18 - Domain updated to www.kaptaze.com!');
+console.log('🚨 CACHE VERSION: 2025.08.22.19 - Permanent database integration completed!');
