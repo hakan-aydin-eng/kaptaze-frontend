@@ -598,10 +598,16 @@ async function loadRestaurantsData() {
         
         // Try shared storage first using service
         try {
+            if (!window.KapTazeShared) {
+                throw new Error('KapTazeShared service not loaded');
+            }
+            
             console.log('🌐 Loading restaurants from shared storage service...');
             restaurants = await window.KapTazeShared.getRestaurants();
             console.log('✅ Found restaurants from shared storage:', restaurants.length);
+            console.log('📋 Restaurant data sample:', restaurants.length > 0 ? restaurants[0] : 'No restaurants');
         } catch (sharedError) {
+            console.error('❌ Restaurants loading error:', sharedError.message);
             console.log('⚠️ Shared storage failed, trying local database:', sharedError);
         }
         
@@ -1354,12 +1360,23 @@ async function approveApplication(applicationId) {
         
         // Try shared storage first using service
         try {
+            if (!window.KapTazeShared) {
+                throw new Error('KapTazeShared service not loaded');
+            }
+            
             console.log('🌐 Trying approval in shared storage service...');
+            console.log('📝 Approval params:', { applicationId, credentials });
+            
             approvalResult = await window.KapTazeShared.approveApplication(applicationId, credentials);
             approvalSuccess = true;
             console.log('✅ Application approved in shared storage:', approvalResult);
         } catch (sharedError) {
-            console.log('⚠️ Shared storage approval failed, trying local database:', sharedError);
+            console.error('❌ Shared storage approval error details:', {
+                name: sharedError.name,
+                message: sharedError.message,
+                stack: sharedError.stack
+            });
+            console.log('⚠️ Shared storage approval failed, trying local database:', sharedError.message);
         }
         
         // Fallback to local database

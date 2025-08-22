@@ -19,6 +19,8 @@ class KapTazeSharedStorage {
     async makeRequest(action, data = null) {
         try {
             console.log(`📡 Shared Storage Request: ${action}`, data ? 'with data' : 'no data');
+            console.log(`🔗 Request URL:`, this.baseUrl);
+            console.log(`📤 Request data:`, { action, data });
             
             const response = await fetch(this.baseUrl, {
                 method: 'POST',
@@ -31,6 +33,8 @@ class KapTazeSharedStorage {
                 })
             });
             
+            console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+            
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('❌ HTTP Error:', response.status, errorText);
@@ -38,16 +42,22 @@ class KapTazeSharedStorage {
             }
             
             const result = await response.json();
-            console.log(`📥 Response for ${action}:`, result.success ? '✅ Success' : '❌ Failed');
+            console.log(`📥 Full response for ${action}:`, result);
             
             if (!result.success) {
+                console.error(`❌ API Error for ${action}:`, result.error);
                 throw new Error(result.error || 'Request failed');
             }
             
+            console.log(`✅ Success for ${action}, returning:`, result.data);
             return result;
             
         } catch (error) {
-            console.error(`❌ Shared Storage Error (${action}):`, error);
+            console.error(`❌ Shared Storage Error (${action}):`, {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
             throw error;
         }
     }
