@@ -1048,43 +1048,6 @@ async function loadApplicationsData() {
     }
 }
 
-function renderApplicationsTable(applications) {
-    const tableBody = document.getElementById('applications-table-body');
-    
-    if (!applications || applications.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="loading">Henüz başvuru bulunmuyor</td></tr>';
-        return;
-    }
-    
-    console.log('🎨 Rendering applications table with', applications.length, 'applications');
-    
-    tableBody.innerHTML = applications.map(app => `
-        <tr>
-            <td>${app.id}</td>
-            <td><span class="type-badge ${app.type}">${app.type === 'customer' ? 'Müşteri' : 'Restoran'}</span></td>
-            <td>${app.firstName} ${app.lastName}</td>
-            <td>${app.email}</td>
-            <td>${app.type === 'restaurant' ? app.businessName : '-'}</td>
-            <td>${new Date(app.createdAt).toLocaleDateString('tr-TR')}</td>
-            <td><span class="status-badge ${app.status}">${getApplicationStatusText(app.status)}</span></td>
-            <td>
-                <button class="btn-secondary" onclick="viewApplication('${app.id}')" title="Detay">
-                    <i class="fas fa-eye"></i>
-                </button>
-                ${app.status === 'pending' ? `
-                <button class="btn-primary" onclick="approveApplication('${app.id}')" title="Onayla">
-                    <i class="fas fa-check"></i>
-                </button>
-                <button class="btn-danger" onclick="rejectApplication('${app.id}')" title="Reddet">
-                    <i class="fas fa-times"></i>
-                </button>
-                ` : ''}
-            </td>
-        </tr>
-    `).join('');
-    
-    console.log('✅ Applications table rendered successfully');
-}
 
 // Render applications table with database format
 function renderApplicationsTable(applications) {
@@ -1104,27 +1067,31 @@ function renderApplicationsTable(applications) {
     
     tableBody.innerHTML = pendingApplications.map(application => `
         <tr>
-            <td>${application.id}</td>
             <td>
-                <strong>${application.businessName}</strong><br>
-                <small style="color: #6b7280;">👤 ${application.firstName} ${application.lastName}</small><br>
-                <small style="color: #dc2626;">🏷️ ${application.businessType || application.businessCategory}</small>
+                <strong>${application.businessName || 'İşletme adı belirtilmemiş'}</strong><br>
+                <small style="color: #dc2626;">🏷️ ${application.businessType || application.businessCategory || 'Kategori belirtilmemiş'}</small>
             </td>
             <td>
-                ${application.email}<br>
-                <small style="color: #6b7280;">${application.phone || 'Telefon belirtilmemiş'}</small>
+                <strong>${application.firstName} ${application.lastName}</strong><br>
+                <small style="color: #6b7280;">ID: ${application.id}</small>
+            </td>
+            <td>
+                <strong>📧 ${application.email}</strong><br>
+                <small style="color: #6b7280;">📱 ${application.phone || 'Telefon belirtilmemiş'}</small>
             </td>
             <td>
                 ${application.businessAddress || 'Adres belirtilmemiş'}<br>
-                <small style="color: #6b7280;">${application.district}/${application.city}</small>
-                ${application.businessLatitude ? `<br><small style="color: #059669;" onclick="showOnMap(${application.businessLatitude}, ${application.businessLongitude})">📍 Haritada Göster</small>` : ''}
+                ${application.businessLatitude ? `<small style="color: #059669;" onclick="showOnMap(${application.businessLatitude}, ${application.businessLongitude})">📍 Haritada Göster</small>` : ''}
+            </td>
+            <td>
+                ${application.restaurantUsername ? `<strong style="color: #059669;">🔑 ${application.restaurantUsername}</strong>` : '<span style="color: #6b7280;">Henüz atanmadı</span>'}
+            </td>
+            <td>
+                <strong>${application.city || 'Şehir belirtilmemiş'}</strong> / <strong>${application.district || 'İlçe belirtilmemiş'}</strong><br>
+                <small style="color: #6b7280;">${new Date(application.createdAt).toLocaleDateString('tr-TR')}</small>
             </td>
             <td>
                 <span class="status-badge pending">Bekliyor</span>
-            </td>
-            <td>${new Date(application.createdAt).toLocaleDateString('tr-TR')}</td>
-            <td>
-                ${application.restaurantUsername ? `<small style="color: #059669;">🔑 ${application.restaurantUsername}</small>` : 'N/A'}
             </td>
             <td>
                 <div class="action-buttons">
@@ -1381,40 +1348,80 @@ async function approveApplication(applicationId) {
     console.log('🔄 Approving application:', applicationId);
     
     try {
-        // Use centralized database system
-        if (window.KapTazeDB) {
-            // Generate restaurant credentials
-            const credentials = {
-                username: `resto_${Date.now().toString(36)}`,
-                password: Math.random().toString(36).substring(2, 10)
-            };
+        // Generate restaurant credentials
+        const credentials = {
+            username: `resto_${Date.now().toString(36)}`,
+            password: Math.random().toString(36).substring(2, 10)
+        };
+        
+        let approvalSuccess = false;
+        let approvalResult = null;
+        
+        // Try shared storage first
+        try {
+            console.log('🌐 Trying approval in shared storage...');
+            const response = await fetch('/.netlify/functions/shared-storage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'approveApplication',
+                    data: {
+                        applicationId: applicationId,
+                        credentials: credentials
+                    }
+                })
+            });
             
-            const approvalResult = window.KapTazeDB.approveApplication(applicationId, credentials);
-            
-            if (approvalResult) {
-                const { application, user, profile } = approvalResult;
-                
-                showNotification(
-                    `Başvuru onaylandı! Restaurant kullanıcı adı: ${credentials.username}, Şifre: ${credentials.password}`, 
-                    'success'
-                );
-                
-                console.log('✅ Application approved:', {
-                    applicationId,
-                    restaurantUser: user.id,
-                    restaurantProfile: profile.id
-                });
-                
-                // Reload all sections
-                loadApplicationsData();
-                loadRestaurantsData();
-                loadUsersData();
-                loadDashboardData();
-                
-                return;
-            } else {
-                throw new Error('Database approval failed');
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    approvalSuccess = true;
+                    approvalResult = result.data;
+                    console.log('✅ Application approved in shared storage:', approvalResult);
+                }
             }
+        } catch (sharedError) {
+            console.log('⚠️ Shared storage approval failed, trying local database:', sharedError);
+        }
+        
+        // Fallback to local database
+        if (!approvalSuccess && window.KapTazeDB) {
+            console.log('💾 Trying approval in local database...');
+            approvalResult = window.KapTazeDB.approveApplication(applicationId, credentials);
+            if (approvalResult) {
+                approvalSuccess = true;
+                console.log('✅ Application approved in local database:', approvalResult);
+            }
+        }
+        
+        if (approvalSuccess && approvalResult) {
+            const { application, user, profile } = approvalResult;
+            
+            // Update the application with restaurant credentials for display
+            application.restaurantUsername = credentials.username;
+            
+            showNotification(
+                `Başvuru onaylandı! Restaurant kullanıcı adı: ${credentials.username}, Şifre: ${credentials.password}`, 
+                'success'
+            );
+            
+            console.log('✅ Application approval completed:', {
+                applicationId,
+                restaurantUser: user.id,
+                restaurantProfile: profile.id
+            });
+            
+            // Reload all sections
+            loadApplicationsData();
+            loadRestaurantsData();
+            loadUsersData();
+            loadDashboardData();
+            
+            return;
+        } else {
+            throw new Error('Application approval failed in both shared storage and local database');
         }
         
         // Fallback to localStorage for backward compatibility
