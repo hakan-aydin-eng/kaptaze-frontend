@@ -296,13 +296,10 @@ async function loadDashboardData() {
             const stats = window.KapTazeDB.getStatistics();
             console.log('📊 Dashboard stats from database:', stats);
             
-            updateDashboardStats({
-                totalUsers: stats.totalApplications, // All applications
-                activeUsers: (window.KapTazeDB.getData().restaurantUsers.length + window.KapTazeDB.getData().customerUsers.length),
+            updateDashboardStatsDirect({
+                totalUsers: stats.totalApplications,
                 totalRestaurants: stats.activeRestaurants,
-                pendingApplications: stats.pendingApplications,
                 totalPackages: stats.totalPackages,
-                activePackages: stats.activePackages,
                 totalOrders: stats.totalOrders
             });
             
@@ -340,6 +337,27 @@ function updateDashboardStatsMock(stats) {
     document.getElementById('total-restaurants').textContent = stats.totalRestaurants.toLocaleString('tr-TR');
     document.getElementById('total-packages').textContent = stats.totalPackages.toLocaleString('tr-TR');
     document.getElementById('total-orders').textContent = stats.totalOrders.toLocaleString('tr-TR');
+}
+
+function updateDashboardStatsDirect(stats) {
+    console.log('📊 Updating dashboard with stats:', stats);
+    
+    const elements = {
+        'total-users': stats.totalUsers || 0,
+        'total-restaurants': stats.totalRestaurants || 0,
+        'total-packages': stats.totalPackages || 0,
+        'total-orders': stats.totalOrders || 0
+    };
+    
+    Object.entries(elements).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value.toLocaleString('tr-TR');
+            console.log(`✅ Updated ${id}:`, value);
+        } else {
+            console.warn(`❌ Element not found: ${id}`);
+        }
+    });
 }
 
 function updateDashboardStats(data) {
@@ -984,6 +1002,10 @@ async function loadApplicationsData() {
         const applications = window.KapTazeDB.getAllApplications();
         console.log('📊 Applications from database:', applications.length);
         console.log('📋 Applications data:', applications);
+        
+        // Debug: Show database content
+        const dbData = window.KapTazeDB.getData();
+        console.log('🗄️ Full database content:', dbData);
         
         if (applications.length > 0) {
             renderApplicationsTable(applications);
