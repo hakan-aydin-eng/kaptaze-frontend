@@ -94,7 +94,7 @@ function initializeApp() {
     console.log('🚀 KapTaze Admin Panel initialized');
 }
 
-// Navigation - Make sure it's globally accessible
+// Navigation - Enhanced version (replace early version)
 window.showSection = function showSection(sectionId, event) {
     console.log('🔄 Admin panel showSection called with:', sectionId);
     

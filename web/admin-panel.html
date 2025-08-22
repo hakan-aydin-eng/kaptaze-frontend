@@ -13,6 +13,57 @@
     <script src="./js/config.js"></script>
     <script src="./js/shared.js?v=2025.08.21.10"></script>
     <script src="./js/database.js"></script>
+    
+    <!-- Early navigation function for onclick events -->
+    <script>
+        // Temporary navigation function until admin.js loads
+        window.showSection = function(sectionId, event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected section
+            const section = document.getElementById(sectionId);
+            const navItem = document.querySelector(`a[href="#${sectionId}"]`);
+            
+            if (section) {
+                section.classList.add('active');
+                
+                // Update URL hash without causing page jump
+                history.replaceState(null, null, `#${sectionId}`);
+                
+                console.log('✅ Early admin panel section switched to:', sectionId);
+            }
+            
+            if (navItem) {
+                navItem.classList.add('active');
+            }
+            
+            return false;
+        };
+        
+        // Temporary sidebar toggle
+        window.toggleSidebar = function() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
+            if (sidebar && mainContent) {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('sidebar-collapsed');
+            }
+        };
+    </script>
 </head>
 <body>
     <!-- Sidebar -->
