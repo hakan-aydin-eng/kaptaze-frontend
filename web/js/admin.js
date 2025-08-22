@@ -1364,9 +1364,11 @@ async function approveApplication(applicationId) {
                 throw new Error('KapTazeShared service not loaded');
             }
             
-            console.log('🌐 Trying approval in shared storage service...');
+            console.log('🌐 Service found, checking methods...');
+            console.log('📋 Available methods:', Object.getOwnPropertyNames(window.KapTazeShared.__proto__));
             console.log('📝 Approval params:', { applicationId, credentials });
             
+            console.log('🚀 Calling approveApplication...');
             approvalResult = await window.KapTazeShared.approveApplication(applicationId, credentials);
             approvalSuccess = true;
             console.log('✅ Application approved in shared storage:', approvalResult);
@@ -1379,22 +1381,9 @@ async function approveApplication(applicationId) {
             console.log('⚠️ Shared storage approval failed, trying local database:', sharedError.message);
         }
         
-        // Fallback to local database
-        if (!approvalSuccess && window.KapTazeDB) {
-            console.log('💾 Trying approval in local database...');
-            try {
-                approvalResult = window.KapTazeDB.approveApplication(applicationId, credentials);
-                if (approvalResult) {
-                    approvalSuccess = true;
-                    console.log('✅ Application approved in local database:', approvalResult);
-                } else {
-                    console.error('❌ Local database approval returned null/false');
-                }
-            } catch (localError) {
-                console.error('❌ Local database approval error:', localError);
-            }
-        } else if (!approvalSuccess) {
-            console.error('❌ Local database not available and shared storage failed');
+        // Don't fallback to local database for approval since applications are in shared storage
+        if (!approvalSuccess) {
+            console.error('❌ Shared storage approval failed - applications are stored in shared storage only');
         }
         
         console.log('🔍 Final approval check:', { approvalSuccess, approvalResult });
