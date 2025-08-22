@@ -1700,8 +1700,8 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// ✅ GLOBAL ADMIN ACCESS - Bulletproof function declarations
-window.approveApplication = window.approveApplication || approveApplication;
+// ✅ GLOBAL ADMIN ACCESS - Force override any cached versions
+window.approveApplication = approveApplication; // FORCE OVERRIDE
 window.rejectApplication = window.rejectApplication || rejectApplication;
 window.viewApplication = window.viewApplication || viewApplication;
 window.closeApplicationModal = window.closeApplicationModal || closeApplicationModal;
@@ -1772,9 +1772,26 @@ window.showOnMap = window.showOnMap || function(lat, lng) {
     window.open(mapsUrl, '_blank');
 };
 
+// 🚨 DIRECT TEST FUNCTION - EMERGENCY APPROVAL
+window.FORCE_APPROVE_TEST = async function(appId) {
+    console.log('🚨 FORCE APPROVAL TEST:', appId);
+    try {
+        const result = await approveApplication(appId || 'APP_1755878896472_xvf08hj7h');
+        console.log('✅ FORCE APPROVAL RESULT:', result);
+        return result;
+    } catch (error) {
+        console.error('❌ FORCE APPROVAL ERROR:', error);
+        return error;
+    }
+};
+
 console.log('🔧 KapTaze Admin Panel loaded successfully');
 console.log('🌐 Global functions registered:', {
     showSection: typeof window.showSection,
     approveApplication: typeof window.approveApplication,
-    rejectApplication: typeof window.rejectApplication
+    rejectApplication: typeof window.rejectApplication,
+    FORCE_APPROVE_TEST: typeof window.FORCE_APPROVE_TEST
 });
+
+// 🔥 FORCE CACHE CLEAR NOTIFICATION
+console.log('🚨 CACHE VERSION: 2025.08.22.16 - If approval fails, press Ctrl+F5 to hard refresh!');
