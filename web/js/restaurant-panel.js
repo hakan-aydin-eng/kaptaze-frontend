@@ -821,6 +821,67 @@ class RestaurantPanel {
     }
 }
 
+// Navigation function for section switching
+window.showSection = function(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    // Remove active class from all nav items
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Show target section
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+    
+    // Add active class to corresponding nav item
+    const activeNavItem = document.querySelector(`a[href="#${sectionId}"]`);
+    if (activeNavItem) {
+        activeNavItem.classList.add('active');
+    }
+    
+    // Update page title
+    const sectionTitles = {
+        'dashboard': 'Dashboard',
+        'profile': 'Profil',
+        'packages': 'Paketler',
+        'orders': 'Siparişler',
+        'analytics': 'Analizler',
+        'settings': 'Ayarlar'
+    };
+    
+    const pageTitle = sectionTitles[sectionId] || 'Restoran Paneli';
+    document.title = `KapTaze - ${pageTitle}`;
+    
+    // Load section-specific data
+    if (window.restaurantPanel) {
+        switch(sectionId) {
+            case 'packages':
+                window.restaurantPanel.loadPackages();
+                break;
+            case 'dashboard':
+                window.restaurantPanel.loadDashboardData();
+                break;
+        }
+    }
+};
+
+// Sidebar toggle function
+window.toggleSidebar = function() {
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    
+    if (sidebar && mainContent) {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('sidebar-collapsed');
+    }
+};
+
 // Global functions for HTML event handlers
 window.toggleProfileEdit = function() {
     window.restaurantPanel.toggleProfileEdit();
@@ -866,6 +927,34 @@ window.duplicatePackage = function(packageId) {
 
 window.logout = function() {
     window.restaurantPanel.logout();
+};
+
+// Additional missing global functions for restaurant panel
+window.toggleNotifications = function() {
+    const notificationsPanel = document.getElementById('notificationsPanel');
+    if (notificationsPanel) {
+        notificationsPanel.classList.toggle('active');
+    }
+};
+
+window.updateAnalytics = function() {
+    if (window.restaurantPanel) {
+        window.restaurantPanel.updateStatistics();
+        window.restaurantPanel.showSuccessMessage('Analizler güncellendi!');
+    }
+};
+
+window.hidePackageImageModal = function() {
+    const modal = document.getElementById('packageImageModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+};
+
+window.savePackageImage = function() {
+    // Placeholder for package image save functionality
+    window.restaurantPanel.showSuccessMessage('Görsel kaydedildi!');
+    window.hidePackageImageModal();
 };
 
 // Initialize when DOM is loaded

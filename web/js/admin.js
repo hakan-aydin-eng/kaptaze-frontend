@@ -1368,6 +1368,11 @@ window.viewRestaurant = window.viewRestaurant || viewRestaurant;
 window.toggleRestaurantStatus = window.toggleRestaurantStatus || toggleRestaurantStatus;
 window.showAddUserModal = window.showAddUserModal || showAddUserModal;
 window.showAddRestaurantModal = window.showAddRestaurantModal || showAddRestaurantModal;
+window.loadApplicationsData = window.loadApplicationsData || loadApplicationsData;
+window.filterApplications = window.filterApplications || filterApplications;
+window.filterOrders = window.filterOrders || filterOrders;
+window.testAPIConnection = window.testAPIConnection || testAPIConnection;
+window.toggleSidebar = window.toggleSidebar || toggleSidebar;
 window.showOnMap = window.showOnMap || function(lat, lng) {
     const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}&z=15`;
     window.open(mapsUrl, '_blank');
