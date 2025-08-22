@@ -178,6 +178,12 @@ class RestaurantPanel {
             profileForm.addEventListener('submit', (e) => this.handleProfileSubmit(e));
         }
         
+        // Package form submission
+        const packageForm = document.getElementById('addPackageForm');
+        if (packageForm) {
+            packageForm.addEventListener('submit', (e) => this.handlePackageSubmit(e));
+        }
+        
         // Database change notifications
         window.addEventListener('kaptaze_data_updated', () => {
             this.loadUserData();
@@ -319,42 +325,105 @@ class RestaurantPanel {
 
     renderPackageCard(pkg) {
         const discountPercent = Math.round((1 - pkg.discountedPrice / pkg.originalPrice) * 100);
+        const isLowStock = pkg.quantity <= 3;
+        const isExpiringSoon = pkg.availableUntil ? 
+            (new Date(pkg.availableUntil) - new Date()) < (24 * 60 * 60 * 1000) : false;
         
         return `
-            <div class="package-card" data-package-id="${pkg.id}">
+            <div class="package-card ${isLowStock ? 'low-stock' : ''}" data-package-id="${pkg.id}">
                 <div class="package-header">
-                    <div>
+                    <div class="package-info">
                         <h4 class="package-title">${pkg.name}</h4>
+                        <span class="package-category">${this.getCategoryDisplayName(pkg.category)}</span>
                         <p class="package-description">${pkg.description}</p>
+                        ${pkg.tags && pkg.tags.length > 0 ? `
+                            <div class="package-tags">
+                                ${pkg.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
+                        ` : ''}
                     </div>
+                    
                     <div class="package-price-info">
-                        <div class="original-price">₺${pkg.originalPrice}</div>
-                        <div class="discounted-price">₺${pkg.discountedPrice}</div>
+                        <div class="original-price">₺${pkg.originalPrice.toFixed(2)}</div>
+                        <div class="discounted-price">₺${pkg.discountedPrice.toFixed(2)}</div>
                         <div class="discount-badge">${discountPercent}% İndirim</div>
+                        <div class="savings">₺${(pkg.originalPrice - pkg.discountedPrice).toFixed(2)} tasarruf</div>
                     </div>
                 </div>
                 
                 <div class="package-details">
-                    <div class="detail-item">
+                    <div class="detail-item ${isLowStock ? 'warning' : ''}">
                         <i class="fas fa-cubes"></i>
                         <span>Stok: ${pkg.quantity} adet</span>
+                        ${isLowStock ? '<i class="fas fa-exclamation-triangle warning-icon"></i>' : ''}
+                    </div>
+                    <div class="detail-item ${isExpiringSoon ? 'warning' : ''}">
+                        <i class="fas fa-clock"></i>
+                        <span>${pkg.availableUntil ? 
+                            new Date(pkg.availableUntil).toLocaleString('tr-TR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) : 'Süresiz'}</span>
+                        ${isExpiringSoon ? '<i class="fas fa-exclamation-triangle warning-icon"></i>' : ''}
                     </div>
                     <div class="detail-item">
-                        <i class="fas fa-clock"></i>
-                        <span>${pkg.availableUntil ? new Date(pkg.availableUntil).toLocaleDateString() : 'Süresiz'}</span>
+                        <i class="fas fa-calendar-plus"></i>
+                        <span>Eklendi: ${new Date(pkg.createdAt).toLocaleDateString('tr-TR')}</span>
                     </div>
                 </div>
                 
+                ${pkg.specialInstructions ? `
+                    <div class="special-instructions">
+                        <i class="fas fa-info-circle"></i>
+                        <span>${pkg.specialInstructions}</span>
+                    </div>
+                ` : ''}
+                
+                <div class="package-status">
+                    <span class="status-badge ${pkg.status}">${this.getStatusDisplayName(pkg.status)}</span>
+                    ${isLowStock ? '<span class="warning-badge">Az Stok</span>' : ''}
+                    ${isExpiringSoon ? '<span class="urgent-badge">Yakında Sona Eriyor</span>' : ''}
+                </div>
+                
                 <div class="package-actions">
-                    <button class="btn-sm btn-warning" onclick="editPackage('${pkg.id}')">
+                    <button class="btn-sm btn-secondary" onclick="editPackage('${pkg.id}')" title="Paketi Düzenle">
                         <i class="fas fa-edit"></i> Düzenle
                     </button>
-                    <button class="btn-sm btn-danger" onclick="deletePackage('${pkg.id}')">
+                    <button class="btn-sm btn-warning" onclick="duplicatePackage('${pkg.id}')" title="Paketi Kopyala">
+                        <i class="fas fa-copy"></i> Kopyala
+                    </button>
+                    <button class="btn-sm btn-danger" onclick="deletePackage('${pkg.id}')" title="Paketi Sil">
                         <i class="fas fa-trash"></i> Sil
                     </button>
                 </div>
             </div>
         `;
+    }
+
+    getCategoryDisplayName(category) {
+        const categories = {
+            'ana-yemek': 'Ana Yemek',
+            'aperatif': 'Aperatif',
+            'tatli': 'Tatlı',
+            'icecek': 'İçecek',
+            'menu': 'Menü',
+            'kahvalti': 'Kahvaltı',
+            'atistirmalik': 'Atıştırmalık'
+        };
+        return categories[category] || category;
+    }
+
+    getStatusDisplayName(status) {
+        const statuses = {
+            'active': 'Aktif',
+            'inactive': 'Pasif',
+            'deleted': 'Silindi',
+            'expired': 'Süresi Dolmuş'
+        };
+        return statuses[status] || status;
     }
 
     setupDataSync() {
@@ -447,6 +516,263 @@ class RestaurantPanel {
         document.getElementById('mainImageInput').click();
     }
 
+    // Package Management Methods
+    addPackage(packageData) {
+        if (!this.restaurantProfile) {
+            console.error('❌ No restaurant profile found');
+            return false;
+        }
+        
+        try {
+            const newPackage = window.KapTazeDB.addPackage(this.restaurantProfile.id, packageData);
+            
+            if (newPackage) {
+                this.packages.push(newPackage);
+                this.renderPackages();
+                this.updateStatistics();
+                this.showSuccessMessage('Paket başarıyla eklendi!');
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error('❌ Package add error:', error);
+            this.showErrorMessage('Paket eklenirken hata oluştu.');
+            return false;
+        }
+    }
+
+    updatePackage(packageId, updates) {
+        try {
+            const updatedPackage = window.KapTazeDB.updatePackage(packageId, updates);
+            
+            if (updatedPackage) {
+                // Update local packages array
+                const index = this.packages.findIndex(pkg => pkg.id === packageId);
+                if (index !== -1) {
+                    this.packages[index] = updatedPackage;
+                }
+                
+                this.renderPackages();
+                this.showSuccessMessage('Paket başarıyla güncellendi!');
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error('❌ Package update error:', error);
+            this.showErrorMessage('Paket güncellenirken hata oluştu.');
+            return false;
+        }
+    }
+
+    deletePackageById(packageId) {
+        try {
+            const success = window.KapTazeDB.updatePackage(packageId, { status: 'deleted' });
+            
+            if (success) {
+                // Remove from local array
+                this.packages = this.packages.filter(pkg => pkg.id !== packageId);
+                this.renderPackages();
+                this.updateStatistics();
+                this.showSuccessMessage('Paket başarıyla silindi!');
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error('❌ Package delete error:', error);
+            this.showErrorMessage('Paket silinirken hata oluştu.');
+            return false;
+        }
+    }
+
+    duplicatePackage(packageId) {
+        try {
+            const originalPackage = this.packages.find(pkg => pkg.id === packageId);
+            if (!originalPackage) {
+                this.showErrorMessage('Kopyalanacak paket bulunamadı.');
+                return false;
+            }
+            
+            const duplicateData = {
+                ...originalPackage,
+                name: `${originalPackage.name} (Kopya)`,
+                quantity: 1, // Reset quantity for safety
+            };
+            
+            // Remove fields that shouldn't be copied
+            delete duplicateData.id;
+            delete duplicateData.createdAt;
+            delete duplicateData.updatedAt;
+            
+            const success = this.addPackage(duplicateData);
+            if (success) {
+                this.showSuccessMessage('Paket başarıyla kopyalandı!');
+            }
+            
+            return success;
+        } catch (error) {
+            console.error('❌ Package duplicate error:', error);
+            this.showErrorMessage('Paket kopyalanırken hata oluştu.');
+            return false;
+        }
+    }
+
+    // Modal Management
+    showAddPackageModal(packageId = null) {
+        const modal = document.getElementById('addPackageModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const submitButtonText = document.getElementById('submitButtonText');
+        
+        if (packageId) {
+            // Edit mode
+            modalTitle.textContent = 'Paketi Düzenle';
+            submitButtonText.textContent = 'Paketi Güncelle';
+            this.populatePackageForm(packageId);
+            modal.dataset.editingPackageId = packageId;
+        } else {
+            // Add mode
+            modalTitle.textContent = 'Yeni Paket Ekle';
+            submitButtonText.textContent = 'Paket Ekle';
+            this.clearPackageForm();
+            delete modal.dataset.editingPackageId;
+        }
+        
+        modal.style.display = 'flex';
+        
+        // Set default datetime to 1 hour from now
+        const defaultDate = new Date();
+        defaultDate.setHours(defaultDate.getHours() + 1);
+        document.getElementById('availableUntil').value = defaultDate.toISOString().slice(0, 16);
+    }
+
+    hideAddPackageModal() {
+        const modal = document.getElementById('addPackageModal');
+        modal.style.display = 'none';
+        this.clearPackageForm();
+    }
+
+    populatePackageForm(packageId) {
+        const packageData = this.packages.find(pkg => pkg.id === packageId);
+        if (!packageData) return;
+        
+        document.getElementById('packageName').value = packageData.name || '';
+        document.getElementById('packageCategory').value = packageData.category || '';
+        document.getElementById('packageDescription').value = packageData.description || '';
+        document.getElementById('originalPrice').value = packageData.originalPrice || '';
+        document.getElementById('discountedPrice').value = packageData.discountedPrice || '';
+        document.getElementById('quantity').value = packageData.quantity || '';
+        document.getElementById('packageTags').value = packageData.tags ? packageData.tags.join(', ') : '';
+        document.getElementById('specialInstructions').value = packageData.specialInstructions || '';
+        
+        if (packageData.availableUntil) {
+            const date = new Date(packageData.availableUntil);
+            document.getElementById('availableUntil').value = date.toISOString().slice(0, 16);
+        }
+        
+        // Update discount calculation
+        this.calculateDiscount();
+    }
+
+    clearPackageForm() {
+        document.getElementById('packageName').value = '';
+        document.getElementById('packageCategory').value = '';
+        document.getElementById('packageDescription').value = '';
+        document.getElementById('originalPrice').value = '';
+        document.getElementById('discountedPrice').value = '';
+        document.getElementById('quantity').value = '';
+        document.getElementById('packageTags').value = '';
+        document.getElementById('specialInstructions').value = '';
+        document.getElementById('availableUntil').value = '';
+        
+        // Reset discount indicator
+        document.getElementById('discountBadge').textContent = '0% İndirim';
+        document.getElementById('savingsAmount').textContent = '₺0 tasarruf';
+        document.getElementById('stockWarning').style.display = 'none';
+    }
+
+    handlePackageSubmit(e) {
+        e.preventDefault();
+        
+        if (!this.restaurantProfile) {
+            this.showErrorMessage('Restaurant profili bulunamadı.');
+            return;
+        }
+        
+        // Collect form data
+        const formData = {
+            name: document.getElementById('packageName').value,
+            category: document.getElementById('packageCategory').value,
+            description: document.getElementById('packageDescription').value,
+            originalPrice: parseFloat(document.getElementById('originalPrice').value),
+            discountedPrice: parseFloat(document.getElementById('discountedPrice').value),
+            quantity: parseInt(document.getElementById('quantity').value),
+            availableUntil: document.getElementById('availableUntil').value || null,
+            tags: document.getElementById('packageTags').value
+                .split(',')
+                .map(tag => tag.trim())
+                .filter(tag => tag.length > 0),
+            specialInstructions: document.getElementById('specialInstructions').value
+        };
+        
+        // Validation
+        if (formData.originalPrice <= formData.discountedPrice) {
+            this.showErrorMessage('İndirimli fiyat orijinal fiyattan düşük olmalıdır.');
+            return;
+        }
+        
+        if (formData.quantity < 1) {
+            this.showErrorMessage('Stok adedi 1\'den az olamaz.');
+            return;
+        }
+        
+        const modal = document.getElementById('addPackageModal');
+        const editingPackageId = modal.dataset.editingPackageId;
+        
+        let success = false;
+        
+        if (editingPackageId) {
+            // Update existing package
+            success = this.updatePackage(editingPackageId, formData);
+        } else {
+            // Add new package
+            success = this.addPackage(formData);
+        }
+        
+        if (success) {
+            this.hideAddPackageModal();
+        }
+    }
+
+    // Utility functions for package management
+    calculateDiscount() {
+        const originalPrice = parseFloat(document.getElementById('originalPrice').value) || 0;
+        const discountedPrice = parseFloat(document.getElementById('discountedPrice').value) || 0;
+        
+        if (originalPrice > 0 && discountedPrice > 0 && originalPrice > discountedPrice) {
+            const discountPercent = Math.round((1 - discountedPrice / originalPrice) * 100);
+            const savings = originalPrice - discountedPrice;
+            
+            document.getElementById('discountBadge').textContent = `%${discountPercent} İndirim`;
+            document.getElementById('savingsAmount').textContent = `₺${savings.toFixed(2)} tasarruf`;
+        } else {
+            document.getElementById('discountBadge').textContent = '0% İndirim';
+            document.getElementById('savingsAmount').textContent = '₺0 tasarruf';
+        }
+    }
+
+    updateStockWarning() {
+        const quantity = parseInt(document.getElementById('quantity').value) || 0;
+        const warning = document.getElementById('stockWarning');
+        
+        if (quantity > 0 && quantity <= 3) {
+            warning.style.display = 'block';
+        } else {
+            warning.style.display = 'none';
+        }
+    }
+
     // Utility methods
     showSuccessMessage(message) {
         // Implementation for success messages
@@ -508,20 +834,34 @@ window.changeAvatar = function() {
     window.restaurantPanel.changeAvatar();
 };
 
-window.showAddPackageModal = function() {
-    // Package modal implementation
-    console.log('🔧 Package modal - To be implemented');
+window.showAddPackageModal = function(packageId = null) {
+    window.restaurantPanel.showAddPackageModal(packageId);
+};
+
+window.hideAddPackageModal = function() {
+    window.restaurantPanel.hideAddPackageModal();
+};
+
+window.calculateDiscount = function() {
+    window.restaurantPanel.calculateDiscount();
+};
+
+window.updateStockWarning = function() {
+    window.restaurantPanel.updateStockWarning();
 };
 
 window.editPackage = function(packageId) {
-    console.log('✏️ Edit package:', packageId);
+    window.restaurantPanel.showAddPackageModal(packageId);
 };
 
 window.deletePackage = function(packageId) {
-    if (confirm('Bu paketi silmek istediğinize emin misiniz?')) {
-        // Delete package implementation
-        console.log('🗑️ Delete package:', packageId);
+    if (confirm('Bu paketi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) {
+        window.restaurantPanel.deletePackageById(packageId);
     }
+};
+
+window.duplicatePackage = function(packageId) {
+    window.restaurantPanel.duplicatePackage(packageId);
 };
 
 window.logout = function() {

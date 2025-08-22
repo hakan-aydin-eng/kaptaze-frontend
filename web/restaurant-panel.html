@@ -573,6 +573,150 @@
         </div>
     </div>
 
+    <!-- Add Package Modal -->
+    <div id="addPackageModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-box"></i> <span id="modalTitle">Yeni Paket Ekle</span></h3>
+                <button class="modal-close" onclick="hideAddPackageModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="addPackageForm" class="modal-form">
+                <div class="form-grid">
+                    <div class="form-section">
+                        <h4><i class="fas fa-info-circle"></i> Paket Bilgileri</h4>
+                        
+                        <div class="form-group">
+                            <label for="packageName">Paket Adı *</label>
+                            <input type="text" id="packageName" class="form-control" required 
+                                placeholder="Örn: Günlük Pizza Paketi">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="packageCategory">Kategori *</label>
+                            <select id="packageCategory" class="form-control" required>
+                                <option value="">Kategori Seçin</option>
+                                <option value="ana-yemek">Ana Yemek</option>
+                                <option value="aperatif">Aperatif</option>
+                                <option value="tatli">Tatlı</option>
+                                <option value="icecek">İçecek</option>
+                                <option value="menu">Menü</option>
+                                <option value="kahvalti">Kahvaltı</option>
+                                <option value="atistirmalik">Atıştırmalık</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="packageDescription">Paket Açıklaması - "Neyi Kurtarıyorsunuz?" *</label>
+                            <textarea id="packageDescription" class="form-control" required rows="3"
+                                placeholder="Hangi yiyecekleri kurtarıyorsunuz? Paket içeriğini detaylı açıklayın. Müşteri neler alacağını net bilsin."></textarea>
+                            <small>Müşterileriniz bu açıklamaya göre karar verecek. Detaylı yazın.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4><i class="fas fa-money-bill"></i> Fiyat ve Stok</h4>
+                        
+                        <div class="price-grid">
+                            <div class="form-group">
+                                <label for="originalPrice">Orijinal Fiyat (₺) *</label>
+                                <input type="number" id="originalPrice" class="form-control" required 
+                                    step="0.01" min="0" placeholder="100.00" onchange="calculateDiscount()">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="discountedPrice">İndirimli Fiyat (₺) *</label>
+                                <input type="number" id="discountedPrice" class="form-control" required 
+                                    step="0.01" min="0" placeholder="60.00" onchange="calculateDiscount()">
+                            </div>
+                            
+                            <div class="discount-indicator">
+                                <span class="discount-badge" id="discountBadge">%40 İndirim</span>
+                                <span class="savings" id="savingsAmount">₺40 tasarruf</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="quantity">Stok Adedi *</label>
+                            <input type="number" id="quantity" class="form-control" required 
+                                min="1" placeholder="5" onchange="updateStockWarning()">
+                            <small id="stockWarning" style="color: #f59e0b; display: none;">
+                                <i class="fas fa-exclamation-triangle"></i> Az stok - müşteri ilgisi yüksek olabilir
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="availableUntil">Son Teslim Tarihi ve Saati</label>
+                            <input type="datetime-local" id="availableUntil" class="form-control">
+                            <small>Boş bırakırsanız süresiz olarak ayarlanır</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h4><i class="fas fa-tags"></i> Ek Bilgiler (İsteğe bağlı)</h4>
+                    
+                    <div class="form-group">
+                        <label for="packageTags">Etiketler</label>
+                        <input type="text" id="packageTags" class="form-control" 
+                            placeholder="Örn: Vejetaryen, Organik, Glutensiz (virgülle ayırın)">
+                        <small>Müşterilerin daha kolay bulması için etiketler ekleyin</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="specialInstructions">Özel Talimatlar</label>
+                        <textarea id="specialInstructions" class="form-control" rows="2"
+                            placeholder="Teslim alırken dikkat edilmesi gereken özel durumlar"></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideAddPackageModal()">
+                        <i class="fas fa-times"></i> İptal
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> <span id="submitButtonText">Paket Ekle</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Package Image Modal -->
+    <div id="packageImageModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container modal-small">
+            <div class="modal-header">
+                <h3><i class="fas fa-camera"></i> Paket Görseli</h3>
+                <button class="modal-close" onclick="hidePackageImageModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="image-upload-section">
+                <div class="image-upload-area" onclick="document.getElementById('packageImageInput').click();">
+                    <img id="packageImagePreview" class="image-preview" style="display: none;">
+                    <div id="packageImagePlaceholder" class="upload-placeholder">
+                        <i class="fas fa-camera" style="font-size: 2em; color: #9ca3af; margin-bottom: 10px;"></i>
+                        <p>Paket görseli yüklemek için tıklayın</p>
+                        <p style="font-size: 0.8em; color: #6b7280;">JPG, PNG (Max 3MB)</p>
+                    </div>
+                    <input type="file" id="packageImageInput" accept="image/*" style="display: none;" onchange="previewPackageImage(this)">
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hidePackageImageModal()">
+                        İptal
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="savePackageImage()">
+                        <i class="fas fa-save"></i> Görseli Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="./js/restaurant-panel.js"></script>
     <script>
         // Logout function for restaurant panel
