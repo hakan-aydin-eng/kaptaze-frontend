@@ -665,31 +665,43 @@
                     businessType: selectedBusinessType
                 };
 
-                // Try API first, fallback to localStorage
+                // Try shared storage first, fallback to localStorage
                 let apiSuccess = false;
                 try {
-                    const response = await fetch('/.netlify/functions/submit-registration', {
+                    console.log('🌐 Trying shared storage registration...', navigator.userAgent.includes('iPhone') ? '[iOS Device]' : '[Non-iOS Device]');
+                    
+                    const response = await fetch('/.netlify/functions/shared-storage', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify(apiData)
+                        body: JSON.stringify({
+                            action: 'addApplication',
+                            data: apiData
+                        })
                     });
 
+                    console.log('📡 Response status:', response.status, response.statusText);
+                    
                     if (response.ok) {
                         const result = await response.json();
+                        console.log('📥 Response data:', result);
+                        
                         if (result.success) {
                             apiSuccess = true;
-                            console.log('✅ Registration API success:', result);
-                            showSuccess(result.message || 'Başvurunuz başarıyla kaydedildi!');
+                            console.log('✅ Registration API success:', result.data.id);
+                            showSuccess(`Başvurunuz başarıyla kaydedildi! Başvuru numaranız: ${result.data.id}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
                         } else {
                             console.error('❌ Registration API failed:', result);
                         }
                     } else {
                         console.error('❌ HTTP Error:', response.status, response.statusText);
+                        const errorText = await response.text();
+                        console.error('❌ Error body:', errorText);
                     }
                 } catch (apiError) {
-                    console.log('API call failed, falling back to localStorage:', apiError);
+                    console.error('❌ API call failed, falling back to localStorage:', apiError);
+                    console.error('Error details:', apiError.name, apiError.message);
                 }
                 
                 // Fallback to database if API failed
@@ -1208,150 +1220,6 @@
             }
         }
 
-        // Registration form submission
-        async function handleRegistration(event) {
-            event.preventDefault();
-            
-            console.log('🔄 Starting registration process...');
-            
-            const submitBtn = document.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            
-            // Show loading state
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kaydediliyor...';
-            
-            try {
-                // Initialize database
-                if (!window.KapTazeDB) {
-                    window.KapTazeDB = new KapTazeDatabase();
-                }
-                
-                // Collect form data
-                const formData = new FormData(event.target);
-                const registrationData = {
-                    firstName: formData.get('firstName'),
-                    lastName: formData.get('lastName'),
-                    email: formData.get('email'),
-                    phone: formData.get('phone'),
-                    businessName: formData.get('businessName'),
-                    businessType: formData.get('businessType'),
-                    businessAddress: formData.get('businessAddress'),
-                    city: formData.get('city'),
-                    district: formData.get('district'),
-                    taxNumber: formData.get('taxNumber'),
-                    businessLatitude: window.currentLocation ? window.currentLocation.lat : null,
-                    businessLongitude: window.currentLocation ? window.currentLocation.lng : null,
-                    type: 'restaurant' // Default to restaurant
-                };
-                
-                console.log('📝 Registration data:', registrationData);
-                
-                // Try shared storage first
-                let success = false;
-                let resultData = null;
-                
-                try {
-                    console.log('🌐 Trying shared storage (Netlify Functions)...');
-                    const response = await fetch('/.netlify/functions/shared-storage', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: 'addApplication',
-                            data: registrationData
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        if (result.success) {
-                            success = true;
-                            resultData = result.data;
-                            console.log('✅ Registration saved to shared storage:', resultData);
-                        }
-                    }
-                } catch (sharedError) {
-                    console.log('⚠️ Shared storage failed, falling back to local database:', sharedError);
-                }
-                
-                // Fallback to local database
-                if (!success) {
-                    console.log('💾 Using local database fallback...');
-                    resultData = window.KapTazeDB.addApplication(registrationData);
-                    if (resultData) {
-                        success = true;
-                        console.log('✅ Registration saved to local database:', resultData);
-                    }
-                }
-                
-                if (success && resultData) {
-                    // Show success message
-                    showSuccess(`Başvurunuz başarıyla alındı! Başvuru numaranız: ${resultData.id}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
-                    
-                    // Reset form
-                    event.target.reset();
-                    
-                    // Clear location
-                    window.currentLocation = null;
-                    
-                } else {
-                    throw new Error('Registration kayıt hatası - tüm sistemler başarısız');
-                }
-                
-            } catch (error) {
-                console.error('❌ Registration error:', error);
-                showError('Kayıt sırasında hata oluştu: ' + error.message);
-            } finally {
-                // Reset button
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            }
-        }
-        
-        // Success/Error message functions
-        function showSuccess(message) {
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-success';
-            alert.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #10b981;
-                color: white;
-                padding: 1rem 1.5rem;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 10000;
-                max-width: 400px;
-            `;
-            alert.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-            document.body.appendChild(alert);
-            
-            setTimeout(() => alert.remove(), 5000);
-        }
-        
-        function showError(message) {
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-error';
-            alert.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #ef4444;
-                color: white;
-                padding: 1rem 1.5rem;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 10000;
-                max-width: 400px;
-            `;
-            alert.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-            document.body.appendChild(alert);
-            
-            setTimeout(() => alert.remove(), 5000);
-        }
 
         // Initialize everything when page loads
         document.addEventListener('DOMContentLoaded', function() {
