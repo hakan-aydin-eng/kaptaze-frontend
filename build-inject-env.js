@@ -47,6 +47,14 @@ const hasPlaceholders = updatedContent.includes('%%');
 
 if (hasPlaceholders) {
     console.warn('⚠️  Warning: Some placeholders may not have been replaced');
+    console.log('📄 Current content sample:', updatedContent.substring(0, 200) + '...');
 } else {
     console.log('🎯 All placeholders successfully replaced');
 }
+
+// Summary
+console.log('\n📊 Build Summary:');
+console.log(`✅ Environment variables: ${Object.keys(envVars).length} processed`);
+console.log(`✅ File updated: ${envInjectPath}`);
+console.log(`✅ Placeholders replaced: ${hasPlaceholders ? 'NO' : 'YES'}`);
+console.log('🚀 Ready for deployment!\n');
