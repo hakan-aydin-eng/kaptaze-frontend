@@ -48,7 +48,7 @@ exports.handler = async (event, context) => {
     let forwardSuccess = false;
     try {
       console.log('🔄 Forwarding to admin panel API...');
-      const adminResponse = await fetch('https://kaptaze.netlify.app/.netlify/functions/shared-storage', {
+      const adminResponse = await fetch('https://www.kaptaze.com/.netlify/functions/shared-storage', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

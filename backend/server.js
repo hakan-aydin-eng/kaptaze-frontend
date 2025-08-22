@@ -15,7 +15,8 @@ app.use(helmet());
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://kaptaze.netlify.app',
+    'https://www.kaptaze.com',
+    'https://kaptaze.com',
     'https://kaptaze.netlify.app',
     'https://kaptaze-customer.netlify.app',
     'https://kaptaze-restaurant.netlify.app',

@@ -10,7 +10,7 @@
     // Environment variables from Netlify
     // These will be replaced during build process
     window.GOOGLE_MAPS_API_KEY = '%%GOOGLE_MAPS_API_KEY%%';
-    window.API_BASE_URL = 'https://kaptaze.netlify.app/.netlify/functions';
+    window.API_BASE_URL = 'https://www.kaptaze.com/.netlify/functions';
     window.ENVIRONMENT = 'production';
     
     // Clean up placeholder values

@@ -1794,4 +1794,4 @@ console.log('🌐 Global functions registered:', {
 });
 
 // 🔥 FORCE CACHE CLEAR NOTIFICATION
-console.log('🚨 CACHE VERSION: 2025.08.22.16 - If approval fails, press Ctrl+F5 to hard refresh!');
+console.log('🚨 CACHE VERSION: 2025.08.22.18 - Domain updated to www.kaptaze.com!');

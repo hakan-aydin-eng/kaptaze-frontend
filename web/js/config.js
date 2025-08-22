@@ -23,7 +23,7 @@ window.KapTazeConfig = {
         
         // Allowed domains for this API key (for reference)
         allowedDomains: [
-            'kaptaze.netlify.app',
+            'www.kaptaze.com',
             'localhost',
             '127.0.0.1'
         ]
@@ -31,7 +31,7 @@ window.KapTazeConfig = {
     
     // API Endpoints
     api: {
-        baseUrl: window.API_BASE_URL || 'https://kaptaze.netlify.app/.netlify/functions',
+        baseUrl: window.API_BASE_URL || 'https://www.kaptaze.com/.netlify/functions',
         endpoints: {
             submitRegistration: '/submit-registration',
             approveRegistration: '/approve-registration',
