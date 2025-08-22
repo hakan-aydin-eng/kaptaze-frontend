@@ -1208,6 +1208,117 @@
             }
         }
 
+        // Registration form submission
+        async function handleRegistration(event) {
+            event.preventDefault();
+            
+            console.log('🔄 Starting registration process...');
+            
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kaydediliyor...';
+            
+            try {
+                // Initialize database
+                if (!window.KapTazeDB) {
+                    window.KapTazeDB = new KapTazeDatabase();
+                }
+                
+                // Collect form data
+                const formData = new FormData(event.target);
+                const registrationData = {
+                    firstName: formData.get('firstName'),
+                    lastName: formData.get('lastName'),
+                    email: formData.get('email'),
+                    phone: formData.get('phone'),
+                    businessName: formData.get('businessName'),
+                    businessType: formData.get('businessType'),
+                    businessAddress: formData.get('businessAddress'),
+                    city: formData.get('city'),
+                    district: formData.get('district'),
+                    taxNumber: formData.get('taxNumber'),
+                    businessLatitude: window.currentLocation ? window.currentLocation.lat : null,
+                    businessLongitude: window.currentLocation ? window.currentLocation.lng : null,
+                    type: 'restaurant' // Default to restaurant
+                };
+                
+                console.log('📝 Registration data:', registrationData);
+                
+                // Add to database
+                const result = window.KapTazeDB.addApplication(registrationData);
+                
+                if (result) {
+                    console.log('✅ Registration saved to database:', result);
+                    
+                    // Show success message
+                    showSuccess(`Başvurunuz başarıyla alındı! Başvuru numaranız: ${result.id}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
+                    
+                    // Reset form
+                    event.target.reset();
+                    
+                    // Clear location
+                    window.currentLocation = null;
+                    
+                } else {
+                    throw new Error('Database kayıt hatası');
+                }
+                
+            } catch (error) {
+                console.error('❌ Registration error:', error);
+                showError('Kayıt sırasında hata oluştu: ' + error.message);
+            } finally {
+                // Reset button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+        
+        // Success/Error message functions
+        function showSuccess(message) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success';
+            alert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                max-width: 400px;
+            `;
+            alert.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => alert.remove(), 5000);
+        }
+        
+        function showError(message) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-error';
+            alert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #ef4444;
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                max-width: 400px;
+            `;
+            alert.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => alert.remove(), 5000);
+        }
+
         // Initialize everything when page loads
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize maps (with fallback)
