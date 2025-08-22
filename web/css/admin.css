@@ -536,6 +536,26 @@ body {
     animation: pulse 2s infinite;
 }
 
+/* Type badges */
+.type-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+    display: inline-block;
+    margin-top: 0.25rem;
+}
+
+.type-badge.customer {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.type-badge.restaurant {
+    background: #dcfce7;
+    color: #166534;
+}
+
 /* Settings */
 .settings-grid {
     display: grid;

@@ -8,7 +8,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Shared Data System -->
-    <script src="./js/shared.js"></script>
+    <script src="./js/shared.js?v=2025.08.21.10"></script>
+    
+    <!-- Google Maps API -->
+    <script async defer 
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBMVa_XdCaGUBQDOGi_sK8U0nKGqQoE9tc&libraries=places&callback=initMap">
+    </script>
     
     <style>
         * {
@@ -262,6 +267,36 @@
                 margin: 1rem;
             }
         }
+
+        /* Google Maps Styles */
+        .map-container {
+            margin-top: 0.5rem;
+        }
+
+        .map-instructions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #0369a1;
+        }
+
+        .map-instructions i {
+            color: #0ea5e9;
+        }
+
+        #businessMap {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .gm-style-iw {
+            font-family: 'Inter', sans-serif !important;
+        }
     </style>
 </head>
 <body>
@@ -358,7 +393,21 @@
                         <label for="businessAddress">İşletme Adresi *</label>
                         <div class="input-wrapper">
                             <i class="fas fa-map-marker-alt input-icon"></i>
-                            <input type="text" id="businessAddress" name="businessAddress">
+                            <input type="text" id="businessAddress" name="businessAddress" placeholder="Haritadan seçin veya manuel girin">
+                        </div>
+                    </div>
+
+                    <!-- Google Maps Integration -->
+                    <div class="form-group">
+                        <label>İşletme Konumu *</label>
+                        <div class="map-container">
+                            <div id="businessMap" style="height: 300px; width: 100%; border-radius: 8px; border: 2px solid #e5e7eb;"></div>
+                            <div class="map-instructions">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Harita üzerinde işletmenizin konumunu işaretleyin</span>
+                            </div>
+                            <input type="hidden" id="businessLatitude" name="businessLatitude">
+                            <input type="hidden" id="businessLongitude" name="businessLongitude">
                         </div>
                     </div>
 
@@ -443,6 +492,12 @@
 
     <script>
         let selectedBusinessType = 'restaurant';
+        
+        // Google Maps variables
+        let map;
+        let marker;
+        let geocoder;
+        let businessLocation = null;
 
         // İlçe verileri
         const districts = {
@@ -578,17 +633,29 @@
                 const formData = new FormData(event.target);
                 const data = Object.fromEntries(formData.entries());
                 
+                // Validate location for restaurant type
+                if (selectedBusinessType === 'restaurant') {
+                    if (!data.businessLatitude || !data.businessLongitude) {
+                        showError('Lütfen haritadan işletme konumunuzu seçin.');
+                        return;
+                    }
+                }
+                
                 // Prepare API request data
                 const apiData = {
                     firstName: data.firstName,
                     lastName: data.lastName,
                     email: data.email,
                     phone: data.phone || '',
+                    city: data.city,
+                    district: data.district,
                     businessName: data.businessName,
                     businessCategory: data.businessCategory,
                     businessAddress: data.businessAddress,
-                    username: data.restaurantUsername,
-                    password: data.restaurantPassword,
+                    businessLatitude: data.businessLatitude,
+                    businessLongitude: data.businessLongitude,
+                    restaurantUsername: data.restaurantUsername,
+                    restaurantPassword: data.restaurantPassword,
                     businessType: selectedBusinessType
                 };
 
@@ -666,6 +733,126 @@
             successMessage.style.display = 'block';
             successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+
+        // Google Maps Functions
+        function initMap() {
+            // Initialize map centered on Turkey
+            const turkey = { lat: 39.925533, lng: 32.866287 };
+            
+            map = new google.maps.Map(document.getElementById('businessMap'), {
+                zoom: 6,
+                center: turkey,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                styles: [
+                    {
+                        featureType: 'poi',
+                        elementType: 'labels',
+                        stylers: [{ visibility: 'on' }]
+                    }
+                ]
+            });
+
+            geocoder = new google.maps.Geocoder();
+
+            // Add click listener to map
+            map.addListener('click', function(event) {
+                placeMarker(event.latLng);
+            });
+
+            // Auto-detect user location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    // Check if user is in Turkey (rough bounds)
+                    if (userLocation.lat >= 36 && userLocation.lat <= 42 && 
+                        userLocation.lng >= 26 && userLocation.lng <= 45) {
+                        map.setCenter(userLocation);
+                        map.setZoom(13);
+                    }
+                });
+            }
+        }
+
+        function placeMarker(location) {
+            // Remove existing marker
+            if (marker) {
+                marker.setMap(null);
+            }
+
+            // Create new marker
+            marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: 'İşletme Konumu',
+                animation: google.maps.Animation.DROP,
+                icon: {
+                    url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                    scaledSize: new google.maps.Size(32, 32)
+                }
+            });
+
+            // Store location
+            businessLocation = {
+                lat: location.lat(),
+                lng: location.lng()
+            };
+
+            // Update hidden inputs
+            document.getElementById('businessLatitude').value = location.lat();
+            document.getElementById('businessLongitude').value = location.lng();
+
+            // Reverse geocode to get address
+            geocoder.geocode({ location: location }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address;
+                    document.getElementById('businessAddress').value = address;
+                    
+                    // Update map instructions
+                    const instructions = document.querySelector('.map-instructions span');
+                    instructions.textContent = 'Konum seçildi: ' + address;
+                    instructions.parentElement.style.background = '#f0fdf4';
+                    instructions.parentElement.style.borderColor = '#16a34a';
+                    instructions.parentElement.style.color = '#15803d';
+                }
+            });
+        }
+
+        // Search address function
+        function searchAddress(address) {
+            if (!address) return;
+
+            geocoder.geocode({ address: address + ', Turkey' }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    const location = results[0].geometry.location;
+                    map.setCenter(location);
+                    map.setZoom(15);
+                    placeMarker(location);
+                }
+            });
+        }
+
+        // Add event listener to address input
+        document.addEventListener('DOMContentLoaded', function() {
+            const addressInput = document.getElementById('businessAddress');
+            let searchTimeout;
+
+            addressInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const address = this.value;
+                
+                if (address.length > 5) {
+                    searchTimeout = setTimeout(() => {
+                        searchAddress(address);
+                    }, 1000);
+                }
+            });
+        });
     </script>
 </body>
 </html>

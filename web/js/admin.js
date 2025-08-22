@@ -366,35 +366,57 @@ function renderMockUsersData() {
     const registrations = window.KapTazeData ? 
         window.KapTazeData.getRegistrations() : 
         JSON.parse(localStorage.getItem('registrations') || '[]');
-    const customerRegistrations = registrations.filter(reg => reg.type === 'customer');
     
     const mockUsers = [
-        { id: '1', name: 'Ahmet Yılmaz', email: 'ahmet@example.com', phone: '0532 XXX XX XX', date: '2024-01-15', status: 'active' },
-        { id: '2', name: 'Fatma Kaya', email: 'fatma@example.com', phone: '0542 XXX XX XX', date: '2024-01-20', status: 'active' },
-        { id: '3', name: 'Mehmet Demir', email: 'mehmet@example.com', phone: '0555 XXX XX XX', date: '2024-01-25', status: 'inactive' }
+        { id: '1', name: 'Ahmet Yılmaz', email: 'ahmet@example.com', phone: '0532 XXX XX XX', date: '2024-01-15', status: 'active', type: 'customer' },
+        { id: '2', name: 'Fatma Kaya', email: 'fatma@example.com', phone: '0542 XXX XX XX', date: '2024-01-20', status: 'active', type: 'customer' },
+        { id: '3', name: 'Mehmet Demir', email: 'mehmet@example.com', phone: '0555 XXX XX XX', date: '2024-01-25', status: 'inactive', type: 'customer' }
     ];
     
-    // Add customer registrations
-    customerRegistrations.forEach(reg => {
-        mockUsers.push({
-            id: reg.id,
-            name: `${reg.firstName} ${reg.lastName}`,
-            email: reg.email,
-            phone: reg.phone,
-            date: new Date(reg.createdAt).toLocaleDateString('tr-TR'),
-            status: reg.status === 'approved' ? 'active' : 'pending'
-        });
+    // Add all registrations (both customer and restaurant users)
+    registrations.forEach(reg => {
+        if (reg.type === 'customer') {
+            mockUsers.push({
+                id: reg.id,
+                name: `${reg.firstName} ${reg.lastName}`,
+                email: reg.email,
+                phone: reg.phone,
+                date: new Date(reg.createdAt).toLocaleDateString('tr-TR'),
+                status: reg.status === 'approved' ? 'active' : 'pending',
+                type: 'customer'
+            });
+        } else if (reg.type === 'restaurant' && reg.status === 'approved' && reg.restaurantUsername) {
+            // Add restaurant user accounts
+            mockUsers.push({
+                id: reg.id + '_rest',
+                name: `${reg.firstName} ${reg.lastName} (Restoran)`,
+                email: reg.email,
+                phone: reg.phone,
+                date: new Date(reg.approvedAt || reg.createdAt).toLocaleDateString('tr-TR'),
+                status: 'active',
+                type: 'restaurant',
+                username: reg.restaurantUsername,
+                businessName: reg.businessName
+            });
+        }
     });
     
     const tableBody = document.getElementById('users-table-body');
     tableBody.innerHTML = mockUsers.map(user => `
         <tr>
             <td>${user.id}</td>
-            <td>${user.name}</td>
+            <td>
+                <strong>${user.name}</strong><br>
+                ${user.username ? `<small style="color: #6b7280;">👤 ${user.username}</small>` : ''}
+                ${user.businessName ? `<br><small style="color: #16a34a;">🏪 ${user.businessName}</small>` : ''}
+            </td>
             <td>${user.email}</td>
-            <td>${user.phone}</td>
+            <td>${user.phone || 'Belirtilmemiş'}</td>
             <td>${user.date}</td>
-            <td><span class="status-badge ${user.status}">${getStatusText(user.status)}</span></td>
+            <td>
+                <span class="status-badge ${user.status}">${getStatusText(user.status)}</span>
+                ${user.type === 'restaurant' ? '<br><span class="type-badge restaurant">Restoran</span>' : '<span class="type-badge customer">Müşteri</span>'}
+            </td>
             <td>
                 <button class="btn-secondary" onclick="editUser('${user.id}')">
                     <i class="fas fa-edit"></i>
@@ -483,10 +505,15 @@ function renderMockRestaurantsData() {
             email: reg.email,
             address: `${reg.businessAddress}, ${reg.district}/${reg.city}`,
             approved: reg.status === 'approved' ? 'active' : 'pending',
-            packages: 0,
+            packages: Math.floor(Math.random() * 5), // Random package count for demo
             category: reg.businessCategory,
             owner: `${reg.firstName} ${reg.lastName}`,
-            phone: reg.phone
+            phone: reg.phone,
+            location: reg.businessLatitude && reg.businessLongitude ? {
+                lat: parseFloat(reg.businessLatitude),
+                lng: parseFloat(reg.businessLongitude)
+            } : null,
+            username: reg.restaurantUsername
         });
     });
     
@@ -496,10 +523,18 @@ function renderMockRestaurantsData() {
             <td>${restaurant.id}</td>
             <td>
                 <strong>${restaurant.name}</strong><br>
-                <small style="color: #6b7280;">${restaurant.owner || 'N/A'}</small>
+                <small style="color: #6b7280;">👤 ${restaurant.owner || 'N/A'}</small>
+                ${restaurant.username ? `<br><small style="color: #059669;">🔑 ${restaurant.username}</small>` : ''}
+                ${restaurant.category ? `<br><small style="color: #dc2626;">🏷️ ${restaurant.category}</small>` : ''}
             </td>
-            <td>${restaurant.email}</td>
-            <td>${restaurant.address}</td>
+            <td>
+                ${restaurant.email}<br>
+                <small style="color: #6b7280;">${restaurant.phone || 'Telefon belirtilmemiş'}</small>
+            </td>
+            <td>
+                ${restaurant.address}
+                ${restaurant.location ? `<br><small style="color: #059669;"><i class="fas fa-map-marker-alt"></i> Konum: ${restaurant.location.lat.toFixed(4)}, ${restaurant.location.lng.toFixed(4)}</small>` : ''}
+            </td>
             <td><span class="status-badge ${restaurant.approved}">${restaurant.approved === 'active' ? 'Onaylı' : 'Beklemede'}</span></td>
             <td>${restaurant.packages}</td>
             <td>
@@ -515,6 +550,11 @@ function renderMockRestaurantsData() {
                     <i class="fas fa-eye"></i>
                 </button>
                 `}
+                ${restaurant.location ? `
+                <button class="btn-secondary" onclick="showOnMap('${restaurant.id}', ${restaurant.location.lat}, ${restaurant.location.lng})" title="Haritada Göster">
+                    <i class="fas fa-map-marker-alt"></i>
+                </button>
+                ` : ''}
             </td>
         </tr>
     `).join('');
@@ -540,6 +580,13 @@ function approveRestaurant(restaurantId) {
 
 function viewRestaurant(restaurantId) {
     showNotification(`Restoran detayları görüntüleme özelliği yakında aktif olacak (ID: ${restaurantId})`, 'info');
+}
+
+function showOnMap(restaurantId, lat, lng) {
+    // Open Google Maps with the restaurant location
+    const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}&z=15&t=m`;
+    window.open(mapsUrl, '_blank');
+    showNotification(`Restoran konumu Google Maps'te açılıyor...`, 'info');
 }
 
 // Orders functions
