@@ -82,6 +82,11 @@ function logout() {
 
 // App initialization
 function initializeApp() {
+    // Initialize database first
+    console.log('🔄 Initializing KapTaze Database...');
+    window.KapTazeDB = window.KapTazeDB || new KapTazeDatabase();
+    console.log('✅ KapTaze Database initialized');
+    
     // Set active section from URL hash
     const hash = window.location.hash.substring(1);
     if (hash) {
@@ -969,29 +974,67 @@ async function loadApplicationsData() {
     tableBody.innerHTML = '<tr><td colspan="8" class="loading">Başvurular yükleniyor...</td></tr>';
     
     console.log('🔄 Loading applications data...');
-    console.log('📡 API Connected:', apiConnected);
     
     try {
-        // Use centralized database system
-        if (window.KapTazeDB) {
-            const applications = window.KapTazeDB.getAllApplications();
-            console.log('📊 Applications from database:', applications.length);
-            
-            if (applications.length > 0) {
-                renderApplicationsTable(applications);
-                return;
-            }
+        // Initialize database if not already
+        if (!window.KapTazeDB) {
+            window.KapTazeDB = new KapTazeDatabase();
         }
         
-        // Fallback to localStorage for backward compatibility
-        console.log('📁 Fallback to localStorage data...');
-        await renderMockApplicationsData();
+        // Get applications from database
+        const applications = window.KapTazeDB.getAllApplications();
+        console.log('📊 Applications from database:', applications.length);
+        console.log('📋 Applications data:', applications);
+        
+        if (applications.length > 0) {
+            renderApplicationsTable(applications);
+        } else {
+            tableBody.innerHTML = '<tr><td colspan="8" class="loading">Henüz başvuru bulunmuyor. Müşteri kayıt sayfasından başvuru yapıldığında burada görünecek.</td></tr>';
+        }
         
     } catch (error) {
         console.error('❌ Error loading applications:', error);
         // Final fallback
-        tableBody.innerHTML = '<tr><td colspan="8" class="error">Başvurular yüklenirken hata oluştu</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8" class="error">Başvurular yüklenirken hata oluştu: ' + error.message + '</td></tr>';
     }
+}
+
+function renderApplicationsTable(applications) {
+    const tableBody = document.getElementById('applications-table-body');
+    
+    if (!applications || applications.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="loading">Henüz başvuru bulunmuyor</td></tr>';
+        return;
+    }
+    
+    console.log('🎨 Rendering applications table with', applications.length, 'applications');
+    
+    tableBody.innerHTML = applications.map(app => `
+        <tr>
+            <td>${app.id}</td>
+            <td><span class="type-badge ${app.type}">${app.type === 'customer' ? 'Müşteri' : 'Restoran'}</span></td>
+            <td>${app.firstName} ${app.lastName}</td>
+            <td>${app.email}</td>
+            <td>${app.type === 'restaurant' ? app.businessName : '-'}</td>
+            <td>${new Date(app.createdAt).toLocaleDateString('tr-TR')}</td>
+            <td><span class="status-badge ${app.status}">${getApplicationStatusText(app.status)}</span></td>
+            <td>
+                <button class="btn-secondary" onclick="viewApplication('${app.id}')" title="Detay">
+                    <i class="fas fa-eye"></i>
+                </button>
+                ${app.status === 'pending' ? `
+                <button class="btn-primary" onclick="approveApplication('${app.id}')" title="Onayla">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button class="btn-danger" onclick="rejectApplication('${app.id}')" title="Reddet">
+                    <i class="fas fa-times"></i>
+                </button>
+                ` : ''}
+            </td>
+        </tr>
+    `).join('');
+    
+    console.log('✅ Applications table rendered successfully');
 }
 
 // Render applications table with database format
@@ -1187,6 +1230,18 @@ function filterApplications() {
 }
 
 function viewApplication(applicationId) {
+    // Try database first
+    if (window.KapTazeDB) {
+        const applications = window.KapTazeDB.getAllApplications();
+        const application = applications.find(app => app.id === applicationId);
+        
+        if (application) {
+            displayApplicationModal(application);
+            return;
+        }
+    }
+    
+    // Fallback to localStorage
     const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
     const application = registrations.find(app => app.id === applicationId);
     
@@ -1194,6 +1249,11 @@ function viewApplication(applicationId) {
         showNotification('Başvuru bulunamadı', 'error');
         return;
     }
+    
+    displayApplicationModal(application);
+}
+
+function displayApplicationModal(application) {
     
     let modalContent = `
         <div class="modal-overlay" onclick="closeApplicationModal()">
