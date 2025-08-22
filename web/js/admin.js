@@ -1382,11 +1382,31 @@ function closeApplicationModal() {
 async function approveApplication(applicationId) {
     console.log('🎯 STARTING APPROVAL:', applicationId);
     
-    // Generate credentials first
+    // Get application data to extract customer-provided credentials
+    const data = await window.KapTazeSharedStorage.getAllData();
+    const application = data.applications.find(app => app.id === applicationId);
+    
+    if (!application) {
+        throw new Error(`Application ${applicationId} not found`);
+    }
+    
+    // Use customer-provided credentials instead of generating random ones
     const credentials = {
-        username: `resto_${Date.now().toString(36)}`,
-        password: Math.random().toString(36).substring(2, 10)
+        username: application.restaurantUsername,
+        password: application.restaurantPassword
     };
+    
+    console.log('📋 Using customer-provided credentials:', {
+        username: credentials.username,
+        passwordLength: credentials.password ? credentials.password.length : 0,
+        hasUsername: !!credentials.username,
+        hasPassword: !!credentials.password
+    });
+    
+    // Validate customer credentials
+    if (!credentials.username || !credentials.password) {
+        throw new Error('Application missing restaurant username or password');
+    }
     
     console.log('🔑 Generated credentials:', credentials.username);
     
@@ -1898,4 +1918,4 @@ console.log('🌐 Global functions registered:', {
 });
 
 // 🔥 FORCE CACHE CLEAR NOTIFICATION
-console.log('🚨 CACHE VERSION: 2025.08.22.19 - Permanent database integration completed!');
+console.log('🚨 CACHE VERSION: 2025.08.22.23 - Using customer-provided credentials instead of random!');
