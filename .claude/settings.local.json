@@ -69,7 +69,10 @@
       "Bash(start https://app.netlify.com/projects/kaptaze)",
       "Bash(del netlify.toml)",
       "Bash(git revert:*)",
-      "Bash(start https://app.netlify.com/sites/kaptaze/deploys)"
+      "Bash(start https://app.netlify.com/sites/kaptaze/deploys)",
+      "WebSearch",
+      "Bash(find:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": [],

@@ -5,6 +5,8 @@
 
 class KapTazeSharedStorage {
     constructor() {
+        // Try MongoDB first, fallback to shared-storage
+        this.mongoUrl = '/.netlify/functions/mongodb-storage';
         this.baseUrl = '/.netlify/functions/shared-storage';
         this.cache = {
             data: null,
@@ -15,11 +17,39 @@ class KapTazeSharedStorage {
         console.log('🌐 KapTaze Shared Storage Service initialized');
     }
     
-    // Core API Methods
+    // Core API Methods - Try MongoDB first, fallback to shared-storage
     async makeRequest(action, data = null) {
         try {
-            console.log(`📡 Shared Storage Request: ${action}`, data ? 'with data' : 'no data');
-            console.log(`🔗 Request URL:`, this.baseUrl);
+            console.log(`📡 Storage Request: ${action}`, data ? 'with data' : 'no data');
+            
+            // Try MongoDB first
+            try {
+                console.log(`🗄️ Trying MongoDB:`, this.mongoUrl);
+                
+                const mongoResponse = await fetch(this.mongoUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        data: data
+                    })
+                });
+                
+                if (mongoResponse.ok) {
+                    const result = await mongoResponse.json();
+                    console.log(`✅ MongoDB success for ${action}:`, result);
+                    return result;
+                }
+                
+                console.log(`⚠️ MongoDB failed, trying fallback...`);
+            } catch (mongoError) {
+                console.log(`⚠️ MongoDB error, using fallback:`, mongoError.message);
+            }
+            
+            // Fallback to shared-storage
+            console.log(`🔗 Fallback URL:`, this.baseUrl);
             console.log(`📤 Request data:`, { action, data });
             
             const response = await fetch(this.baseUrl, {

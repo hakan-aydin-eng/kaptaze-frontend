@@ -765,9 +765,9 @@ function renderMockRestaurantsData() {
             <td>${restaurant.id}</td>
             <td>
                 <strong>${restaurant.name}</strong><br>
-                <small style="color: #6b7280;">👤 ${restaurant.owner || 'N/A'}</small>
-                ${restaurant.username ? `<br><small style="color: #059669;">🔑 ${restaurant.username}</small>` : ''}
-                ${restaurant.category ? `<br><small style="color: #dc2626;">🏷️ ${restaurant.category}</small>` : ''}
+                <small style="color: #6b7280;">👤 ${restaurant.owner || 'İsim belirtilmemiş'}</small><br>
+                ${restaurant.username ? `<small style="color: #059669;">🔑 ${restaurant.username}</small><br>` : ''}
+                ${restaurant.category ? `<small style="color: #dc2626;">🏷️ ${restaurant.category}</small>` : ''}
             </td>
             <td>
                 ${restaurant.email}<br>
@@ -1935,4 +1935,4 @@ console.log('🌐 Global functions registered:', {
 });
 
 // 🔥 FORCE CACHE CLEAR NOTIFICATION
-console.log('🚨 CACHE VERSION: 2025.08.22.24 - Fixed KapTazeSharedStorage initialization in admin!');
+console.log('🚨 CACHE VERSION: 2025.08.22.31 - Enhanced restaurant names display with firstName+lastName!');
