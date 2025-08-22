@@ -1,6 +1,6 @@
-// KapTaze Admin Panel JavaScript
+// KapTaze Admin Panel JavaScript - Database Integration
 
-// Configuration
+// Configuration - Fallback to database when API fails
 const API_BASE_URL = 'https://kaptaze-api.onrender.com';
 const API_ENDPOINTS = {
     users: '/api/admin/kullanicilar',
@@ -13,6 +13,7 @@ const API_ENDPOINTS = {
 
 // Global state
 let apiConnected = false;
+let useDatabase = true; // Use local database as primary source
 
 // Global state
 let currentSection = 'dashboard';
@@ -253,7 +254,26 @@ async function checkAPIStatus() {
 // Dashboard functions
 async function loadDashboardData() {
     try {
+        // Use centralized database system
+        if (window.KapTazeDB) {
+            const stats = window.KapTazeDB.getStatistics();
+            console.log('📊 Dashboard stats from database:', stats);
+            
+            updateDashboardStats({
+                totalUsers: stats.totalApplications, // All applications
+                activeUsers: (window.KapTazeDB.getData().restaurantUsers.length + window.KapTazeDB.getData().customerUsers.length),
+                totalRestaurants: stats.activeRestaurants,
+                pendingApplications: stats.pendingApplications,
+                totalPackages: stats.totalPackages,
+                activePackages: stats.activePackages,
+                totalOrders: stats.totalOrders
+            });
+            
+            return;
+        }
+        
         // Mock data fallback
+        console.log('📁 Using mock dashboard data...');
         const mockStats = {
             totalUsers: 1247,
             totalRestaurants: 89,
@@ -261,17 +281,7 @@ async function loadDashboardData() {
             totalOrders: 2834
         };
         
-        if (apiConnected) {
-            // Try to get real data from API
-            const dashboardData = await makeAPICall(API_ENDPOINTS.dashboard);
-            if (dashboardData && dashboardData.success) {
-                updateDashboardStats(dashboardData.data);
-            } else {
-                // Fall back to mock data
-                updateDashboardStatsMock(mockStats);
-            }
-        } else {
-            // Use mock data
+        // Use mock data
             updateDashboardStatsMock(mockStats);
         }
         
@@ -314,19 +324,34 @@ async function loadUsersData() {
     tableBody.innerHTML = '<tr><td colspan="7" class="loading">Kullanıcılar yükleniyor...</td></tr>';
     
     try {
-        if (apiConnected) {
-            const usersData = await makeAPICall(API_ENDPOINTS.users);
+        // Use centralized database system
+        if (window.KapTazeDB) {
+            const data = window.KapTazeDB.getData();
             
-            if (usersData && usersData.success && usersData.data.kullanicilar) {
-                renderUsersTable(usersData.data.kullanicilar);
-            } else {
-                // Show mock data
-                renderMockUsersData();
+            // Combine restaurant and customer users
+            const allUsers = [
+                ...data.restaurantUsers.map(user => ({
+                    ...user,
+                    type: 'restaurant'
+                })),
+                ...data.customerUsers.map(user => ({
+                    ...user,
+                    type: 'customer'
+                }))
+            ];
+            
+            console.log('📊 Users from database:', allUsers.length);
+            
+            if (allUsers.length > 0) {
+                renderUsersTable(allUsers);
+                return;
             }
-        } else {
-            // Show mock data when API is not connected
-            renderMockUsersData();
         }
+        
+        // Fallback to mock data
+        console.log('📁 Fallback to mock users data...');
+        renderMockUsersData();
+        
     } catch (error) {
         renderMockUsersData();
         console.error('Users loading failed, using mock data:', error);
@@ -356,6 +381,52 @@ function renderUsersTable(users) {
                 <button class="btn-secondary" onclick="toggleUserStatus('${user._id}', ${user.aktif})">
                     <i class="fas fa-${user.aktif ? 'ban' : 'check'}"></i>
                 </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Render users table with database format
+function renderUsersTable(users) {
+    const tableBody = document.getElementById('users-table-body');
+    
+    if (!users || users.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="no-data">Henüz kullanıcı bulunmuyor</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = users.map(user => `
+        <tr>
+            <td>${user.id}</td>
+            <td>
+                <strong>${user.email}</strong><br>
+                <small style="color: #6b7280;">🔑 ${user.username}</small>
+            </td>
+            <td>
+                <span class="user-type-badge ${user.type}">
+                    ${user.type === 'restaurant' ? '🏪 Restoran' : '👤 Müşteri'}
+                </span>
+            </td>
+            <td>${user.phone || 'Belirtilmemiş'}</td>
+            <td>
+                <span class="status-badge ${user.status === 'active' ? 'approved' : 'pending'}">
+                    ${user.status === 'active' ? 'Aktif' : 'Pasif'}
+                </span>
+            </td>
+            <td>${new Date(user.createdAt).toLocaleDateString('tr-TR')}</td>
+            <td>
+                <div class="action-buttons">
+                    <button onclick="viewUser('${user.id}')" class="btn-view" title="Görüntüle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="editUser('${user.id}')" class="btn-edit" title="Düzenle">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="toggleUserStatus('${user.id}', '${user.status}')" 
+                        class="btn-toggle" title="Durumu Değiştir">
+                        <i class="fas fa-power-off"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -469,21 +540,80 @@ async function loadRestaurantsData() {
     tableBody.innerHTML = '<tr><td colspan="7" class="loading">Restoranlar yükleniyor...</td></tr>';
     
     try {
-        if (apiConnected) {
-            const restaurantsData = await makeAPICall(API_ENDPOINTS.restaurants);
+        // Use centralized database system
+        if (window.KapTazeDB) {
+            const restaurants = window.KapTazeDB.getAllRestaurants();
+            console.log('📊 Restaurants from database:', restaurants.length);
             
-            if (restaurantsData && restaurantsData.success) {
-                renderRestaurantsTable(restaurantsData.data.restoranlar);
-            } else {
-                renderMockRestaurantsData();
+            if (restaurants.length > 0) {
+                renderRestaurantsTable(restaurants);
+                return;
             }
-        } else {
-            renderMockRestaurantsData();
         }
-    } catch (error) {
+        
+        // Fallback to mock data
+        console.log('📁 Fallback to mock restaurants data...');
         renderMockRestaurantsData();
-        console.error('Restaurants loading failed, using mock data:', error);
+        
+    } catch (error) {
+        console.error('❌ Error loading restaurants:', error);
+        renderMockRestaurantsData();
     }
+}
+
+// Render restaurants table with database format
+function renderRestaurantsTable(restaurants) {
+    const tableBody = document.getElementById('restaurants-table-body');
+    
+    if (!restaurants || restaurants.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="no-data">Henüz onaylanmış restoran bulunmuyor</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = restaurants.map(restaurant => {
+        const user = restaurant.user || {};
+        const application = restaurant.application || {};
+        
+        return `
+            <tr>
+                <td>${restaurant.id}</td>
+                <td>
+                    <strong>${restaurant.businessName}</strong><br>
+                    <small style="color: #6b7280;">👤 ${user.email || 'N/A'}</small>
+                    ${user.username ? `<br><small style="color: #059669;">🔑 ${user.username}</small>` : ''}
+                    ${restaurant.businessType ? `<br><small style="color: #dc2626;">🏷️ ${restaurant.businessType}</small>` : ''}
+                </td>
+                <td>
+                    ${application.email || user.email || 'N/A'}<br>
+                    <small style="color: #6b7280;">${application.phone || user.phone || 'Telefon belirtilmemiş'}</small>
+                </td>
+                <td>
+                    ${restaurant.address || 'Adres belirtilmemiş'}
+                    ${restaurant.coordinates ? `<br><small style="color: #059669;" onclick="showOnMap(${restaurant.coordinates.lat}, ${restaurant.coordinates.lng})">📍 Haritada Göster</small>` : ''}
+                </td>
+                <td>
+                    <span class="status-badge ${restaurant.status === 'active' ? 'approved' : 'pending'}">
+                        ${restaurant.status === 'active' ? 'Aktif' : 'Pasif'}
+                    </span>
+                </td>
+                <td>${restaurant.packageCount || '0'}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button onclick="viewRestaurant('${restaurant.id}')" class="btn-view" title="Görüntüle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="editRestaurant('${restaurant.id}')" class="btn-edit" title="Düzenle">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="toggleRestaurantStatus('${restaurant.id}', '${restaurant.status}')" 
+                            class="btn-toggle" title="Durumu Değiştir">
+                            <i class="fas fa-power-off"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function renderMockRestaurantsData() {
@@ -738,23 +868,83 @@ async function loadApplicationsData() {
     console.log('📡 API Connected:', apiConnected);
     
     try {
-        if (apiConnected) {
-            // Try to get real data from API
-            const applicationsData = await makeAPICall('/api/admin/basvurular');
+        // Use centralized database system
+        if (window.KapTazeDB) {
+            const applications = window.KapTazeDB.getAllApplications();
+            console.log('📊 Applications from database:', applications.length);
             
-            if (applicationsData && applicationsData.success) {
-                renderApplicationsTable(applicationsData.data.basvurular);
-            } else {
-                renderMockApplicationsData();
+            if (applications.length > 0) {
+                renderApplicationsTable(applications);
+                return;
             }
-        } else {
-            console.log('📁 Using localStorage data...');
-            await renderMockApplicationsData();
         }
-    } catch (error) {
+        
+        // Fallback to localStorage for backward compatibility
+        console.log('📁 Fallback to localStorage data...');
         await renderMockApplicationsData();
-        console.error('Applications loading failed, using mock data:', error);
+        
+    } catch (error) {
+        console.error('❌ Error loading applications:', error);
+        // Final fallback
+        tableBody.innerHTML = '<tr><td colspan="8" class="error">Başvurular yüklenirken hata oluştu</td></tr>';
     }
+}
+
+// Render applications table with database format
+function renderApplicationsTable(applications) {
+    const tableBody = document.getElementById('applications-table-body');
+    
+    if (!applications || applications.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="no-data">Henüz başvuru bulunmuyor</td></tr>';
+        return;
+    }
+    
+    const pendingApplications = applications.filter(app => app.status === 'pending');
+    
+    if (pendingApplications.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" class="no-data">Bekleyen başvuru bulunmuyor</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = pendingApplications.map(application => `
+        <tr>
+            <td>${application.id}</td>
+            <td>
+                <strong>${application.businessName}</strong><br>
+                <small style="color: #6b7280;">👤 ${application.firstName} ${application.lastName}</small><br>
+                <small style="color: #dc2626;">🏷️ ${application.businessType || application.businessCategory}</small>
+            </td>
+            <td>
+                ${application.email}<br>
+                <small style="color: #6b7280;">${application.phone || 'Telefon belirtilmemiş'}</small>
+            </td>
+            <td>
+                ${application.businessAddress || 'Adres belirtilmemiş'}<br>
+                <small style="color: #6b7280;">${application.district}/${application.city}</small>
+                ${application.businessLatitude ? `<br><small style="color: #059669;" onclick="showOnMap(${application.businessLatitude}, ${application.businessLongitude})">📍 Haritada Göster</small>` : ''}
+            </td>
+            <td>
+                <span class="status-badge pending">Bekliyor</span>
+            </td>
+            <td>${new Date(application.createdAt).toLocaleDateString('tr-TR')}</td>
+            <td>
+                ${application.restaurantUsername ? `<small style="color: #059669;">🔑 ${application.restaurantUsername}</small>` : 'N/A'}
+            </td>
+            <td>
+                <div class="action-buttons">
+                    <button onclick="viewApplication('${application.id}')" class="btn-view" title="Görüntüle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="approveApplication('${application.id}')" class="btn-approve" title="Onayla">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button onclick="rejectApplication('${application.id}')" class="btn-reject" title="Reddet">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
 }
 
 async function renderMockApplicationsData() {
@@ -975,33 +1165,56 @@ function closeApplicationModal() {
 }
 
 async function approveApplication(applicationId) {
+    console.log('🔄 Approving application:', applicationId);
+    
     try {
-        // Try API first
-        const response = await fetch('https://kaptaze.netlify.app/.netlify/functions/approve-registration', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ applicationId: applicationId })
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            if (result.basarili) {
-                showNotification(result.mesaj, 'success');
-                loadApplicationsData(); // Reload applications
+        // Use centralized database system
+        if (window.KapTazeDB) {
+            // Generate restaurant credentials
+            const credentials = {
+                username: `resto_${Date.now().toString(36)}`,
+                password: Math.random().toString(36).substring(2, 10)
+            };
+            
+            const approvalResult = window.KapTazeDB.approveApplication(applicationId, credentials);
+            
+            if (approvalResult) {
+                const { application, user, profile } = approvalResult;
                 
-                // Reload all related sections
+                showNotification(
+                    `Başvuru onaylandı! Restaurant kullanıcı adı: ${credentials.username}, Şifre: ${credentials.password}`, 
+                    'success'
+                );
+                
+                console.log('✅ Application approved:', {
+                    applicationId,
+                    restaurantUser: user.id,
+                    restaurantProfile: profile.id
+                });
+                
+                // Reload all sections
+                loadApplicationsData();
                 loadRestaurantsData();
                 loadUsersData();
-                loadDashboardData(); // Update dashboard stats
+                loadDashboardData();
+                
                 return;
+            } else {
+                throw new Error('Database approval failed');
             }
         }
+        
+        // Fallback to localStorage for backward compatibility
+        console.log('📁 Fallback to localStorage...');
+        await approveApplicationLegacy(applicationId);
+        
     } catch (error) {
-        console.log('API approval failed, falling back to localStorage:', error);
+        console.error('❌ Application approval failed:', error);
+        showNotification('Başvuru onaylanırken hata oluştu: ' + error.message, 'error');
     }
+}
 
+async function approveApplicationLegacy(applicationId) {
     // Fallback to localStorage
     const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
     const application = registrations.find(app => app.id === applicationId);
