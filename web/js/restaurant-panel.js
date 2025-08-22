@@ -822,7 +822,13 @@ class RestaurantPanel {
 }
 
 // Navigation function for section switching
-window.showSection = function(sectionId) {
+window.showSection = function(sectionId, event) {
+    // Prevent default link behavior to stop page jump
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     // Hide all sections
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
@@ -844,6 +850,9 @@ window.showSection = function(sectionId) {
     if (activeNavItem) {
         activeNavItem.classList.add('active');
     }
+    
+    // Update URL hash without causing page jump
+    history.replaceState(null, null, `#${sectionId}`);
     
     // Update page title
     const sectionTitles = {
@@ -869,6 +878,8 @@ window.showSection = function(sectionId) {
                 break;
         }
     }
+    
+    return false; // Prevent default link behavior
 };
 
 // Sidebar toggle function

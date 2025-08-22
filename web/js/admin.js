@@ -95,7 +95,13 @@ function initializeApp() {
 }
 
 // Navigation - Make sure it's globally accessible
-window.showSection = function showSection(sectionId) {
+window.showSection = function showSection(sectionId, event) {
+    // Prevent default link behavior to stop page jump
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     // Hide all sections
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
@@ -108,19 +114,24 @@ window.showSection = function showSection(sectionId) {
     
     // Show selected section
     const section = document.getElementById(sectionId);
-    const navItem = document.querySelector(`[onclick="showSection('${sectionId}')"]`);
+    const navItem = document.querySelector(`[onclick*="showSection('${sectionId}')"]`);
     
-    if (section && navItem) {
+    if (section) {
         section.classList.add('active');
-        navItem.classList.add('active');
         currentSection = sectionId;
         
-        // Update URL hash
-        window.location.hash = sectionId;
+        // Update URL hash without causing page jump
+        history.replaceState(null, null, `#${sectionId}`);
         
         // Load section data
         loadSectionData(sectionId);
     }
+    
+    if (navItem) {
+        navItem.classList.add('active');
+    }
+    
+    return false; // Prevent default link behavior
 }
 
 // Load section data
