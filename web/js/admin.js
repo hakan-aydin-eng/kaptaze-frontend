@@ -87,6 +87,13 @@ function initializeApp() {
     window.KapTazeDB = window.KapTazeDB || new KapTazeDatabase();
     console.log('✅ KapTaze Database initialized');
     
+    // Initialize shared storage
+    if (!window.KapTazeSharedStorage && typeof KapTazeSharedStorage !== 'undefined') {
+        console.log('🔄 Initializing KapTaze Shared Storage...');
+        window.KapTazeSharedStorage = new KapTazeSharedStorage();
+        console.log('✅ KapTaze Shared Storage initialized');
+    }
+    
     // Set active section from URL hash
     const hash = window.location.hash.substring(1);
     if (hash) {
@@ -1382,6 +1389,16 @@ function closeApplicationModal() {
 async function approveApplication(applicationId) {
     console.log('🎯 STARTING APPROVAL:', applicationId);
     
+    // Initialize shared storage if not available
+    if (!window.KapTazeSharedStorage) {
+        console.log('🔧 Initializing KapTaze Shared Storage in admin...');
+        if (typeof KapTazeSharedStorage !== 'undefined') {
+            window.KapTazeSharedStorage = new KapTazeSharedStorage();
+        } else {
+            throw new Error('KapTazeSharedStorage class not available in admin panel');
+        }
+    }
+    
     // Get application data to extract customer-provided credentials
     const data = await window.KapTazeSharedStorage.getAllData();
     const application = data.applications.find(app => app.id === applicationId);
@@ -1918,4 +1935,4 @@ console.log('🌐 Global functions registered:', {
 });
 
 // 🔥 FORCE CACHE CLEAR NOTIFICATION
-console.log('🚨 CACHE VERSION: 2025.08.22.23 - Using customer-provided credentials instead of random!');
+console.log('🚨 CACHE VERSION: 2025.08.22.24 - Fixed KapTazeSharedStorage initialization in admin!');
