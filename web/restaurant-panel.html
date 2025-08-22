@@ -718,7 +718,7 @@
         </div>
     </div>
 
-    <script src="./js/restaurant-panel.js?v=2025.08.22.19"></script>
+    <script src="./js/restaurant-panel.js?v=2025.08.22.25"></script>
     
     <script>
         // 🔐 RESTAURANT PANEL AUTHENTICATION CHECK
@@ -728,9 +728,15 @@
             const restaurantToken = sessionStorage.getItem('restaurantToken');
             const restaurantUser = sessionStorage.getItem('restaurantUser');
             
+            console.log('🔍 Restaurant auth check:', {
+                hasToken: !!restaurantToken,
+                hasUser: !!restaurantUser,
+                tokenValue: restaurantToken ? restaurantToken.substring(0, 20) + '...' : 'null',
+                userValue: restaurantUser ? 'Present' : 'null'
+            });
+            
             if (!restaurantToken || !restaurantUser) {
                 console.log('❌ No restaurant authentication found, redirecting to login');
-                alert('Restoran paneline erişim için giriş yapmanız gerekiyor.');
                 window.location.href = '/restaurant-login.html';
                 return;
             }
@@ -797,40 +803,7 @@
         // Make logout function available globally
         window.logoutRestaurant = logoutRestaurant;
         
-        console.log('🚨 CACHE VERSION: 2025.08.22.19 - Restaurant panel with KapTaze authentication!');
-    </script>
-    <script>
-        // Logout function for restaurant panel
-        function logout() {
-            if (confirm('Çıkış yapmak istediğiniz emin misiniz?')) {
-                // Clear authentication data
-                localStorage.removeItem('restaurantToken');
-                localStorage.removeItem('restaurantUser');
-                
-                // Redirect to restaurant login - same tab navigation
-                window.location.href = '/restaurant-login.html';
-            }
-        }
-
-        // Check authentication on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('restaurantToken');
-            const user = localStorage.getItem('restaurantUser');
-            
-            if (!token || !user) {
-                // Not authenticated, redirect to login
-                window.location.href = '/restaurant-login.html';
-                return;
-            }
-            
-            // Load user data and update UI
-            try {
-                const userData = JSON.parse(user);
-                document.getElementById('restaurant-name').textContent = userData.name || 'Restoran Paneli';
-            } catch (error) {
-                console.error('Error loading user data:', error);
-            }
-        });
+        console.log('🚨 CACHE VERSION: 2025.08.22.25 - Fixed authentication loop by removing duplicate script!');
     </script>
 </body>
 </html>
