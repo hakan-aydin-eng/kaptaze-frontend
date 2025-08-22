@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KapTaze API Test Suite</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .test-section { margin-bottom: 30px; }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2980b9; }
+        button.success { background: #27ae60; }
+        button.error { background: #e74c3c; }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { border-color: #27ae60; background: #d4edda; }
+        .error { border-color: #e74c3c; background: #f8d7da; }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 KapTaze API Test Suite</h1>
+        <p>Comprehensive backend API testing for global admin access</p>
+    </div>
+
+    <div class="container">
+        <h2>📊 Current System State</h2>
+        <div class="test-section">
+            <button onclick="getCurrentData()">Get All Data</button>
+            <button onclick="getPendingApplications()">Get Pending Applications</button>
+            <button onclick="getApprovedRestaurants()">Get Approved Restaurants</button>
+            <div id="systemState" class="result"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>✅ Application Approval Testing</h2>
+        <div class="test-section">
+            <div class="form-group">
+                <label>Application ID:</label>
+                <input type="text" id="appId" placeholder="APP_..." />
+                <button onclick="loadPendingApps()">Load Pending IDs</button>
+            </div>
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" id="username" placeholder="resto_user_123" />
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="text" id="password" placeholder="secure123" />
+            </div>
+            <button onclick="testApproval()">🎯 Test Approval</button>
+            <button onclick="testInvalidApproval()">❌ Test Invalid ID</button>
+            <button onclick="testMissingData()">⚠️ Test Missing Data</button>
+            <div id="approvalResult" class="result"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🔧 Frontend Service Testing</h2>
+        <div class="test-section">
+            <button onclick="testSharedStorageService()">Test KapTazeShared Service</button>
+            <button onclick="testServiceMethods()">Test All Service Methods</button>
+            <button onclick="simulateAdminApproval()">🎯 Simulate Admin Panel Approval</button>
+            <div id="serviceResult" class="result"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🚨 Emergency Testing</h2>
+        <div class="test-section">
+            <button onclick="testEmergencyApproval()">🆘 Emergency Approval</button>
+            <button onclick="testLocalStorageFallback()">💾 LocalStorage Fallback</button>
+            <button onclick="clearEmergencyData()">🗑️ Clear Emergency Data</button>
+            <div id="emergencyResult" class="result"></div>
+        </div>
+    </div>
+
+    <script src="./js/shared-storage-service.js"></script>
+    <script>
+        // Test functions
+        async function getCurrentData() {
+            const result = document.getElementById('systemState');
+            try {
+                const response = await fetch('/.netlify/functions/shared-storage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'get' })
+                });
+                
+                const data = await response.json();
+                result.className = 'result success';
+                result.textContent = `📊 SYSTEM STATE:
+Applications: ${data.data?.applications?.length || 0}
+- Pending: ${data.data?.applications?.filter(a => a.status === 'pending').length || 0}
+- Approved: ${data.data?.applications?.filter(a => a.status === 'approved').length || 0}
+
+Restaurant Users: ${data.data?.restaurantUsers?.length || 0}
+Restaurant Profiles: ${data.data?.restaurantProfiles?.length || 0}
+
+Last Modified: ${data.data?.metadata?.lastModified || 'N/A'}
+
+FULL DATA:
+${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ ERROR: ${error.message}`;
+            }
+        }
+
+        async function getPendingApplications() {
+            const result = document.getElementById('systemState');
+            try {
+                const response = await fetch('/.netlify/functions/shared-storage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'get' })
+                });
+                
+                const data = await response.json();
+                const pending = data.data?.applications?.filter(a => a.status === 'pending') || [];
+                
+                result.className = 'result success';
+                result.textContent = `📋 PENDING APPLICATIONS (${pending.length}):
+
+${pending.map(app => `
+ID: ${app.id}
+Name: ${app.firstName} ${app.lastName} 
+Business: ${app.businessName}
+Email: ${app.email}
+Created: ${new Date(app.createdAt).toLocaleString()}
+`).join('\n---\n')}`;
+
+                // Auto-fill first pending application
+                if (pending.length > 0) {
+                    document.getElementById('appId').value = pending[0].id;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ ERROR: ${error.message}`;
+            }
+        }
+
+        async function getApprovedRestaurants() {
+            const result = document.getElementById('systemState');
+            try {
+                const response = await fetch('/.netlify/functions/shared-storage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'get' })
+                });
+                
+                const data = await response.json();
+                const profiles = data.data?.restaurantProfiles || [];
+                const users = data.data?.restaurantUsers || [];
+                
+                result.className = 'result success';
+                result.textContent = `🏪 APPROVED RESTAURANTS (${profiles.length}):
+
+${profiles.map(profile => {
+                    const user = users.find(u => u.id === profile.userId);
+                    return `
+Restaurant: ${profile.businessName}
+Profile ID: ${profile.id}
+Username: ${user?.username || 'N/A'}
+Status: ${profile.status}
+Visible: ${profile.isVisible}
+Created: ${new Date(profile.createdAt).toLocaleString()}
+`;
+                }).join('\n---\n')}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ ERROR: ${error.message}`;
+            }
+        }
+
+        async function testApproval() {
+            const result = document.getElementById('approvalResult');
+            const appId = document.getElementById('appId').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!appId || !username || !password) {
+                result.className = 'result error';
+                result.textContent = '❌ Please fill all fields';
+                return;
+            }
+
+            try {
+                console.log('🚀 Testing approval:', { appId, username, password });
+                
+                const response = await fetch('/.netlify/functions/shared-storage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'approveApplication',
+                        data: {
+                            applicationId: appId,
+                            credentials: { username, password }
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                result.className = data.success ? 'result success' : 'result error';
+                result.textContent = `🎯 APPROVAL TEST RESULT:
+Status: ${response.status} ${response.statusText}
+Success: ${data.success}
+Message: ${data.message || data.error}
+
+${data.success ? `
+✅ CREATED:
+- Application: ${data.data?.application?.id} (${data.data?.application?.status})
+- User: ${data.data?.user?.id} (${data.data?.user?.username})
+- Profile: ${data.data?.profile?.id} (${data.data?.profile?.businessName})
+
+🔑 LOGIN CREDENTIALS:
+Username: ${data.data?.user?.username}
+Password: ${data.data?.user?.password}
+` : ''}
+
+FULL RESPONSE:
+${JSON.stringify(data, null, 2)}`;
+
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ NETWORK ERROR: ${error.message}`;
+                console.error('Approval test error:', error);
+            }
+        }
+
+        async function testInvalidApproval() {
+            const result = document.getElementById('approvalResult');
+            try {
+                const response = await fetch('/.netlify/functions/shared-storage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'approveApplication',
+                        data: {
+                            applicationId: 'INVALID_ID_TEST',
+                            credentials: { username: 'test', password: 'test' }
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                result.className = 'result error';
+                result.textContent = `❌ INVALID ID TEST:
+Status: ${response.status} ${response.statusText}
+Expected: 404 Not Found
+Received: ${data.success ? 'Success (ERROR!)' : 'Failed (CORRECT)'}
+
+Error: ${data.error}
+Available Apps: ${JSON.stringify(data.availableApplications, null, 2) || 'N/A'}`;
+                
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ ERROR: ${error.message}`;
+            }
+        }
+
+        async function testMissingData() {
+            const result = document.getElementById('approvalResult');
+            try {
+                const response = await fetch('/.netlify/functions/shared-storage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'approveApplication',
+                        data: {} // Missing required fields
+                    })
+                });
+                
+                const data = await response.json();
+                
+                result.className = 'result error';
+                result.textContent = `⚠️ MISSING DATA TEST:
+Status: ${response.status} ${response.statusText}
+Expected: 400 Bad Request
+Received: ${data.success ? 'Success (ERROR!)' : 'Failed (CORRECT)'}
+
+Error: ${data.error}
+Received Data: ${JSON.stringify(data.received, null, 2) || 'N/A'}`;
+                
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ ERROR: ${error.message}`;
+            }
+        }
+
+        function testSharedStorageService() {
+            const result = document.getElementById('serviceResult');
+            try {
+                if (typeof window.KapTazeShared === 'undefined') {
+                    result.className = 'result error';
+                    result.textContent = `❌ SHARED STORAGE SERVICE NOT LOADED!
+window.KapTazeShared is undefined.
+Check if shared-storage-service.js is loaded.`;
+                    return;
+                }
+
+                result.className = 'result success';
+                result.textContent = `✅ SHARED STORAGE SERVICE LOADED:
+
+Service Type: ${typeof window.KapTazeShared}
+Constructor: ${window.KapTazeShared.constructor.name}
+
+Available Methods:
+${Object.getOwnPropertyNames(window.KapTazeShared.__proto__).filter(name => 
+    name !== 'constructor' && typeof window.KapTazeShared[name] === 'function'
+).map(method => `- ${method}()`).join('\n')}
+
+Cache State:
+- Data: ${window.KapTazeShared.cache?.data ? 'Loaded' : 'Empty'}
+- Timestamp: ${window.KapTazeShared.cache?.timestamp || 'N/A'}
+- TTL: ${window.KapTazeShared.cache?.ttl}ms
+
+Base URL: ${window.KapTazeShared.baseUrl}`;
+                
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ SERVICE TEST ERROR: ${error.message}`;
+            }
+        }
+
+        async function testServiceMethods() {
+            const result = document.getElementById('serviceResult');
+            try {
+                if (!window.KapTazeShared) {
+                    result.className = 'result error';
+                    result.textContent = '❌ Service not loaded!';
+                    return;
+                }
+
+                result.textContent = '🔄 Testing service methods...';
+                
+                // Test getAllData
+                const allData = await window.KapTazeShared.getAllData();
+                
+                // Test getApplications
+                const applications = await window.KapTazeShared.getApplications();
+                
+                // Test getPendingApplications
+                const pending = await window.KapTazeShared.getPendingApplications();
+                
+                // Test getRestaurants
+                const restaurants = await window.KapTazeShared.getRestaurants();
+                
+                // Test getStatistics
+                const stats = await window.KapTazeShared.getStatistics();
+                
+                result.className = 'result success';
+                result.textContent = `✅ ALL SERVICE METHODS TESTED:
+
+📊 getAllData(): ${allData ? 'SUCCESS' : 'FAILED'}
+📋 getApplications(): ${applications?.length || 0} applications
+⏳ getPendingApplications(): ${pending?.length || 0} pending
+🏪 getRestaurants(): ${restaurants?.length || 0} restaurants
+📈 getStatistics(): ${JSON.stringify(stats, null, 2)}
+
+CACHE STATUS:
+${window.KapTazeShared.cache?.data ? '✅ Cache loaded' : '❌ Cache empty'}`;
+                
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ SERVICE METHODS ERROR: ${error.message}
+Stack: ${error.stack}`;
+            }
+        }
+
+        async function simulateAdminApproval() {
+            const result = document.getElementById('serviceResult');
+            const appId = document.getElementById('appId').value;
+            
+            if (!appId) {
+                result.className = 'result error';
+                result.textContent = '❌ Please enter Application ID first';
+                return;
+            }
+
+            try {
+                result.textContent = '🔄 Simulating admin panel approval...';
+                
+                const credentials = {
+                    username: `admin_test_${Date.now().toString(36)}`,
+                    password: Math.random().toString(36).substring(2, 10)
+                };
+                
+                console.log('🎯 Simulating admin approval:', { appId, credentials });
+                
+                const approvalResult = await window.KapTazeShared.approveApplication(appId, credentials);
+                
+                result.className = 'result success';
+                result.textContent = `✅ ADMIN SIMULATION SUCCESS:
+
+Application ID: ${appId}
+Credentials: ${credentials.username} / ${credentials.password}
+
+Result Structure:
+${JSON.stringify(approvalResult, null, 2)}
+
+This is exactly what admin panel should receive!`;
+                
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ ADMIN SIMULATION ERROR: ${error.message}
+Stack: ${error.stack}
+
+This error would cause admin panel failure!`;
+                console.error('Admin simulation error:', error);
+            }
+        }
+
+        function testEmergencyApproval() {
+            const result = document.getElementById('emergencyResult');
+            const appId = document.getElementById('appId').value || 'EMERGENCY_TEST_ID';
+            
+            try {
+                if (typeof window.EMERGENCY_APPROVE === 'function') {
+                    const emergencyResult = window.EMERGENCY_APPROVE(appId);
+                    
+                    result.className = 'result success';
+                    result.textContent = `🆘 EMERGENCY APPROVAL SUCCESSFUL:
+
+Application ID: ${appId}
+Emergency Restaurant: ${JSON.stringify(emergencyResult, null, 2)}
+
+LocalStorage Check:
+${localStorage.getItem('emergency_restaurants')}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = '❌ EMERGENCY_APPROVE function not found!';
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ EMERGENCY ERROR: ${error.message}`;
+            }
+        }
+
+        function testLocalStorageFallback() {
+            const result = document.getElementById('emergencyResult');
+            try {
+                const emergencyData = localStorage.getItem('emergency_restaurants');
+                const parsed = emergencyData ? JSON.parse(emergencyData) : [];
+                
+                result.className = 'result success';
+                result.textContent = `💾 LOCALSTORAGE FALLBACK:
+
+Emergency Restaurants: ${parsed.length}
+Data: ${JSON.stringify(parsed, null, 2)}
+
+Full localStorage:
+${Object.keys(localStorage).map(key => `${key}: ${localStorage.getItem(key)?.length} chars`).join('\n')}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ LOCALSTORAGE ERROR: ${error.message}`;
+            }
+        }
+
+        function clearEmergencyData() {
+            localStorage.removeItem('emergency_restaurants');
+            const result = document.getElementById('emergencyResult');
+            result.className = 'result success';
+            result.textContent = '🗑️ Emergency data cleared!';
+        }
+
+        function loadPendingApps() {
+            getPendingApplications();
+        }
+
+        // Auto-load on page start
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 KapTaze API Test Suite loaded');
+            setTimeout(() => {
+                getCurrentData();
+                testSharedStorageService();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
