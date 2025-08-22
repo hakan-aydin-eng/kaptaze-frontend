@@ -94,8 +94,8 @@ function initializeApp() {
     console.log('🚀 KapTaze Admin Panel initialized');
 }
 
-// Navigation
-function showSection(sectionId) {
+// Navigation - Make sure it's globally accessible
+window.showSection = function showSection(sectionId) {
     // Hide all sections
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
@@ -1355,4 +1355,27 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// Global functions - Ensure they're accessible from HTML onclick events
+window.approveApplication = window.approveApplication || approveApplication;
+window.rejectApplication = window.rejectApplication || rejectApplication;
+window.viewApplication = window.viewApplication || viewApplication;
+window.closeApplicationModal = window.closeApplicationModal || closeApplicationModal;
+window.editUser = window.editUser || editUser;
+window.toggleUserStatus = window.toggleUserStatus || toggleUserStatus;
+window.viewUser = window.viewUser || viewUser;
+window.editRestaurant = window.editRestaurant || editRestaurant;
+window.viewRestaurant = window.viewRestaurant || viewRestaurant;
+window.toggleRestaurantStatus = window.toggleRestaurantStatus || toggleRestaurantStatus;
+window.showAddUserModal = window.showAddUserModal || showAddUserModal;
+window.showAddRestaurantModal = window.showAddRestaurantModal || showAddRestaurantModal;
+window.showOnMap = window.showOnMap || function(lat, lng) {
+    const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}&z=15`;
+    window.open(mapsUrl, '_blank');
+};
+
 console.log('🔧 KapTaze Admin Panel loaded successfully');
+console.log('🌐 Global functions registered:', {
+    showSection: typeof window.showSection,
+    approveApplication: typeof window.approveApplication,
+    rejectApplication: typeof window.rejectApplication
+});
