@@ -7,8 +7,11 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Shared Data System -->
+    <!-- Database and Shared Systems -->
+    <script src="./js/env-inject.js"></script>
+    <script src="./js/config.js"></script>
     <script src="./js/shared.js"></script>
+    <script src="./js/database.js"></script>
     
     <style>
         * {
@@ -269,39 +272,56 @@
             errorMessage.style.display = 'none';
             
             try {
-                // Simulate API call delay
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                // Initialize database
+                window.KapTazeDB = window.KapTazeDB || new KapTazeDatabase();
                 
-                // Check registrations in localStorage
-                const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
-                const restaurantUser = registrations.find(reg => 
-                    reg.type === 'restaurant' && 
-                    reg.status === 'approved' && 
-                    reg.restaurantUsername === username && 
-                    reg.restaurantPassword === password
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                console.log('🔐 Restaurant login attempt:', username);
+                
+                // Check KapTazeDB for restaurant users
+                const data = window.KapTazeDB.getData();
+                const restaurantUser = data.restaurantUsers.find(user => 
+                    user.username === username && 
+                    user.password === password && 
+                    user.status === 'active'
                 );
                 
-                // Check demo credentials
+                // Check demo credentials as fallback
                 const demoRestaurant = DEMO_RESTAURANTS[username];
                 const isDemoValid = demoRestaurant && demoRestaurant.password === password;
+                
+                console.log('🔍 Restaurant user found:', !!restaurantUser);
+                console.log('🔍 Demo valid:', isDemoValid);
                 
                 if (restaurantUser || isDemoValid) {
                     let userData;
                     
                     if (restaurantUser) {
+                        // Get restaurant profile for complete data
+                        const restaurantProfile = data.restaurantProfiles.find(profile => 
+                            profile.userId === restaurantUser.id
+                        );
+                        
                         userData = {
-                            username: restaurantUser.restaurantUsername,
-                            name: restaurantUser.businessName,
+                            username: restaurantUser.username,
+                            name: restaurantProfile ? restaurantProfile.businessName : 'Restoran',
                             id: restaurantUser.id,
-                            ownerName: `${restaurantUser.firstName} ${restaurantUser.lastName}`,
-                            category: restaurantUser.businessCategory,
-                            address: restaurantUser.businessAddress,
-                            city: restaurantUser.city,
-                            district: restaurantUser.district,
-                            status: 'approved',
+                            email: restaurantUser.email,
+                            phone: restaurantUser.phone,
+                            profileId: restaurantProfile ? restaurantProfile.id : null,
+                            businessName: restaurantProfile ? restaurantProfile.businessName : '',
+                            businessType: restaurantProfile ? restaurantProfile.businessType : '',
+                            address: restaurantProfile ? restaurantProfile.address : '',
+                            city: restaurantProfile ? restaurantProfile.city : '',
+                            district: restaurantProfile ? restaurantProfile.district : '',
+                            status: 'active',
                             role: 'restaurant',
                             loginTime: new Date().toISOString()
                         };
+                        
+                        console.log('✅ Database user logged in:', userData.name);
                     } else {
                         userData = {
                             username: username,
