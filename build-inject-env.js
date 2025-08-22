@@ -23,7 +23,7 @@ const envVars = {
 console.log('📋 Environment variables:');
 Object.entries(envVars).forEach(([key, value]) => {
     const placeholder = `%%${key}%%`;
-    const safeValue = value ? `'${value}'` : 'null';
+    const safeValue = value || 'null';
     
     envContent = envContent.replace(new RegExp(placeholder, 'g'), safeValue);
     

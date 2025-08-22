@@ -68,7 +68,8 @@
       "Bash(git pull:*)",
       "Bash(start https://app.netlify.com/projects/kaptaze)",
       "Bash(del netlify.toml)",
-      "Bash(git revert:*)"
+      "Bash(git revert:*)",
+      "Bash(start https://app.netlify.com/sites/kaptaze/deploys)"
     ],
     "deny": [],
     "ask": [],

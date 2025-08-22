@@ -31,7 +31,7 @@ window.KapTazeConfig = {
     
     // API Endpoints
     api: {
-        baseUrl: process?.env?.API_BASE_URL || 'https://kaptaze.netlify.app/.netlify/functions',
+        baseUrl: window.API_BASE_URL || 'https://kaptaze.netlify.app/.netlify/functions',
         endpoints: {
             submitRegistration: '/submit-registration',
             approveRegistration: '/approve-registration',
