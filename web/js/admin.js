@@ -1376,11 +1376,18 @@ async function approveApplication(applicationId) {
             
             if (response.ok) {
                 const result = await response.json();
+                console.log('📥 Shared storage response:', result);
                 if (result.success) {
                     approvalSuccess = true;
                     approvalResult = result.data;
                     console.log('✅ Application approved in shared storage:', approvalResult);
+                } else {
+                    console.error('❌ Shared storage approval failed:', result.error);
                 }
+            } else {
+                console.error('❌ HTTP error:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('❌ Response body:', errorText);
             }
         } catch (sharedError) {
             console.log('⚠️ Shared storage approval failed, trying local database:', sharedError);
@@ -1389,11 +1396,19 @@ async function approveApplication(applicationId) {
         // Fallback to local database
         if (!approvalSuccess && window.KapTazeDB) {
             console.log('💾 Trying approval in local database...');
-            approvalResult = window.KapTazeDB.approveApplication(applicationId, credentials);
-            if (approvalResult) {
-                approvalSuccess = true;
-                console.log('✅ Application approved in local database:', approvalResult);
+            try {
+                approvalResult = window.KapTazeDB.approveApplication(applicationId, credentials);
+                if (approvalResult) {
+                    approvalSuccess = true;
+                    console.log('✅ Application approved in local database:', approvalResult);
+                } else {
+                    console.error('❌ Local database approval returned null/false');
+                }
+            } catch (localError) {
+                console.error('❌ Local database approval error:', localError);
             }
+        } else if (!approvalSuccess) {
+            console.error('❌ Local database not available and shared storage failed');
         }
         
         if (approvalSuccess && approvalResult) {
