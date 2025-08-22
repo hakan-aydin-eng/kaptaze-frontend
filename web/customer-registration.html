@@ -958,42 +958,89 @@
             });
         }
 
-        // Initialize Google Places Autocomplete
+        // Initialize Google Places Autocomplete (New PlaceAutocompleteElement)
         function initAddressAutocomplete() {
             const addressInput = document.getElementById('businessAddress');
             
             if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-                // Real Google Places Autocomplete
-                autocomplete = new google.maps.places.Autocomplete(addressInput, {
-                    types: ['establishment', 'geocode'],
-                    componentRestrictions: { country: 'tr' },
-                    fields: ['place_id', 'geometry', 'name', 'formatted_address']
-                });
-
-                autocomplete.addListener('place_changed', function() {
-                    const place = autocomplete.getPlace();
-                    
-                    if (!place.geometry) {
-                        console.log("No geometry found for the place");
-                        return;
-                    }
-
-                    const location = place.geometry.location;
-                    
-                    if (map) {
-                        map.setCenter(location);
-                        map.setZoom(15);
-                        placeMarker(location);
+                try {
+                    // Try new PlaceAutocompleteElement first (recommended)
+                    if (google.maps.places.PlaceAutocompleteElement) {
+                        console.log('🔄 Using new PlaceAutocompleteElement API');
+                        
+                        const autocompleteElement = new google.maps.places.PlaceAutocompleteElement({
+                            types: ['establishment', 'geocode'],
+                            componentRestrictions: { country: 'tr' },
+                            fields: ['place_id', 'geometry', 'name', 'formatted_address']
+                        });
+                        
+                        // Replace input with autocomplete element
+                        addressInput.parentNode.replaceChild(autocompleteElement, addressInput);
+                        
+                        autocompleteElement.addEventListener('gmp-placeselect', (event) => {
+                            const place = event.place;
+                            
+                            if (!place.geometry) {
+                                console.log("No geometry found for the place");
+                                return;
+                            }
+                            
+                            const location = place.geometry.location;
+                            
+                            if (map) {
+                                map.setCenter(location);
+                                map.setZoom(15);
+                                placeMarker(location);
+                            } else {
+                                // Store for fallback mode
+                                businessLocation = {
+                                    lat: location.lat(),
+                                    lng: location.lng()
+                                };
+                                document.getElementById('businessLatitude').value = businessLocation.lat;
+                                document.getElementById('businessLongitude').value = businessLocation.lng;
+                            }
+                        });
                     } else {
-                        // Store for fallback mode
-                        businessLocation = {
-                            lat: location.lat(),
-                            lng: location.lng()
-                        };
-                        document.getElementById('businessLatitude').value = businessLocation.lat;
-                        document.getElementById('businessLongitude').value = businessLocation.lng;
+                        // Fallback to legacy Autocomplete (will be deprecated)
+                        console.log('⚠️ Using legacy Autocomplete API (deprecated)');
+                        
+                        autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                            types: ['establishment', 'geocode'],
+                            componentRestrictions: { country: 'tr' },
+                            fields: ['place_id', 'geometry', 'name', 'formatted_address']
+                        });
+
+                        autocomplete.addListener('place_changed', function() {
+                            const place = autocomplete.getPlace();
+                            
+                            if (!place.geometry) {
+                                console.log("No geometry found for the place");
+                                return;
+                            }
+
+                            const location = place.geometry.location;
+                            
+                            if (map) {
+                                map.setCenter(location);
+                                map.setZoom(15);
+                                placeMarker(location);
+                            } else {
+                                // Store for fallback mode
+                                businessLocation = {
+                                    lat: location.lat(),
+                                    lng: location.lng()
+                                };
+                                document.getElementById('businessLatitude').value = businessLocation.lat;
+                                document.getElementById('businessLongitude').value = businessLocation.lng;
+                            }
+                        });
                     }
-                });
+                } catch (error) {
+                    console.error('❌ Places API initialization failed:', error);
+                    // Fallback address suggestions
+                    initFallbackAutocomplete(addressInput);
+                }
             } else {
                 // Fallback address suggestions
                 initFallbackAutocomplete(addressInput);
