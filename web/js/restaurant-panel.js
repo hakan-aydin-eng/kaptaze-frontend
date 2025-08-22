@@ -38,8 +38,14 @@ class RestaurantPanel {
     }
 
     checkAuth() {
-        const token = localStorage.getItem('restaurantToken');
-        const user = localStorage.getItem('restaurantUser');
+        const token = sessionStorage.getItem('restaurantToken');
+        const user = sessionStorage.getItem('restaurantUser');
+        
+        console.log('🔍 Restaurant-panel.js auth check:', {
+            hasToken: !!token,
+            hasUser: !!user,
+            storage: 'sessionStorage'
+        });
         
         if (!token || !user) {
             console.warn('⚠️ Not authenticated, redirecting to login');
@@ -49,6 +55,7 @@ class RestaurantPanel {
         
         try {
             this.currentUser = JSON.parse(user);
+            console.log('✅ Restaurant-panel.js authenticated user:', this.currentUser.username);
             return true;
         } catch (error) {
             console.error('❌ Error parsing user data:', error);
@@ -814,8 +821,10 @@ class RestaurantPanel {
 
     logout() {
         if (confirm('Çıkış yapmak istediğiniz emin misiniz?')) {
-            localStorage.removeItem('restaurantToken');
-            localStorage.removeItem('restaurantUser');
+            sessionStorage.removeItem('restaurantToken');
+            sessionStorage.removeItem('restaurantUser');
+            sessionStorage.removeItem('restaurantProfile');
+            console.log('🚪 Restaurant logged out from restaurant-panel.js');
             window.location.href = '/restaurant-login.html';
         }
     }
@@ -973,4 +982,4 @@ document.addEventListener('DOMContentLoaded', function() {
     window.restaurantPanel = new RestaurantPanel();
 });
 
-console.log('🏪 Restaurant Panel JS loaded');
+console.log('🏪 Restaurant Panel JS loaded - v2025.08.22.25 - sessionStorage authentication!');
