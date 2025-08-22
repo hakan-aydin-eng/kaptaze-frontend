@@ -718,15 +718,15 @@
         </div>
     </div>
 
-    <script src="./js/restaurant-panel.js?v=2025.08.22.25"></script>
+    <script src="./js/restaurant-panel.js?v=2025.08.22.30"></script>
     
     <script>
         // 🔐 RESTAURANT PANEL AUTHENTICATION CHECK
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🔐 Checking restaurant authentication...');
             
-            const restaurantToken = sessionStorage.getItem('restaurantToken');
-            const restaurantUser = sessionStorage.getItem('restaurantUser');
+            const restaurantToken = localStorage.getItem('restaurantToken');
+            const restaurantUser = localStorage.getItem('restaurantUser');
             
             console.log('🔍 Restaurant auth check:', {
                 hasToken: !!restaurantToken,
@@ -759,9 +759,9 @@
                 
             } catch (error) {
                 console.error('❌ Invalid restaurant session data:', error);
-                sessionStorage.removeItem('restaurantToken');
-                sessionStorage.removeItem('restaurantUser');
-                sessionStorage.removeItem('restaurantProfile');
+                localStorage.removeItem('restaurantToken');
+                localStorage.removeItem('restaurantUser');
+                localStorage.removeItem('restaurantProfile');
                 window.location.href = '/restaurant-login.html';
             }
         });
@@ -792,9 +792,9 @@
         // 🚪 LOGOUT FUNCTION
         function logoutRestaurant() {
             if (confirm('Çıkış yapmak istediğiniz emin misiniz?')) {
-                sessionStorage.removeItem('restaurantToken');
-                sessionStorage.removeItem('restaurantUser');
-                sessionStorage.removeItem('restaurantProfile');
+                localStorage.removeItem('restaurantToken');
+                localStorage.removeItem('restaurantUser');
+                localStorage.removeItem('restaurantProfile');
                 console.log('🚪 Restaurant logged out');
                 window.location.href = '/restaurant-login.html';
             }
@@ -803,7 +803,7 @@
         // Make logout function available globally
         window.logoutRestaurant = logoutRestaurant;
         
-        console.log('🚨 CACHE VERSION: 2025.08.22.25 - Fixed authentication loop by removing duplicate script!');
+        console.log('🚨 CACHE VERSION: 2025.08.22.30 - AGGRESSIVE CACHE BUSTING!');
     </script>
 </body>
 </html>

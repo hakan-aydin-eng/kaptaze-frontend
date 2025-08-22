@@ -38,13 +38,13 @@ class RestaurantPanel {
     }
 
     checkAuth() {
-        const token = sessionStorage.getItem('restaurantToken');
-        const user = sessionStorage.getItem('restaurantUser');
+        const token = localStorage.getItem('restaurantToken');
+        const user = localStorage.getItem('restaurantUser');
         
         console.log('🔍 Restaurant-panel.js auth check:', {
             hasToken: !!token,
             hasUser: !!user,
-            storage: 'sessionStorage'
+            storage: 'localStorage'
         });
         
         if (!token || !user) {
@@ -68,11 +68,14 @@ class RestaurantPanel {
         if (!this.currentUser) return;
         
         try {
-            // Get restaurant profile from database
-            this.restaurantProfile = window.KapTazeDB.getRestaurantProfile(this.currentUser.id);
+            // Get restaurant profile from localStorage
+            const profileData = localStorage.getItem('restaurantProfile');
             
-            if (!this.restaurantProfile) {
-                console.warn('⚠️ Restaurant profile not found');
+            if (profileData) {
+                this.restaurantProfile = JSON.parse(profileData);
+                console.log('✅ Restaurant profile loaded from localStorage:', this.restaurantProfile);
+            } else {
+                console.warn('⚠️ Restaurant profile not found in localStorage');
                 return;
             }
             
@@ -821,9 +824,9 @@ class RestaurantPanel {
 
     logout() {
         if (confirm('Çıkış yapmak istediğiniz emin misiniz?')) {
-            sessionStorage.removeItem('restaurantToken');
-            sessionStorage.removeItem('restaurantUser');
-            sessionStorage.removeItem('restaurantProfile');
+            localStorage.removeItem('restaurantToken');
+            localStorage.removeItem('restaurantUser');
+            localStorage.removeItem('restaurantProfile');
             console.log('🚪 Restaurant logged out from restaurant-panel.js');
             window.location.href = '/restaurant-login.html';
         }
@@ -982,4 +985,4 @@ document.addEventListener('DOMContentLoaded', function() {
     window.restaurantPanel = new RestaurantPanel();
 });
 
-console.log('🏪 Restaurant Panel JS loaded - v2025.08.22.25 - sessionStorage authentication!');
+console.log('🏪 Restaurant Panel JS loaded - v2025.08.22.30 - AGGRESSIVE CACHE BUSTING!');

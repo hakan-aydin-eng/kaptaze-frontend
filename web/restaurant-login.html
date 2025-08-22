@@ -279,9 +279,9 @@
                 
                 if (loginResult.success) {
                     // Store authentication data
-                    sessionStorage.setItem('restaurantToken', loginResult.token);
-                    sessionStorage.setItem('restaurantUser', JSON.stringify(loginResult.user));
-                    sessionStorage.setItem('restaurantProfile', JSON.stringify(loginResult.profile));
+                    localStorage.setItem('restaurantToken', loginResult.token);
+                    localStorage.setItem('restaurantUser', JSON.stringify(loginResult.user));
+                    localStorage.setItem('restaurantProfile', JSON.stringify(loginResult.profile));
                     
                     // Show success message
                     loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı! Hoşgeldin ' + (loginResult.user.businessName || loginResult.user.username);
@@ -474,8 +474,8 @@
             }
             
             // Check existing login
-            const restaurantToken = sessionStorage.getItem('restaurantToken');
-            const restaurantUser = sessionStorage.getItem('restaurantUser');
+            const restaurantToken = localStorage.getItem('restaurantToken');
+            const restaurantUser = localStorage.getItem('restaurantUser');
             
             if (restaurantToken && restaurantUser) {
                 try {
@@ -484,9 +484,9 @@
                     window.location.href = '/restaurant-panel.html';
                 } catch (error) {
                     // Clear invalid session data
-                    sessionStorage.removeItem('restaurantToken');
-                    sessionStorage.removeItem('restaurantUser');
-                    sessionStorage.removeItem('restaurantProfile');
+                    localStorage.removeItem('restaurantToken');
+                    localStorage.removeItem('restaurantUser');
+                    localStorage.removeItem('restaurantProfile');
                 }
             }
             
