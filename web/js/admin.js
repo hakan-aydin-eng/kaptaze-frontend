@@ -96,25 +96,36 @@ function initializeApp() {
 
 // Navigation - Make sure it's globally accessible
 window.showSection = function showSection(sectionId, event) {
+    console.log('🔄 Admin panel showSection called with:', sectionId);
+    
     // Prevent default link behavior to stop page jump
     if (event) {
         event.preventDefault();
         event.stopPropagation();
     }
     
+    // Check if DOM elements exist
+    const allSections = document.querySelectorAll('.content-section');
+    const allNavItems = document.querySelectorAll('.nav-item');
+    console.log('📊 Found sections:', allSections.length, 'nav items:', allNavItems.length);
+    
     // Hide all sections
-    document.querySelectorAll('.content-section').forEach(section => {
+    allSections.forEach(section => {
         section.classList.remove('active');
+        console.log('🔹 Hiding section:', section.id);
     });
     
     // Remove active class from nav items
-    document.querySelectorAll('.nav-item').forEach(item => {
+    allNavItems.forEach(item => {
         item.classList.remove('active');
     });
     
     // Show selected section
     const section = document.getElementById(sectionId);
-    const navItem = document.querySelector(`[onclick*="showSection('${sectionId}')"]`);
+    const navItem = document.querySelector(`a[href="#${sectionId}"]`);
+    
+    console.log('🎯 Target section element:', section);
+    console.log('🎯 Target nav element:', navItem);
     
     if (section) {
         section.classList.add('active');
@@ -125,10 +136,20 @@ window.showSection = function showSection(sectionId, event) {
         
         // Load section data
         loadSectionData(sectionId);
+        
+        console.log('✅ Admin panel section switched to:', sectionId);
+        console.log('✅ Section classes:', section.className);
+    } else {
+        console.error('❌ Admin panel section not found:', sectionId);
+        console.log('Available sections:', Array.from(allSections).map(s => s.id));
     }
     
     if (navItem) {
         navItem.classList.add('active');
+        console.log('✅ Admin panel nav item activated:', sectionId);
+    } else {
+        console.error('❌ Admin panel nav item not found for:', sectionId);
+        console.log('Available nav links:', Array.from(document.querySelectorAll('a[href^="#"]')).map(a => a.getAttribute('href')));
     }
     
     return false; // Prevent default link behavior
