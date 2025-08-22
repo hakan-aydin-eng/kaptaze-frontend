@@ -594,20 +594,63 @@ async function loadRestaurantsData() {
     tableBody.innerHTML = '<tr><td colspan="7" class="loading">Restoranlar yükleniyor...</td></tr>';
     
     try {
-        // Use centralized database system
-        if (window.KapTazeDB) {
-            const restaurants = window.KapTazeDB.getAllRestaurants();
-            console.log('📊 Restaurants from database:', restaurants.length);
+        let restaurants = [];
+        
+        // Try shared storage first
+        try {
+            console.log('🌐 Loading restaurants from shared storage...');
+            const response = await fetch('/.netlify/functions/shared-storage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'get'
+                })
+            });
             
-            if (restaurants.length > 0) {
-                renderRestaurantsTable(restaurants);
-                return;
+            if (response.ok) {
+                const result = await response.json();
+                console.log('📥 Shared storage response:', result);
+                
+                if (result.success && result.data) {
+                    // Get approved restaurants from shared data
+                    const approvedApplications = result.data.applications.filter(app => app.status === 'approved');
+                    const restaurantUsers = result.data.restaurantUsers || [];
+                    const restaurantProfiles = result.data.restaurantProfiles || [];
+                    
+                    restaurants = restaurantProfiles.map(profile => {
+                        const user = restaurantUsers.find(u => u.id === profile.userId);
+                        const application = approvedApplications.find(app => app.id === profile.applicationId);
+                        
+                        return {
+                            ...profile,
+                            user: user,
+                            application: application
+                        };
+                    });
+                    
+                    console.log('✅ Found restaurants from shared storage:', restaurants.length);
+                }
             }
+        } catch (sharedError) {
+            console.log('⚠️ Shared storage failed, trying local database:', sharedError);
         }
         
-        // Fallback to mock data
-        console.log('📁 Fallback to mock restaurants data...');
-        renderMockRestaurantsData();
+        // Fallback to local database if shared storage failed or no data
+        if (restaurants.length === 0 && window.KapTazeDB) {
+            console.log('💾 Loading restaurants from local database...');
+            restaurants = window.KapTazeDB.getAllRestaurants();
+            console.log('📊 Restaurants from local database:', restaurants.length);
+        }
+        
+        if (restaurants.length > 0) {
+            renderRestaurantsTable(restaurants);
+        } else {
+            // Fallback to mock data
+            console.log('📁 No restaurants found, using mock data...');
+            renderMockRestaurantsData();
+        }
         
     } catch (error) {
         console.error('❌ Error loading restaurants:', error);
@@ -1411,7 +1454,10 @@ async function approveApplication(applicationId) {
             console.error('❌ Local database not available and shared storage failed');
         }
         
+        console.log('🔍 Final approval check:', { approvalSuccess, approvalResult });
+        
         if (approvalSuccess && approvalResult) {
+            console.log('✅ Approval successful, processing result...');
             const { application, user, profile } = approvalResult;
             
             // Update the application with restaurant credentials for display
