@@ -741,10 +741,82 @@ function approveRestaurant(restaurantId) {
 }
 
 function viewRestaurant(restaurantId) {
-    showNotification(`Restoran detayları görüntüleme özelliği yakında aktif olacak (ID: ${restaurantId})`, 'info');
+    if (!window.KapTazeDB) {
+        showNotification('Database sistem hatası', 'error');
+        return;
+    }
+    
+    const data = window.KapTazeDB.getData();
+    const restaurant = data.restaurantProfiles.find(r => r.id === restaurantId || r.applicationId === restaurantId);
+    
+    if (!restaurant) {
+        showNotification('Restoran bulunamadı', 'error');
+        return;
+    }
+    
+    // Create modal with restaurant details
+    const modalContent = `
+        <div class="modal-overlay" onclick="closeRestaurantModal()">
+            <div class="modal-content restaurant-detail-modal" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h3><i class="fas fa-store"></i> ${restaurant.businessName}</h3>
+                    <button class="modal-close" onclick="closeRestaurantModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="restaurant-info-grid">
+                        <div class="info-section">
+                            <h4>Temel Bilgiler</h4>
+                            <p><strong>İşletme Adı:</strong> ${restaurant.businessName}</p>
+                            <p><strong>Kategori:</strong> ${restaurant.businessType}</p>
+                            <p><strong>Adres:</strong> ${restaurant.address}</p>
+                            <p><strong>Şehir:</strong> ${restaurant.city} / ${restaurant.district}</p>
+                            <p><strong>Durum:</strong> <span class="status-badge ${restaurant.status}">${restaurant.status === 'active' ? 'Aktif' : 'Pasif'}</span></p>
+                        </div>
+                        <div class="info-section">
+                            <h4>İletişim & Detaylar</h4>
+                            <p><strong>Açıklama:</strong> ${restaurant.description || 'Henüz eklenmemiş'}</p>
+                            <p><strong>Website:</strong> ${restaurant.website ? `<a href="${restaurant.website}" target="_blank">${restaurant.website}</a>` : 'Henüz eklenmemiş'}</p>
+                            <p><strong>Uzmanlık Alanları:</strong> ${restaurant.specialties && restaurant.specialties.length > 0 ? restaurant.specialties.join(', ') : 'Henüz eklenmemiş'}</p>
+                        </div>
+                        <div class="info-section">
+                            <h4>Paketler & Aktivite</h4>
+                            <p><strong>Aktif Paket Sayısı:</strong> ${data.packages.filter(p => p.restaurantId === restaurant.id && p.status === 'active').length}</p>
+                            <p><strong>Kayıt Tarihi:</strong> ${new Date(restaurant.createdAt).toLocaleDateString('tr-TR')}</p>
+                            <p><strong>Son Güncelleme:</strong> ${new Date(restaurant.updatedAt).toLocaleDateString('tr-TR')}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeRestaurantModal()">
+                        <i class="fas fa-times"></i> Kapat
+                    </button>
+                    ${restaurant.coordinates && restaurant.coordinates.lat ? `
+                    <button class="btn-primary" onclick="showOnMap(${restaurant.coordinates.lat}, ${restaurant.coordinates.lng})">
+                        <i class="fas fa-map-marker-alt"></i> Haritada Göster
+                    </button>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to body
+    const modal = document.createElement('div');
+    modal.id = 'restaurantModal';
+    modal.innerHTML = modalContent;
+    document.body.appendChild(modal);
 }
 
-function showOnMap(restaurantId, lat, lng) {
+function closeRestaurantModal() {
+    const modal = document.getElementById('restaurantModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function showOnMap(lat, lng) {
     // Open Google Maps with the restaurant location
     const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}&z=15&t=m`;
     window.open(mapsUrl, '_blank');
@@ -1405,6 +1477,7 @@ window.filterApplications = window.filterApplications || filterApplications;
 window.filterOrders = window.filterOrders || filterOrders;
 window.testAPIConnection = window.testAPIConnection || testAPIConnection;
 window.toggleSidebar = window.toggleSidebar || toggleSidebar;
+window.closeRestaurantModal = window.closeRestaurantModal || closeRestaurantModal;
 window.showOnMap = window.showOnMap || function(lat, lng) {
     const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}&z=15`;
     window.open(mapsUrl, '_blank');
