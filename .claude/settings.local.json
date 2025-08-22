@@ -72,7 +72,8 @@
       "Bash(start https://app.netlify.com/sites/kaptaze/deploys)",
       "WebSearch",
       "Bash(find:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(rg:*)"
     ],
     "deny": [],
     "ask": [],

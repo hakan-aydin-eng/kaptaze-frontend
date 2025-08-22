@@ -304,11 +304,17 @@ class RestaurantPanel {
     }
 
     loadPackages() {
-        if (!this.restaurantProfile) return;
+        if (!this.currentUser) {
+            console.error('❌ No current user - cannot load packages');
+            return;
+        }
         
-        const packages = window.KapTazeDB.getRestaurantPackages(this.restaurantProfile.id);
+        // Use the current user ID as restaurant ID for package filtering
+        console.log('📦 Loading packages for restaurant:', this.currentUser.id);
+        const packages = window.KapTazeDB.getRestaurantPackages(this.currentUser.id);
         this.packages = packages;
         
+        console.log('📊 Loaded packages:', packages.length, 'for user:', this.currentUser.username);
         this.renderPackages();
     }
 
@@ -528,13 +534,15 @@ class RestaurantPanel {
 
     // Package Management Methods
     addPackage(packageData) {
-        if (!this.restaurantProfile) {
-            console.error('❌ No restaurant profile found');
+        if (!this.currentUser) {
+            console.error('❌ No current user - cannot add package');
             return false;
         }
         
         try {
-            const newPackage = window.KapTazeDB.addPackage(this.restaurantProfile.id, packageData);
+            // SECURITY FIX: Use current user ID as restaurant ID
+            console.log('📦 Adding package for restaurant:', this.currentUser.id, 'by user:', this.currentUser.username);
+            const newPackage = window.KapTazeDB.addPackage(this.currentUser.id, packageData);
             
             if (newPackage) {
                 this.packages.push(newPackage);
@@ -985,4 +993,4 @@ document.addEventListener('DOMContentLoaded', function() {
     window.restaurantPanel = new RestaurantPanel();
 });
 
-console.log('🏪 Restaurant Panel JS loaded - v2025.08.22.30 - AGGRESSIVE CACHE BUSTING!');
+console.log('🏪 Restaurant Panel JS loaded - v2025.08.22.33 - SECURITY FIX: User data isolation!');
