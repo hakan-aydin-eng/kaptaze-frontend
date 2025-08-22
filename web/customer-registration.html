@@ -12,6 +12,7 @@
     
     <!-- Shared Data System -->
     <script src="./js/shared.js?v=2025.08.21.14"></script>
+    <script src="./js/database.js"></script>
     
     <!-- Configuration -->
     <script src="./js/config.js?v=2025.08.21.14"></script>
@@ -691,20 +692,31 @@
                     console.log('API call failed, falling back to localStorage:', apiError);
                 }
                 
-                // Fallback to localStorage if API failed
+                // Fallback to database if API failed
                 if (!apiSuccess) {
-                    // Use shared data system
-                    const registrationData = window.KapTazeData.saveRegistration({
-                        ...apiData,
-                        type: selectedBusinessType
-                    });
-                    
-                    if (registrationData) {
-                        // Show success
-                        showSuccess(`Başvurunuz başarıyla alındı! Başvuru numaranız: ${registrationData.id}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
+                    try {
+                        // Use centralized database system
+                        const registrationData = window.KapTazeDB.addApplication({
+                            ...apiData,
+                            type: selectedBusinessType
+                        });
                         
-                        console.log('✅ Registration saved via shared system:', registrationData);
-                    } else {
+                        if (registrationData) {
+                            // Show success
+                            showSuccess(`Başvurunuz başarıyla alındı! Başvuru numaranız: ${registrationData.id}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
+                            
+                            console.log('✅ Registration saved to database:', registrationData);
+                            
+                            // Also save to shared system for backward compatibility
+                            window.KapTazeData?.saveRegistration({
+                                ...apiData,
+                                type: selectedBusinessType
+                            });
+                        } else {
+                            showError('Kayıt işlemi sırasında hata oluştu. Lütfen tekrar deneyin.');
+                        }
+                    } catch (dbError) {
+                        console.error('❌ Database save failed:', dbError);
                         showError('Kayıt işlemi sırasında hata oluştu. Lütfen tekrar deneyin.');
                     }
                 }

@@ -8,8 +8,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/restaurant.css">
     
-    <!-- Shared Data System -->
+    <!-- Database and Shared Systems -->
+    <script src="./js/env-inject.js"></script>
+    <script src="./js/config.js"></script>
     <script src="./js/shared.js"></script>
+    <script src="./js/database.js"></script>
 </head>
 <body>
     <!-- Sidebar -->
@@ -391,19 +394,22 @@
         <section id="profile" class="content-section">
             <div class="section-header">
                 <h2>Restoran Profili</h2>
-                <button class="btn-primary" onclick="editProfile()">
+                <button class="btn-primary" onclick="toggleProfileEdit()">
                     <i class="fas fa-edit"></i>
-                    Profili Düzenle
+                    <span id="editButtonText">Profili Düzenle</span>
                 </button>
             </div>
             
-            <div class="profile-grid">
+            <!-- Profile Display Mode -->
+            <div id="profileDisplay" class="profile-grid">
                 <div class="profile-card">
                     <div class="restaurant-avatar">
                         <img src="https://via.placeholder.com/120x120?text=🏪" alt="Restoran" id="restaurant-avatar" />
-                        <button class="change-avatar-btn">
-                            <i class="fas fa-camera"></i>
-                        </button>
+                        <div class="avatar-overlay">
+                            <button class="change-avatar-btn" onclick="changeAvatar()">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="restaurant-details">
@@ -412,6 +418,14 @@
                         <div class="restaurant-rating">
                             <span class="stars">⭐⭐⭐⭐⭐</span>
                             <span class="rating-value">4.7 (245 değerlendirme)</span>
+                        </div>
+                        <div class="restaurant-description">
+                            <p id="profile-description">Restoran açıklaması burada yer alacak...</p>
+                        </div>
+                        <div class="restaurant-website">
+                            <a href="#" id="profile-website" target="_blank">
+                                <i class="fas fa-globe"></i> Web Sitesi
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -442,17 +456,86 @@
                     </div>
                     
                     <div class="info-section">
-                        <h4>Hesap Bilgileri</h4>
-                        <div class="info-item">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>Katılma Tarihi: 15 Ocak 2024</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Onaylı Restoran</span>
+                        <h4>Uzmanlik Alanları</h4>
+                        <div class="specialties" id="profile-specialties">
+                            <span class="specialty-tag">Pizza</span>
+                            <span class="specialty-tag">Burger</span>
+                            <span class="specialty-tag">Türk Mutfağı</span>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Profile Edit Mode -->
+            <div id="profileEdit" class="profile-edit" style="display: none;">
+                <form id="profileForm" class="profile-form">
+                    <div class="form-grid">
+                        <div class="form-section">
+                            <h4>Ana Görsel Yönetimi</h4>
+                            <div class="image-upload-area" onclick="document.getElementById('mainImageInput').click();">
+                                <img id="mainImagePreview" class="image-preview" style="display: none;">
+                                <div id="imageUploadPlaceholder" class="upload-placeholder">
+                                    <i class="fas fa-camera" style="font-size: 2em; color: #9ca3af; margin-bottom: 10px;"></i>
+                                    <p>Ana görseli yüklemek için tıklayın</p>
+                                    <p style="font-size: 0.8em; color: #6b7280;">JPG, PNG (Max 5MB)</p>
+                                </div>
+                                <input type="file" id="mainImageInput" accept="image/*" style="display: none;" onchange="previewMainImage(this)">
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>Restoran Bilgileri</h4>
+                            
+                            <div class="form-group">
+                                <label for="editDescription">İşletme Açıklaması - "Neyi Kurtaracaksınız?" *</label>
+                                <textarea id="editDescription" class="form-control" 
+                                    placeholder="Restoranınızı tanıtın. Hangi yiyecekleri kurtarıyorsunuz? Müşterilerinize nasıl değer katıyorsunuz?" 
+                                    rows="4" required></textarea>
+                                <small>Müşterilerinizin sizi tanımasını sağlayacak açıklama yazın.</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="editWebsite">Web Sitesi</label>
+                                <input type="url" id="editWebsite" class="form-control" 
+                                    placeholder="https://www.restoraniniz.com">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="editSpecialties">Uzmanlik Alanları</label>
+                                <input type="text" id="editSpecialties" class="form-control" 
+                                    placeholder="Örn: Pizza, Burger, Türk Mutfağı (virgülle ayırın)">
+                                <small>Mutfağınızın öne çıkan özelliklerini yazın.</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Çalışma Saatleri</label>
+                                <div class="time-inputs">
+                                    <div class="time-row">
+                                        <label>Hafta İçi:</label>
+                                        <input type="time" id="weekdayOpen" class="form-control">
+                                        <span>-</span>
+                                        <input type="time" id="weekdayClose" class="form-control">
+                                    </div>
+                                    <div class="time-row">
+                                        <label>Hafta Sonu:</label>
+                                        <input type="time" id="weekendOpen" class="form-control">
+                                        <span>-</span>
+                                        <input type="time" id="weekendClose" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="toggleProfileEdit()">
+                            <i class="fas fa-times"></i> İptal
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Profili Kaydet
+                        </button>
+                    </div>
+                </form>
             </div>
         </section>
     </div>
@@ -490,7 +573,7 @@
         </div>
     </div>
 
-    <script src="./js/restaurant.js"></script>
+    <script src="./js/restaurant-panel.js"></script>
     <script>
         // Logout function for restaurant panel
         function logout() {
