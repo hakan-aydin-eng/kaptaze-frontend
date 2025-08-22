@@ -10,9 +10,9 @@
     <!-- Database and Shared Systems -->
     <script src="./js/env-inject.js"></script>
     <script src="./js/config.js"></script>
-    <script src="./js/shared.js?v=2025.08.22.19"></script>
+    <script src="./js/shared.js?v=2025.08.22.20"></script>
     <script src="./js/database.js"></script>
-    <script src="./js/shared-storage-service.js?v=2025.08.22.19"></script>
+    <script src="./js/shared-storage-service.js?v=2025.08.22.20"></script>
     
     <style>
         * {
@@ -320,6 +320,12 @@
             try {
                 console.log('🔍 Authenticating restaurant against KapTaze database...');
                 
+                // Initialize shared storage if not available
+                if (!window.KapTazeSharedStorage) {
+                    console.log('🔧 Initializing KapTaze Shared Storage...');
+                    window.KapTazeSharedStorage = new KapTazeSharedStorageService();
+                }
+                
                 // Load restaurant users from shared storage
                 const sharedData = await window.KapTazeSharedStorage.getAllData();
                 console.log('📊 Shared data loaded:', {
@@ -434,10 +440,35 @@
             }
         }
         
-        // Check if already logged in
-        if (localStorage.getItem('restaurantToken')) {
-            window.location.href = '/restaurant-panel.html';
-        }
+        // Check if already logged in and initialize services
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize KapTaze Shared Storage
+            if (typeof KapTazeSharedStorageService !== 'undefined') {
+                window.KapTazeSharedStorage = new KapTazeSharedStorageService();
+                console.log('✅ KapTaze Shared Storage initialized');
+            } else {
+                console.warn('⚠️ KapTazeSharedStorageService not available, using fallback');
+            }
+            
+            // Check existing login
+            const restaurantToken = sessionStorage.getItem('restaurantToken');
+            const restaurantUser = sessionStorage.getItem('restaurantUser');
+            
+            if (restaurantToken && restaurantUser) {
+                try {
+                    const user = JSON.parse(restaurantUser);
+                    console.log('🔄 Already logged in, redirecting:', user.username);
+                    window.location.href = '/restaurant-panel.html';
+                } catch (error) {
+                    // Clear invalid session data
+                    sessionStorage.removeItem('restaurantToken');
+                    sessionStorage.removeItem('restaurantUser');
+                    sessionStorage.removeItem('restaurantProfile');
+                }
+            }
+            
+            console.log('🚨 CACHE VERSION: 2025.08.22.20 - Restaurant login KapTazeDB initialization fixed!');
+        });
     </script>
 </body>
 </html>
