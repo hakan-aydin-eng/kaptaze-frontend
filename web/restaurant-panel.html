@@ -718,7 +718,87 @@
         </div>
     </div>
 
-    <script src="./js/restaurant-panel.js?v=2025.08.22.17"></script>
+    <script src="./js/restaurant-panel.js?v=2025.08.22.19"></script>
+    
+    <script>
+        // 🔐 RESTAURANT PANEL AUTHENTICATION CHECK
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔐 Checking restaurant authentication...');
+            
+            const restaurantToken = sessionStorage.getItem('restaurantToken');
+            const restaurantUser = sessionStorage.getItem('restaurantUser');
+            
+            if (!restaurantToken || !restaurantUser) {
+                console.log('❌ No restaurant authentication found, redirecting to login');
+                alert('Restoran paneline erişim için giriş yapmanız gerekiyor.');
+                window.location.href = '/restaurant-login.html';
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(restaurantUser);
+                console.log('✅ Restaurant authenticated:', {
+                    username: user.username,
+                    businessName: user.businessName,
+                    source: user.source
+                });
+                
+                // Update restaurant info in the panel
+                updateRestaurantInfo(user);
+                
+                // Initialize restaurant panel with user data
+                if (typeof initializeRestaurantPanel === 'function') {
+                    initializeRestaurantPanel(user);
+                }
+                
+            } catch (error) {
+                console.error('❌ Invalid restaurant session data:', error);
+                sessionStorage.removeItem('restaurantToken');
+                sessionStorage.removeItem('restaurantUser');
+                sessionStorage.removeItem('restaurantProfile');
+                window.location.href = '/restaurant-login.html';
+            }
+        });
+        
+        // 📊 UPDATE RESTAURANT INFO IN PANEL
+        function updateRestaurantInfo(user) {
+            // Update restaurant name in header
+            const restaurantNameEl = document.querySelector('.restaurant-name');
+            if (restaurantNameEl) {
+                restaurantNameEl.textContent = user.businessName || user.username;
+            }
+            
+            // Update welcome message
+            const welcomeEl = document.querySelector('.welcome-message');
+            if (welcomeEl) {
+                welcomeEl.textContent = `Hoşgeldin, ${user.businessName || user.username}!`;
+            }
+            
+            // Update user info in sidebar or profile section
+            const userInfoEls = document.querySelectorAll('.user-info');
+            userInfoEls.forEach(el => {
+                el.textContent = user.businessName || user.username;
+            });
+            
+            console.log('📊 Restaurant panel info updated for:', user.businessName || user.username);
+        }
+        
+        // 🚪 LOGOUT FUNCTION
+        function logoutRestaurant() {
+            if (confirm('Çıkış yapmak istediğiniz emin misiniz?')) {
+                sessionStorage.removeItem('restaurantToken');
+                sessionStorage.removeItem('restaurantUser');
+                sessionStorage.removeItem('restaurantProfile');
+                console.log('🚪 Restaurant logged out');
+                window.location.href = '/restaurant-login.html';
+            }
+        }
+        
+        // Make logout function available globally
+        window.logoutRestaurant = logoutRestaurant;
+        
+        console.log('🚨 CACHE VERSION: 2025.08.22.19 - Restaurant panel with KapTaze authentication!');
+    </script>
     <script>
         // Logout function for restaurant panel
         function logout() {

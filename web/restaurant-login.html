@@ -10,8 +10,9 @@
     <!-- Database and Shared Systems -->
     <script src="./js/env-inject.js"></script>
     <script src="./js/config.js"></script>
-    <script src="./js/shared.js"></script>
+    <script src="./js/shared.js?v=2025.08.22.19"></script>
     <script src="./js/database.js"></script>
+    <script src="./js/shared-storage-service.js?v=2025.08.22.19"></script>
     
     <style>
         * {
@@ -211,16 +212,14 @@
         <div class="error-message" id="errorMessage"></div>
         
         <div class="demo-info">
-            <strong>Demo Restoran Hesapları:</strong><br><br>
+            <strong>📋 Restoran Giriş Bilgileri</strong><br>
+            Admin tarafından onaylanan restoran başvurunuzda verilen kullanıcı adı ve şifre ile giriş yapın.<br>
+            <small>Henüz başvuru yapmadıysanız, <a href="./customer-registration.html">buradan başvuru yapabilirsiniz</a>.</small><br><br>
             
-            <strong>Seraser Restaurant:</strong><br>
-            Kullanıcı: <strong>seraser</strong> | Şifre: <strong>rest123</strong><br><br>
-            
-            <strong>Lara Balık Evi:</strong><br>
-            Kullanıcı: <strong>larabalik</strong> | Şifre: <strong>rest123</strong><br><br>
-            
-            <strong>Köşe Kebap:</strong><br>
-            Kullanıcı: <strong>kosekebap</strong> | Şifre: <strong>rest123</strong>
+            <strong>🔄 Nasıl Çalışır:</strong><br>
+            1. Müşteri kaydı yapın → Admin onayı bekleyin<br>
+            2. Onaylanan bilgilerle restoran paneline giriş yapın<br>
+            3. KapTazeDB'de güvenli şekilde saklanır
         </div>
         
         <div class="footer-links">
@@ -258,104 +257,180 @@
             }
         };
 
+        // 🔐 RESTAURANT LOGIN WITH KAPTAZE DATABASE AUTHENTICATION
         async function handleLogin(event) {
             event.preventDefault();
             
             const loginBtn = document.getElementById('loginBtn');
             const errorMessage = document.getElementById('errorMessage');
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             
             // Show loading state
             loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Giriş yapılıyor...';
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> KapTazeDB kontrol ediliyor...';
             errorMessage.style.display = 'none';
             
             try {
-                // Initialize database
-                window.KapTazeDB = window.KapTazeDB || new KapTazeDatabase();
+                console.log('🔐 Restaurant login attempt:', { username, passwordLength: password.length });
                 
-                // Simulate API call delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // 💾 AUTHENTICATE AGAINST KAPTAZE DATABASE
+                const loginResult = await authenticateRestaurant(username, password);
                 
-                console.log('🔐 Restaurant login attempt:', username);
-                
-                // Check KapTazeDB for restaurant users
-                const data = window.KapTazeDB.getData();
-                const restaurantUser = data.restaurantUsers.find(user => 
-                    user.username === username && 
-                    user.password === password && 
-                    user.status === 'active'
-                );
-                
-                // Check demo credentials as fallback
-                const demoRestaurant = DEMO_RESTAURANTS[username];
-                const isDemoValid = demoRestaurant && demoRestaurant.password === password;
-                
-                console.log('🔍 Restaurant user found:', !!restaurantUser);
-                console.log('🔍 Demo valid:', isDemoValid);
-                
-                if (restaurantUser || isDemoValid) {
-                    let userData;
-                    
-                    if (restaurantUser) {
-                        // Get restaurant profile for complete data
-                        const restaurantProfile = data.restaurantProfiles.find(profile => 
-                            profile.userId === restaurantUser.id
-                        );
-                        
-                        userData = {
-                            username: restaurantUser.username,
-                            name: restaurantProfile ? restaurantProfile.businessName : 'Restoran',
-                            id: restaurantUser.id,
-                            email: restaurantUser.email,
-                            phone: restaurantUser.phone,
-                            profileId: restaurantProfile ? restaurantProfile.id : null,
-                            businessName: restaurantProfile ? restaurantProfile.businessName : '',
-                            businessType: restaurantProfile ? restaurantProfile.businessType : '',
-                            address: restaurantProfile ? restaurantProfile.address : '',
-                            city: restaurantProfile ? restaurantProfile.city : '',
-                            district: restaurantProfile ? restaurantProfile.district : '',
-                            status: 'active',
-                            role: 'restaurant',
-                            loginTime: new Date().toISOString()
-                        };
-                        
-                        console.log('✅ Database user logged in:', userData.name);
-                    } else {
-                        userData = {
-                            username: username,
-                            name: demoRestaurant.name,
-                            id: demoRestaurant.id,
-                            status: demoRestaurant.status,
-                            role: 'restaurant',
-                            loginTime: new Date().toISOString()
-                        };
-                    }
-                    
-                    // Store login state
-                    localStorage.setItem('restaurantToken', `restaurant-token-${userData.id}`);
-                    localStorage.setItem('restaurantUser', JSON.stringify(userData));
+                if (loginResult.success) {
+                    // Store authentication data
+                    sessionStorage.setItem('restaurantToken', loginResult.token);
+                    sessionStorage.setItem('restaurantUser', JSON.stringify(loginResult.user));
+                    sessionStorage.setItem('restaurantProfile', JSON.stringify(loginResult.profile));
                     
                     // Show success message
-                    loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı!';
+                    loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı! Hoşgeldin ' + (loginResult.user.businessName || loginResult.user.username);
                     loginBtn.style.background = '#059669';
+                    
+                    console.log('✅ Restaurant login successful:', {
+                        username: loginResult.user.username,
+                        businessName: loginResult.user.businessName,
+                        userId: loginResult.user.id
+                    });
                     
                     // Redirect to restaurant panel
                     setTimeout(() => {
                         window.location.href = '/restaurant-panel.html';
-                    }, 1000);
+                    }, 2000);
+                    
                 } else {
-                    throw new Error('Kullanıcı adı veya şifre hatalı. Lütfen admin onayından sonra kullanabilirsiniz.');
+                    throw new Error(loginResult.error || 'Giriş başarısız');
                 }
+                
             } catch (error) {
-                // Show error
-                errorMessage.textContent = error.message;
+                console.error('❌ Restaurant login failed:', error);
+                
+                // Show error message
+                errorMessage.textContent = error.message || 'Giriş başarısız oldu.';
                 errorMessage.style.display = 'block';
                 
                 // Reset button
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Giriş Yap';
+            }
+        }
+        
+        // 💾 AUTHENTICATE RESTAURANT AGAINST KAPTAZE DATABASE
+        async function authenticateRestaurant(username, password) {
+            try {
+                console.log('🔍 Authenticating restaurant against KapTaze database...');
+                
+                // Load restaurant users from shared storage
+                const sharedData = await window.KapTazeSharedStorage.getAllData();
+                console.log('📊 Shared data loaded:', {
+                    restaurantUsers: sharedData.restaurantUsers?.length || 0,
+                    customerUsers: sharedData.customerUsers?.length || 0
+                });
+                
+                // Search in restaurant users
+                const restaurantUsers = sharedData.restaurantUsers || [];
+                const matchingUser = restaurantUsers.find(user => 
+                    user.username === username && user.password === password && user.status === 'active'
+                );
+                
+                if (matchingUser) {
+                    console.log('✅ Restaurant user found in shared storage:', matchingUser.id);
+                    
+                    return {
+                        success: true,
+                        token: `RESTAURANT_TOKEN_${Date.now()}_${Math.random().toString(36)}`,
+                        user: {
+                            id: matchingUser.id,
+                            username: matchingUser.username,
+                            firstName: matchingUser.firstName,
+                            lastName: matchingUser.lastName,
+                            email: matchingUser.email,
+                            phone: matchingUser.phone,
+                            businessName: matchingUser.businessName,
+                            role: 'restaurant',
+                            status: 'active',
+                            source: 'shared_storage',
+                            loginTime: new Date().toISOString()
+                        },
+                        profile: {
+                            businessName: matchingUser.businessName,
+                            businessType: matchingUser.businessType || 'restaurant',
+                            registrationDate: matchingUser.registrationDate,
+                            approvalDate: matchingUser.approvalDate
+                        }
+                    };
+                }
+                
+                // Fallback: Check approved users from local storage
+                const approvedUsers = JSON.parse(localStorage.getItem('kaptaze_approved_users') || '[]');
+                const localUser = approvedUsers.find(user => 
+                    user.username === username && user.password === password && user.status === 'active' && user.role === 'restaurant'
+                );
+                
+                if (localUser) {
+                    console.log('✅ Restaurant user found in local storage:', localUser.id);
+                    
+                    return {
+                        success: true,
+                        token: `RESTAURANT_TOKEN_${Date.now()}_${Math.random().toString(36)}`,
+                        user: {
+                            id: localUser.id,
+                            username: localUser.username,
+                            firstName: localUser.firstName,
+                            lastName: localUser.lastName,
+                            email: localUser.email,
+                            phone: localUser.phone,
+                            businessName: localUser.businessName,
+                            role: 'restaurant',
+                            status: 'active',
+                            source: 'local_storage',
+                            loginTime: new Date().toISOString()
+                        },
+                        profile: {
+                            businessName: localUser.businessName,
+                            businessType: 'restaurant',
+                            registrationDate: localUser.registrationDate
+                        }
+                    };
+                }
+                
+                // Demo fallback (keep for testing)
+                const demoRestaurant = DEMO_RESTAURANTS[username];
+                if (demoRestaurant && demoRestaurant.password === password) {
+                    console.log('✅ Demo restaurant user found:', username);
+                    
+                    return {
+                        success: true,
+                        token: `DEMO_TOKEN_${Date.now()}`,
+                        user: {
+                            id: demoRestaurant.id,
+                            username: username,
+                            businessName: demoRestaurant.name,
+                            role: 'restaurant',
+                            status: 'active',
+                            source: 'demo',
+                            loginTime: new Date().toISOString()
+                        },
+                        profile: {
+                            businessName: demoRestaurant.name,
+                            businessType: 'restaurant'
+                        }
+                    };
+                }
+                
+                // No user found
+                console.log('❌ No matching restaurant user found');
+                return {
+                    success: false,
+                    error: 'Kullanıcı adı veya şifre hatalı. Admin tarafından onaylanan bilgileri kontrol edin.'
+                };
+                
+            } catch (error) {
+                console.error('❌ Authentication error:', error);
+                return {
+                    success: false,
+                    error: 'Giriş kontrolü sırasında hata oluştu. Lütfen tekrar deneyin.'
+                };
             }
         }
         
