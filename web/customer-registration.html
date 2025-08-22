@@ -1247,14 +1247,48 @@
                 
                 console.log('📝 Registration data:', registrationData);
                 
-                // Add to database
-                const result = window.KapTazeDB.addApplication(registrationData);
+                // Try shared storage first
+                let success = false;
+                let resultData = null;
                 
-                if (result) {
-                    console.log('✅ Registration saved to database:', result);
+                try {
+                    console.log('🌐 Trying shared storage (Netlify Functions)...');
+                    const response = await fetch('/.netlify/functions/shared-storage', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'addApplication',
+                            data: registrationData
+                        })
+                    });
                     
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            success = true;
+                            resultData = result.data;
+                            console.log('✅ Registration saved to shared storage:', resultData);
+                        }
+                    }
+                } catch (sharedError) {
+                    console.log('⚠️ Shared storage failed, falling back to local database:', sharedError);
+                }
+                
+                // Fallback to local database
+                if (!success) {
+                    console.log('💾 Using local database fallback...');
+                    resultData = window.KapTazeDB.addApplication(registrationData);
+                    if (resultData) {
+                        success = true;
+                        console.log('✅ Registration saved to local database:', resultData);
+                    }
+                }
+                
+                if (success && resultData) {
                     // Show success message
-                    showSuccess(`Başvurunuz başarıyla alındı! Başvuru numaranız: ${result.id}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
+                    showSuccess(`Başvurunuz başarıyla alındı! Başvuru numaranız: ${resultData.id}. Admin onayından sonra sistem erişiminiz aktifleştirilecektir.`);
                     
                     // Reset form
                     event.target.reset();
@@ -1263,7 +1297,7 @@
                     window.currentLocation = null;
                     
                 } else {
-                    throw new Error('Database kayıt hatası');
+                    throw new Error('Registration kayıt hatası - tüm sistemler başarısız');
                 }
                 
             } catch (error) {

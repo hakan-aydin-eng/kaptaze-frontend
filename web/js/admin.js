@@ -998,14 +998,42 @@ async function loadApplicationsData() {
             window.KapTazeDB = new KapTazeDatabase();
         }
         
-        // Get applications from database
-        const applications = window.KapTazeDB.getAllApplications();
-        console.log('📊 Applications from database:', applications.length);
-        console.log('📋 Applications data:', applications);
+        // Try shared storage first
+        let applications = [];
         
-        // Debug: Show database content
-        const dbData = window.KapTazeDB.getData();
-        console.log('🗄️ Full database content:', dbData);
+        try {
+            console.log('🌐 Trying shared storage (Netlify Functions)...');
+            const response = await fetch('/.netlify/functions/shared-storage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'get'
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data && result.data.applications) {
+                    applications = result.data.applications;
+                    console.log('📊 Applications from shared storage:', applications.length);
+                    console.log('📋 Shared storage data:', result.data);
+                }
+            }
+        } catch (sharedError) {
+            console.log('⚠️ Shared storage failed, falling back to local database:', sharedError);
+        }
+        
+        // Fallback to local database
+        if (applications.length === 0) {
+            applications = window.KapTazeDB.getAllApplications();
+            console.log('📊 Applications from local database:', applications.length);
+            
+            // Debug: Show database content
+            const dbData = window.KapTazeDB.getData();
+            console.log('🗄️ Local database content:', dbData);
+        }
         
         if (applications.length > 0) {
             renderApplicationsTable(applications);
