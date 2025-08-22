@@ -8,7 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Shared Data System -->
-    <script src="./js/shared.js?v=2025.08.21.11"></script>
+    <script src="./js/shared.js?v=2025.08.21.12"></script>
+    
+    <!-- Configuration -->
+    <script src="./js/config.js?v=2025.08.21.12"></script>
     
     <!-- Google Maps API will be loaded dynamically -->
     
@@ -736,23 +739,46 @@
         // Load Google Maps API dynamically
         function loadGoogleMapsAPI() {
             if (mapsApiLoaded) return Promise.resolve();
+            
+            // Check if maps are enabled
+            if (!window.KapTazeConfig?.features?.mapsEnabled) {
+                console.log('Maps disabled by config, using fallback');
+                initFallbackMap();
+                return Promise.resolve();
+            }
 
             return new Promise((resolve, reject) => {
-                // Create a fallback for demo purposes
-                window.initMap = function() {
+                // Create a callback for when Maps API loads
+                window.initMapCallback = function() {
                     mapsApiLoaded = true;
                     initMap();
                     resolve();
                 };
 
-                // Use a demo API key (replace with real one for production)
+                // Get API key from config
+                const apiKey = window.KapTazeConfig?.maps?.apiKey || 'AIzaSyBFw0Qbyq9zTFTd-tUY6dQGTsWifdVxUzM';
+                
+                console.log('🗺️ Loading Google Maps API...');
+                
                 const script = document.createElement('script');
-                script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyC8Q8k9J9uJ2J3aJ5jJ5jJ5jJ5jJ5jJ5jJ5&libraries=places&loading=async&callback=initMap';
-                script.onerror = () => {
-                    console.warn('Google Maps API failed to load, using fallback map');
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async&callback=initMapCallback`;
+                script.onerror = (error) => {
+                    console.warn('❌ Google Maps API failed to load, using fallback map:', error);
                     initFallbackMap();
                     resolve();
                 };
+                
+                // Add timeout for API loading
+                const timeout = setTimeout(() => {
+                    console.warn('⏱️ Google Maps API loading timeout, using fallback');
+                    initFallbackMap();
+                    resolve();
+                }, 10000);
+                
+                script.onload = () => {
+                    clearTimeout(timeout);
+                };
+                
                 document.head.appendChild(script);
             });
         }
@@ -1078,16 +1104,12 @@
         }
 
         function setDemoLocationFromAddress(address) {
-            // Demo coordinates for Turkish cities
-            const locations = {
-                'Antalya': { lat: 36.8969, lng: 30.7133 },
-                'İstanbul': { lat: 41.0082, lng: 28.9784 },
-                'Ankara': { lat: 39.9334, lng: 32.8597 },
-                'İzmir': { lat: 38.4192, lng: 27.1287 },
-                'Bursa': { lat: 40.1826, lng: 29.0665 }
+            // Get coordinates from config
+            const locations = window.KapTazeConfig?.turkishCities || {
+                'Antalya': { lat: 36.8969, lng: 30.7133 }
             };
             
-            let selectedLocation = { lat: 36.8969, lng: 30.7133 }; // Default Antalya
+            let selectedLocation = locations['Antalya']; // Default Antalya
             
             for (const [city, coords] of Object.entries(locations)) {
                 if (address.includes(city)) {
