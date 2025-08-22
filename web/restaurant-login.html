@@ -10,9 +10,9 @@
     <!-- Database and Shared Systems -->
     <script src="./js/env-inject.js"></script>
     <script src="./js/config.js"></script>
-    <script src="./js/shared.js?v=2025.08.22.21"></script>
+    <script src="./js/shared.js?v=2025.08.22.22"></script>
     <script src="./js/database.js"></script>
-    <script src="./js/shared-storage-service.js?v=2025.08.22.21"></script>
+    <script src="./js/shared-storage-service.js?v=2025.08.22.22"></script>
     
     <style>
         * {
@@ -339,6 +339,25 @@
                 
                 // Search in restaurant users
                 const restaurantUsers = sharedData.restaurantUsers || [];
+                
+                // 🔍 DEBUG: Log all restaurant users to see structure
+                console.log('🔍 All restaurant users in database:', restaurantUsers);
+                console.log('🔍 Looking for username:', username, 'password length:', password.length);
+                
+                // Check each user individually for debugging
+                restaurantUsers.forEach((user, index) => {
+                    console.log(`🔍 User ${index}:`, {
+                        username: user.username,
+                        hasPassword: !!user.password,
+                        passwordLength: user.password?.length,
+                        status: user.status,
+                        role: user.role,
+                        usernameMatch: user.username === username,
+                        passwordMatch: user.password === password,
+                        statusMatch: user.status === 'active'
+                    });
+                });
+                
                 const matchingUser = restaurantUsers.find(user => 
                     user.username === username && user.password === password && user.status === 'active'
                 );
@@ -471,7 +490,7 @@
                 }
             }
             
-            console.log('🚨 CACHE VERSION: 2025.08.22.21 - Fixed KapTazeSharedStorage class name!');
+            console.log('🚨 CACHE VERSION: 2025.08.22.22 - Added debug logging for restaurant users!');
         });
     </script>
 </body>
