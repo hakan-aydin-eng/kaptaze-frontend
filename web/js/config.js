@@ -6,9 +6,8 @@
 window.KapTazeConfig = {
     // Google Maps API Configuration
     maps: {
-        // Development API key (limited functionality)
-        // For production: Set GOOGLE_MAPS_API_KEY environment variable
-        apiKey: process?.env?.GOOGLE_MAPS_API_KEY || 'AIzaSyBFw0Qbyq9zTFTd-tUY6dQGTsWifdVxUzM',
+        // Production API key for KapTaze
+        apiKey: 'AIzaSyBTPj8fON_ie4OjJUFi1FCDCRD6V6d4xWk',
         
         // Map configuration
         defaultCenter: { lat: 39.925533, lng: 32.866287 }, // Turkey center
@@ -19,7 +18,14 @@ window.KapTazeConfig = {
             types: ['establishment', 'geocode'],
             componentRestrictions: { country: 'tr' },
             fields: ['place_id', 'geometry', 'name', 'formatted_address', 'types']
-        }
+        },
+        
+        // Allowed domains for this API key (for reference)
+        allowedDomains: [
+            'kaptaze.netlify.app',
+            'localhost',
+            '127.0.0.1'
+        ]
     },
     
     // API Endpoints
@@ -56,5 +62,12 @@ window.KapTazeConfig = {
 
 // Debug info
 if (window.KapTazeConfig.features.debugMode) {
-    console.log('🔧 KapTaze Config loaded:', window.KapTazeConfig);
+    const config = { ...window.KapTazeConfig };
+    // Mask API key for security (show only first/last 4 chars)
+    if (config.maps?.apiKey) {
+        const key = config.maps.apiKey;
+        config.maps.apiKey = `${key.substring(0, 4)}...${key.substring(key.length - 4)}`;
+    }
+    console.log('🔧 KapTaze Config loaded:', config);
+    console.log('🗺️ Maps API: Ready to load');
 }
