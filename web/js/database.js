@@ -168,7 +168,7 @@ class KapTazeDatabase {
     addPackage(restaurantId, packageData) {
         const data = this.getData();
         
-        const package = {
+        const packageObj = {
             id: this.generateId('PKG'),
             restaurantId: restaurantId,
             ...packageData,
@@ -177,10 +177,10 @@ class KapTazeDatabase {
             updatedAt: new Date().toISOString()
         };
         
-        data.packages.push(package);
+        data.packages.push(packageObj);
         this.saveData(data);
         
-        return package;
+        return packageObj;
     }
 
     updatePackage(packageId, updates) {

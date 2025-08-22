@@ -319,8 +319,7 @@ async function loadDashboardData() {
         };
         
         // Use mock data
-            updateDashboardStatsMock(mockStats);
-        }
+        updateDashboardStatsMock(mockStats);
         
         console.log('📊 Dashboard data loaded');
     } catch (error) {
