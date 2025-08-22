@@ -10,9 +10,9 @@
     <!-- Database and Shared Systems -->
     <script src="./js/env-inject.js"></script>
     <script src="./js/config.js"></script>
-    <script src="./js/shared.js?v=2025.08.22.20"></script>
+    <script src="./js/shared.js?v=2025.08.22.21"></script>
     <script src="./js/database.js"></script>
-    <script src="./js/shared-storage-service.js?v=2025.08.22.20"></script>
+    <script src="./js/shared-storage-service.js?v=2025.08.22.21"></script>
     
     <style>
         * {
@@ -323,7 +323,11 @@
                 // Initialize shared storage if not available
                 if (!window.KapTazeSharedStorage) {
                     console.log('🔧 Initializing KapTaze Shared Storage...');
-                    window.KapTazeSharedStorage = new KapTazeSharedStorageService();
+                    if (typeof KapTazeSharedStorage !== 'undefined') {
+                        window.KapTazeSharedStorage = new KapTazeSharedStorage();
+                    } else {
+                        throw new Error('KapTazeSharedStorage class not available');
+                    }
                 }
                 
                 // Load restaurant users from shared storage
@@ -443,11 +447,11 @@
         // Check if already logged in and initialize services
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize KapTaze Shared Storage
-            if (typeof KapTazeSharedStorageService !== 'undefined') {
-                window.KapTazeSharedStorage = new KapTazeSharedStorageService();
+            if (typeof KapTazeSharedStorage !== 'undefined') {
+                window.KapTazeSharedStorage = new KapTazeSharedStorage();
                 console.log('✅ KapTaze Shared Storage initialized');
             } else {
-                console.warn('⚠️ KapTazeSharedStorageService not available, using fallback');
+                console.warn('⚠️ KapTazeSharedStorage class not available, using fallback');
             }
             
             // Check existing login
@@ -467,7 +471,7 @@
                 }
             }
             
-            console.log('🚨 CACHE VERSION: 2025.08.22.20 - Restaurant login KapTazeDB initialization fixed!');
+            console.log('🚨 CACHE VERSION: 2025.08.22.21 - Fixed KapTazeSharedStorage class name!');
         });
     </script>
 </body>
