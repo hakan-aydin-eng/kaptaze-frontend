@@ -1813,6 +1813,180 @@ function editPackage(packageId) {
     showNotification(`Paket düzenleme özelliği yakında aktif olacak (ID: ${packageId})`, 'info');
 }
 
+// Load packages data for admin panel
+async function loadPackagesData() {
+    console.log('📦 Loading packages data for admin panel...');
+    
+    try {
+        // Initialize shared storage if not available
+        if (!window.KapTazeSharedStorage) {
+            console.log('🔧 Initializing KapTaze Shared Storage for packages...');
+            if (typeof KapTazeSharedStorage !== 'undefined') {
+                window.KapTazeSharedStorage = new KapTazeSharedStorage();
+            } else {
+                console.error('❌ KapTazeSharedStorage class not available');
+                renderPackagesFallback();
+                return;
+            }
+        }
+        
+        // Get all data from shared storage
+        const allData = await window.KapTazeSharedStorage.getAllData();
+        
+        if (allData && allData.success && allData.data) {
+            const packages = allData.data.packages || [];
+            const restaurantUsers = allData.data.restaurantUsers || [];
+            const restaurantProfiles = allData.data.restaurantProfiles || [];
+            
+            console.log('📊 Packages loaded from shared storage:', packages.length);
+            renderPackagesGrid(packages, restaurantUsers, restaurantProfiles);
+        } else {
+            console.log('⚠️ No packages data found, using fallback');
+            renderPackagesFallback();
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading packages data:', error);
+        renderPackagesFallback();
+    }
+}
+
+// Render packages grid for admin panel
+function renderPackagesGrid(packages, restaurantUsers, restaurantProfiles) {
+    const container = document.getElementById('packages-grid');
+    
+    if (!packages || packages.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state-card">
+                <i class="fas fa-box" style="font-size: 3em; color: #ccc; margin-bottom: 20px;"></i>
+                <h3>Henüz paket bulunmuyor</h3>
+                <p>Restoranlar paket ekledikçe burada görünecekler.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Group packages by restaurant
+    const packagesByRestaurant = packages.reduce((acc, pkg) => {
+        if (!acc[pkg.restaurantId]) {
+            acc[pkg.restaurantId] = [];
+        }
+        acc[pkg.restaurantId].push(pkg);
+        return acc;
+    }, {});
+    
+    let html = '';
+    
+    Object.keys(packagesByRestaurant).forEach(restaurantId => {
+        const restaurantPackages = packagesByRestaurant[restaurantId];
+        const restaurant = restaurantUsers.find(r => r.id === restaurantId);
+        const profile = restaurantProfiles.find(p => p.userId === restaurantId);
+        
+        const restaurantName = profile?.businessName || restaurant?.businessName || `Restaurant ${restaurantId}`;
+        
+        html += `
+            <div class="restaurant-packages-section">
+                <div class="restaurant-header">
+                    <h3>${restaurantName}</h3>
+                    <span class="package-count">${restaurantPackages.length} paket</span>
+                </div>
+                <div class="packages-row">
+                    ${restaurantPackages.map(pkg => renderPackageCard(pkg)).join('')}
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+// Render individual package card
+function renderPackageCard(pkg) {
+    const discountPercent = Math.round((1 - pkg.discountedPrice / pkg.originalPrice) * 100);
+    const isLowStock = pkg.quantity <= 3;
+    const statusClass = pkg.status === 'active' ? 'active' : 'inactive';
+    
+    return `
+        <div class="package-card ${statusClass}" data-package-id="${pkg.id}">
+            <div class="package-image">
+                <img src="${pkg.image || '/assets/default-package.jpg'}" alt="${pkg.name}" onerror="this.src='/assets/default-package.jpg'">
+                <div class="package-status">${pkg.status === 'active' ? 'Aktif' : 'Pasif'}</div>
+                ${discountPercent > 0 ? `<div class="discount-badge">%${discountPercent}</div>` : ''}
+            </div>
+            <div class="package-content">
+                <h4 class="package-name">${pkg.name}</h4>
+                <p class="package-description">${pkg.description}</p>
+                <div class="package-details">
+                    <div class="price-info">
+                        <span class="current-price">₺${pkg.discountedPrice}</span>
+                        ${pkg.originalPrice !== pkg.discountedPrice ? 
+                            `<span class="original-price">₺${pkg.originalPrice}</span>` : ''
+                        }
+                    </div>
+                    <div class="stock-info ${isLowStock ? 'low-stock' : ''}">
+                        <i class="fas fa-box"></i>
+                        <span>${pkg.quantity} adet</span>
+                    </div>
+                </div>
+                <div class="package-meta">
+                    <span class="package-category">${getCategoryDisplayName(pkg.category)}</span>
+                    <span class="package-date">${new Date(pkg.createdAt).toLocaleDateString('tr-TR')}</span>
+                </div>
+                <div class="package-actions">
+                    <button class="btn-sm btn-secondary" onclick="viewPackageDetails('${pkg.id}')" title="Detayları Görüntüle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-sm btn-primary" onclick="editPackage('${pkg.id}')" title="Paketi Düzenle">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-sm btn-danger" onclick="deletePackageAdmin('${pkg.id}')" title="Paketi Sil">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Fallback packages display
+function renderPackagesFallback() {
+    const container = document.getElementById('packages-grid');
+    container.innerHTML = `
+        <div class="fallback-state-card">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3em; color: #f59e0b; margin-bottom: 20px;"></i>
+            <h3>Paket verileri yüklenemedi</h3>
+            <p>Lütfen sayfayı yenileyerek tekrar deneyin.</p>
+            <button class="btn-primary" onclick="loadPackagesData()">
+                <i class="fas fa-sync-alt"></i> Tekrar Dene
+            </button>
+        </div>
+    `;
+}
+
+// Helper functions
+function getCategoryDisplayName(category) {
+    const categories = {
+        'ana-yemek': 'Ana Yemek',
+        'aperatif': 'Aperatif', 
+        'tatli': 'Tatlı',
+        'icecek': 'İçecek',
+        'menu': 'Menü',
+        'kahvalti': 'Kahvaltı',
+        'atistirmalik': 'Atıştırmalık'
+    };
+    return categories[category] || category;
+}
+
+function viewPackageDetails(packageId) {
+    showNotification(`Paket detay görüntüleme özelliği yakında aktif olacak (ID: ${packageId})`, 'info');
+}
+
+function deletePackageAdmin(packageId) {
+    if (confirm('Bu paketi silmek istediğiniz emin misiniz?')) {
+        showNotification(`Paket silme özelliği yakında aktif olacak (ID: ${packageId})`, 'info');
+    }
+}
+
 function showAddUserModal() {
     showNotification('Yeni kullanıcı ekleme özelliği yakında aktif olacak', 'info');
 }
@@ -1897,6 +2071,7 @@ window.EMERGENCY_APPROVE = function(applicationId) {
 window.editUser = window.editUser || editUser;
 window.toggleUserStatus = window.toggleUserStatus || toggleUserStatus;
 window.viewUser = window.viewUser || viewUser;
+window.loadPackagesData = window.loadPackagesData || loadPackagesData;
 window.editRestaurant = window.editRestaurant || editRestaurant;
 window.viewRestaurant = window.viewRestaurant || viewRestaurant;
 window.toggleRestaurantStatus = window.toggleRestaurantStatus || toggleRestaurantStatus;
@@ -1935,4 +2110,4 @@ console.log('🌐 Global functions registered:', {
 });
 
 // 🔥 FORCE CACHE CLEAR NOTIFICATION
-console.log('🚨 CACHE VERSION: 2025.08.22.31 - Enhanced restaurant names display with firstName+lastName!');
+console.log('🚨 CACHE VERSION: 2025.08.22.34 - Admin packages display added!');

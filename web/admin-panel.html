@@ -45,6 +45,12 @@
                 history.replaceState(null, null, `#${sectionId}`);
                 
                 console.log('✅ Early admin panel section switched to:', sectionId);
+                
+                // Load section-specific data
+                if (sectionId === 'packages' && window.loadPackagesData) {
+                    console.log('📦 Loading packages data...');
+                    window.loadPackagesData();
+                }
             }
             
             if (navItem) {
@@ -451,7 +457,7 @@
         </section>
     </div>
 
-    <script src="./js/admin.js?v=2025.08.22.31"></script>
+    <script src="./js/admin.js?v=2025.08.22.34"></script>
     <script>
         // Authentication check and logout function
         function isAuthenticated() {
