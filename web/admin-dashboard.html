@@ -554,9 +554,11 @@
             }
         }
 
-        // Open admin sections
+        // Open admin sections - FIXED: No more admin-panel.html
         function openAdminSection(section) {
-            window.location.href = `/admin-panel.html#${section}`;
+            // Keep users on dashboard instead of broken admin-panel
+            console.log(`Admin section ${section} clicked - staying on dashboard`);
+            alert(`${section} bölümü geliştiriliyor...`);
         }
 
         // Generate report

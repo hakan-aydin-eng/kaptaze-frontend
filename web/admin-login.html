@@ -312,14 +312,14 @@
                             loginTime: new Date().toISOString()
                         }));
                         
+                        console.log('✅ LOCAL AUTH SUCCESS - Redirecting to admin-dashboard.html');
+                        
                         // Show success message
                         loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı!';
                         loginBtn.style.background = '#059669';
                         
-                        // Redirect to admin dashboard - same tab navigation
-                        setTimeout(() => {
-                            window.location.href = '/admin-dashboard.html';
-                        }, 1000);
+                        // DIRECT redirect - no timeout
+                        window.location.href = '/admin-dashboard.html';
                     } else {
                         throw new Error('Kullanıcı adı veya şifre hatalı');
                     }
