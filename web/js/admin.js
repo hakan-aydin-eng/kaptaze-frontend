@@ -15,9 +15,9 @@ const API_ENDPOINTS = {
 let apiConnected = false;
 let useDatabase = true; // Use local database as primary source
 
-// Global state
+// Global state - NO localStorage
 let currentSection = 'dashboard';
-let authToken = localStorage.getItem('adminToken');
+let currentUser = null;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
@@ -31,68 +31,56 @@ document.addEventListener('DOMContentLoaded', function() {
     loadDashboardData();
 });
 
-// Authentication check
+// Authentication check - MongoDB only
 function checkAuthentication() {
-    const token = localStorage.getItem('adminToken');
-    const user = localStorage.getItem('adminUser');
-    
-    if (!token || !user) {
-        // Redirect to login
+    // Check if unified MongoDB service is available
+    if (!window.KapTazeMongoDB) {
+        console.error('❌ Unified MongoDB service not loaded!');
         window.location.href = '/admin-login.html';
         return false;
     }
     
-    try {
-        const userData = JSON.parse(user);
-        const loginTime = new Date(userData.loginTime);
-        const now = new Date();
-        const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
-        
-        // Token expires after 24 hours
-        if (hoursDiff > 24) {
-            localStorage.removeItem('adminToken');
-            localStorage.removeItem('adminUser');
-            window.location.href = '/admin-login.html';
-            return false;
-        }
-        
-        // Update user info in header
-        const userInfo = document.querySelector('.user-info span');
-        if (userInfo) {
-            userInfo.textContent = userData.username;
-        }
-        
-        return true;
-    } catch (error) {
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
+    // Check authentication from MongoDB service
+    currentUser = window.KapTazeMongoDB.getCurrentUser();
+    if (!currentUser || currentUser.role !== 'admin') {
+        console.log('❌ No admin authentication found');
         window.location.href = '/admin-login.html';
         return false;
     }
+    
+    console.log('✅ Admin authenticated:', currentUser.username);
+    
+    // Update user info in header
+    const userInfo = document.querySelector('.user-info span');
+    if (userInfo) {
+        userInfo.textContent = currentUser.businessName || currentUser.username;
+    }
+    
+    return true;
 }
 
-// Logout function
+// Logout function - MongoDB only
 function logout() {
     if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
+        if (window.KapTazeMongoDB) {
+            window.KapTazeMongoDB.clearSession();
+        }
+        console.log('🚪 Admin logged out');
         window.location.href = '/admin-login.html';
     }
 }
 
-// App initialization
+// App initialization - MongoDB only
 function initializeApp() {
-    // Initialize database first
-    console.log('🔄 Initializing KapTaze Database...');
-    window.KapTazeDB = window.KapTazeDB || new KapTazeDatabase();
-    console.log('✅ KapTaze Database initialized');
+    console.log('🔄 Initializing Admin Panel with MongoDB...');
     
-    // Initialize shared storage
-    if (!window.KapTazeSharedStorage && typeof KapTazeSharedStorage !== 'undefined') {
-        console.log('🔄 Initializing KapTaze Shared Storage...');
-        window.KapTazeSharedStorage = new KapTazeSharedStorage();
-        console.log('✅ KapTaze Shared Storage initialized');
+    // Only use unified MongoDB service - no other storage
+    if (!window.KapTazeMongoDB) {
+        console.error('❌ Unified MongoDB service required!');
+        return;
     }
+    
+    console.log('✅ Admin Panel initialized with MongoDB Atlas only');
     
     // Set active section from URL hash
     const hash = window.location.hash.substring(1);

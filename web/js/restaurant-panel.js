@@ -38,44 +38,40 @@ class RestaurantPanel {
     }
 
     checkAuth() {
-        const token = localStorage.getItem('restaurantToken');
-        const user = localStorage.getItem('restaurantUser');
+        // Check MongoDB authentication only
+        if (!window.KapTazeMongoDB) {
+            console.error('❌ Unified MongoDB service not loaded!');
+            window.location.href = '/restaurant-login.html';
+            return false;
+        }
         
-        console.log('🔍 Restaurant-panel.js auth check:', {
-            hasToken: !!token,
-            hasUser: !!user,
-            storage: 'localStorage'
+        this.currentUser = window.KapTazeMongoDB.getCurrentUser();
+        console.log('🔍 Restaurant auth check - MongoDB only:', {
+            hasUser: !!this.currentUser,
+            role: this.currentUser ? this.currentUser.role : 'none'
         });
         
-        if (!token || !user) {
+        if (!this.currentUser || this.currentUser.role !== 'restaurant') {
             console.warn('⚠️ Not authenticated, redirecting to login');
             window.location.href = '/restaurant-login.html';
             return false;
         }
         
-        try {
-            this.currentUser = JSON.parse(user);
-            console.log('✅ Restaurant-panel.js authenticated user:', this.currentUser.username);
-            return true;
-        } catch (error) {
-            console.error('❌ Error parsing user data:', error);
-            this.logout();
-            return false;
-        }
+        console.log('✅ Restaurant authenticated via MongoDB:', this.currentUser.username);
+        return true;
     }
 
     async loadUserData() {
         if (!this.currentUser) return;
         
         try {
-            // Get restaurant profile from localStorage
-            const profileData = localStorage.getItem('restaurantProfile');
+            // Get restaurant profile from MongoDB
+            this.restaurantProfile = await window.KapTazeMongoDB.getRestaurantByUserId(this.currentUser.id);
             
-            if (profileData) {
-                this.restaurantProfile = JSON.parse(profileData);
-                console.log('✅ Restaurant profile loaded from localStorage:', this.restaurantProfile);
+            if (this.restaurantProfile) {
+                console.log('✅ Restaurant profile loaded from MongoDB:', this.restaurantProfile.businessName);
             } else {
-                console.warn('⚠️ Restaurant profile not found in localStorage');
+                console.warn('⚠️ Restaurant profile not found in MongoDB');
                 return;
             }
             
