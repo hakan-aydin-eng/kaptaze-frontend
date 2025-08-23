@@ -7,9 +7,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Unified MongoDB System -->
-    <script src="./js/unified-mongodb-service.js?v=2025.08.23.01"></script>
-    <script src="./js/unified-auth.js?v=2025.08.23.01"></script>
+    <!-- Shared Data System -->
+    <script src="./js/shared.js?v=2025.08.22.17"></script>
     
     <style>
         * {
@@ -51,15 +50,21 @@
         }
 
         .logo-text {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 700;
             color: #16a34a;
         }
 
         h1 {
-            color: #1e293b;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            color: #6b7280;
             margin-bottom: 2rem;
-            font-weight: 600;
+            font-size: 0.95rem;
         }
 
         .form-group {
@@ -67,136 +72,152 @@
             text-align: left;
         }
 
-        .form-group label {
+        label {
             display: block;
-            margin-bottom: 0.5rem;
             color: #374151;
             font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
         }
 
-        .input-wrapper {
+        .input-group {
             position: relative;
         }
 
-        .form-group input {
-            width: 100%;
-            padding: 0.875rem;
-            padding-left: 3rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #16a34a;
-            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
-        }
-
-        .input-icon {
+        .input-group i {
             position: absolute;
             left: 1rem;
             top: 50%;
             transform: translateY(-50%);
             color: #9ca3af;
-            font-size: 1.1rem;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background-color: #fafafa;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #16a34a;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
         }
 
         .login-btn {
             width: 100%;
-            background: linear-gradient(135deg, #16a34a, #22c55e);
+            padding: 1rem;
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
             color: white;
             border: none;
-            padding: 1rem;
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 1rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .login-btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+            box-shadow: 0 10px 30px rgba(22, 163, 74, 0.3);
         }
 
         .login-btn:disabled {
-            opacity: 0.6;
+            opacity: 0.7;
             cursor: not-allowed;
             transform: none;
         }
 
         .error-message {
-            background: #fee2e2;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
             color: #dc2626;
-            padding: 0.75rem 1rem;
+            padding: 0.75rem;
             border-radius: 8px;
-            margin-top: 1rem;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
             display: none;
         }
 
         .demo-info {
             background: #f0f9ff;
-            border: 1px solid #0ea5e9;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 2rem;
-            font-size: 0.875rem;
+            border: 1px solid #bae6fd;
             color: #0369a1;
-        }
-
-        .demo-info strong {
-            color: #0c4a6e;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
         }
 
         .footer-links {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
         }
 
         .footer-link {
             color: #6b7280;
             text-decoration: none;
-            font-size: 0.875rem;
-            display: inline-flex;
+            font-size: 0.9rem;
+            display: flex;
             align-items: center;
             gap: 0.5rem;
-            margin: 0 1rem;
-            transition: color 0.2s ease;
+            transition: color 0.2s;
         }
 
         .footer-link:hover {
             color: #16a34a;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div class="logo">
-            <span class="logo-icon">🌱</span>
+            <span class="logo-icon">🏪</span>
             <span class="logo-text">KapTaze</span>
         </div>
         
-        <h1>Admin Panel Girişi</h1>
+        <h1>Yönetici Girişi</h1>
+        <p class="subtitle">Sistem yönetimi için giriş yapın</p>
         
-        <form id="loginForm" onsubmit="handleLogin(event)">
+        <form onsubmit="handleLogin(event)">
             <div class="form-group">
                 <label for="username">Kullanıcı Adı</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-user input-icon"></i>
-                    <input type="text" id="username" name="username" required>
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" placeholder="Kullanıcı adınızı girin" required>
                 </div>
             </div>
             
             <div class="form-group">
                 <label for="password">Şifre</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-lock input-icon"></i>
-                    <input type="password" id="password" name="password" required>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Şifrenizi girin" required>
                 </div>
             </div>
             
@@ -227,7 +248,7 @@
     </div>
 
     <script>
-        // Simple authentication logic
+        // Simple authentication logic - ESKİ ÇALIŞAN HAL
         async function handleLogin(event) {
             event.preventDefault();
             
@@ -256,13 +277,9 @@
                     if (response.ok) {
                         const result = await response.json();
                         if (result.basarili) {
-                            // Use MongoDB authentication instead of localStorage
-                            try {
-                                await window.KapTazeMongoDB.authenticateUser(username, password, 'admin');
-                                console.log('✅ Admin authenticated via MongoDB');
-                            } catch (mongoError) {
-                                console.warn('⚠️ MongoDB auth failed, continuing with API auth');
-                            }
+                            // Store login state from API
+                            localStorage.setItem('adminToken', result.token);
+                            localStorage.setItem('adminUser', JSON.stringify(result.kullanici));
                             
                             // Show success message
                             loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı!';
@@ -286,31 +303,14 @@
 
                 // Fallback to local credentials if API failed
                 if (!loginSuccess) {
-                    if (username === 'admin' && (password === 'admin123' || password === 'kaptaze2024')) {
-                        // Try MongoDB authentication, but proceed even if it fails
-                        let mongoAuth = false;
-                        try {
-                            await window.KapTazeMongoDB.authenticateUser(username, password, 'admin');
-                            console.log('✅ Admin authenticated via MongoDB fallback');
-                            mongoAuth = true;
-                        } catch (mongoError) {
-                            console.warn('⚠️ MongoDB fallback auth failed, using manual session');
-                            // Manually set session for admin since credentials are correct
-                            if (window.KapTazeMongoDB) {
-                                window.KapTazeMongoDB.sessionState = {
-                                    currentUser: {
-                                        id: 'admin',
-                                        username: 'admin',
-                                        role: 'admin',
-                                        businessName: 'KapTaze Admin'
-                                    },
-                                    authToken: 'manual-admin-token',
-                                    sessionId: 'manual-session-' + Date.now(),
-                                    expires: new Date(Date.now() + 24 * 60 * 60 * 1000)
-                                };
-                                console.log('✅ Manual admin session created');
-                            }
-                        }
+                    if (username === 'admin' && password === 'admin123') {
+                        // Store login state (fallback)
+                        localStorage.setItem('adminToken', 'demo-admin-token');
+                        localStorage.setItem('adminUser', JSON.stringify({
+                            username: 'admin',
+                            role: 'admin',
+                            loginTime: new Date().toISOString()
+                        }));
                         
                         // Show success message
                         loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı!';
@@ -335,16 +335,10 @@
             }
         }
         
-        // Check if already logged in via MongoDB
-        setTimeout(() => {
-            if (window.KapTazeMongoDB && window.KapTazeMongoDB.getCurrentUser()) {
-                const user = window.KapTazeMongoDB.getCurrentUser();
-                if (user.role === 'admin') {
-                    console.log('✅ Admin already authenticated, redirecting to dashboard');
-                    window.location.href = '/admin-dashboard.html';
-                }
-            }
-        }, 100);
+        // Check if already logged in
+        if (localStorage.getItem('adminToken')) {
+            window.location.href = '/admin-dashboard.html';
+        }
     </script>
 </body>
 </html>
