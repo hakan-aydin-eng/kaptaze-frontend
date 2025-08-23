@@ -231,6 +231,31 @@ class KapTazeSharedStorage {
         return this.makeRequest('addPackage', packageWithId);
     }
     
+    // Add restaurant user to the system
+    async addRestaurantUser(restaurantUserData) {
+        console.log('👤 Adding restaurant user:', restaurantUserData.username);
+        
+        const result = await this.makeRequest('addRestaurantUser', restaurantUserData);
+        this.invalidateCache();
+        
+        // Notify data change
+        this.notifyDataChange('addRestaurantUser', restaurantUserData);
+        
+        return result.data;
+    }
+    
+    // Get restaurant users
+    async getRestaurantUsers() {
+        const data = await this.getAllData();
+        return data.restaurantUsers || [];
+    }
+    
+    // Get restaurant user by username
+    async getRestaurantUser(username) {
+        const users = await this.getRestaurantUsers();
+        return users.find(user => user.username === username && user.status === 'active');
+    }
+    
     // Statistics
     async getStatistics() {
         const data = await this.getAllData();

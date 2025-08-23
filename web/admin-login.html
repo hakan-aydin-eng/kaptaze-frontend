@@ -285,9 +285,9 @@
                             loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı!';
                             loginBtn.style.background = '#059669';
                             
-                            // Redirect to admin dashboard
+                            // Redirect to PROFESSIONAL admin dashboard
                             setTimeout(() => {
-                                window.location.href = '/admin-dashboard.html';
+                                window.location.href = '/admin-dashboard-professional.html';
                             }, 1000);
                             loginSuccess = true;
                         } else {
@@ -318,8 +318,8 @@
                         loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı!';
                         loginBtn.style.background = '#059669';
                         
-                        // DIRECT redirect - no timeout
-                        window.location.href = '/admin-dashboard.html';
+                        // DIRECT redirect to PROFESSIONAL dashboard
+                        window.location.href = '/admin-dashboard-professional.html';
                     } else {
                         throw new Error('Kullanıcı adı veya şifre hatalı');
                     }
@@ -335,9 +335,9 @@
             }
         }
         
-        // Check if already logged in
+        // Check if already logged in - redirect to PROFESSIONAL dashboard
         if (localStorage.getItem('adminToken')) {
-            window.location.href = '/admin-dashboard.html';
+            window.location.href = '/admin-dashboard-professional.html';
         }
     </script>
 </body>

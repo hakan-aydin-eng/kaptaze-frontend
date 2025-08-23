@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KapTaze Admin Dashboard - Professional</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- MongoDB Integration -->
+    <script src="./js/unified-mongodb-service.js?v=2025.08.23.01"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+            color: white;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .admin-info {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-title {
+            padding: 0 1.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            opacity: 0.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .badge {
+            background: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            margin-left: auto;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: #f9fafb;
+            width: 300px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+        }
+
+        .notification-btn {
+            position: relative;
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 0.375rem;
+        }
+
+        .notification-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .notification-count {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+        }
+
+        .user-menu:hover {
+            background: #f3f4f6;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* CONTENT AREA */
+        .content {
+            padding: 2rem;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #f1f5f9;
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .stat-icon.blue { background: linear-gradient(45deg, #3b82f6, #1d4ed8); }
+        .stat-icon.green { background: linear-gradient(45deg, #10b981, #059669); }
+        .stat-icon.orange { background: linear-gradient(45deg, #f59e0b, #d97706); }
+        .stat-icon.purple { background: linear-gradient(45deg, #8b5cf6, #7c3aed); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .stat-change.positive { color: #059669; }
+        .stat-change.negative { color: #dc2626; }
+        .stat-change.neutral { color: #6b7280; }
+
+        /* CARDS */
+        .card {
+            background: white;
+            border-radius: 1rem;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            padding: 1.5rem 1.5rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        /* TABLES */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #f3f4f6;
+            background: #f8fafc;
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        /* STATUS BADGES */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge.approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.rejected {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .status-badge.active {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* LOADING */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .loading i {
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Additional Status Badges */
+        .status-badge.preparing {
+            background: #fed7aa;
+            color: #c2410c;
+        }
+
+        .status-badge.ready {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-badge.delivered {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.cancelled {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .status-badge.confirmed {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-info {
+            background: #0ea5e9;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #0284c7;
+        }
+    </style>
+</head>
+<body>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <span class="logo-icon">🏪</span>
+                <span class="logo-text">KapTaze</span>
+            </div>
+            <div class="admin-info">Admin Panel</div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-title">Ana Menü</div>
+                <a class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" data-section="applications">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Başvurular</span>
+                    <span class="badge" id="pending-count">0</span>
+                </a>
+                <a class="nav-item" data-section="restaurants">
+                    <i class="fas fa-store"></i>
+                    <span>Restoranlar</span>
+                </a>
+                <a class="nav-item" data-section="packages">
+                    <i class="fas fa-box"></i>
+                    <span>Paketler</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Yönetim</div>
+                <a class="nav-item" data-section="orders">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Siparişler</span>
+                </a>
+                <a class="nav-item" data-section="users">
+                    <i class="fas fa-users"></i>
+                    <span>Kullanıcılar</span>
+                </a>
+                <a class="nav-item" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analizler</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Sistem</div>
+                <a class="nav-item" data-section="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Ayarlar</span>
+                </a>
+                <a class="nav-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Çıkış Yap</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- TOP BAR -->
+        <div class="top-bar">
+            <div class="page-title" id="page-title">Dashboard</div>
+            <div class="top-bar-right">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Ara..." id="global-search">
+                </div>
+                <button class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-count" id="notification-count">3</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">A</div>
+                    <span>Admin</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="content">
+            <!-- DASHBOARD SECTION -->
+            <div class="content-section active" id="dashboard-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Toplam Başvuru</div>
+                            <div class="stat-icon blue">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="total-applications">0</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="applications-change">+12% bu ay</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Bekleyen Başvuru</div>
+                            <div class="stat-icon orange">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="pending-applications">0</div>
+                        <div class="stat-change neutral" id="pending-change">
+                            <i class="fas fa-minus"></i>
+                            <span>İnceleme bekliyor</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Aktif Restoran</div>
+                            <div class="stat-icon green">
+                                <i class="fas fa-store"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="active-restaurants">0</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="restaurants-change">+5 yeni</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Toplam Paket</div>
+                            <div class="stat-icon purple">
+                                <i class="fas fa-box"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="total-packages">0</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="packages-change">+23 bu hafta</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RECENT ACTIVITY -->
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Son Başvurular</h3>
+                            <a href="#" class="btn btn-primary btn-sm" onclick="showSection('applications')">
+                                Tümünü Gör
+                            </a>
+                        </div>
+                        <div class="card-content">
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>İşletme</th>
+                                            <th>Kategori</th>
+                                            <th>Tarih</th>
+                                            <th>Durum</th>
+                                            <th>İşlem</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-applications">
+                                        <tr>
+                                            <td colspan="5" class="loading">
+                                                <i class="fas fa-spinner"></i>
+                                                Yükleniyor...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Hızlı İstatistikler</h3>
+                        </div>
+                        <div class="card-content">
+                            <div style="space-y: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <span>Bugün Başvuru</span>
+                                    <span id="today-applications" style="font-weight: 600;">0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <span>Bu Hafta Onay</span>
+                                    <span id="week-approvals" style="font-weight: 600;">0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <span>Aktif Paket</span>
+                                    <span id="active-packages" style="font-weight: 600;">0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <span>Toplam Sipariş</span>
+                                    <span id="total-orders" style="font-weight: 600;">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- APPLICATIONS SECTION -->
+            <div class="content-section" id="applications-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Başvuru Yönetimi</h2>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <select id="status-filter" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                            <option value="">Tüm Durumlar</option>
+                            <option value="pending">Beklemede</option>
+                            <option value="approved">Onaylandı</option>
+                            <option value="rejected">Reddedildi</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="refreshApplications()">
+                            <i class="fas fa-sync"></i>
+                            Yenile
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>İşletme Bilgileri</th>
+                                        <th>İletişim</th>
+                                        <th>Kategori</th>
+                                        <th>Başvuru Tarihi</th>
+                                        <th>Durum</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="applications-table">
+                                    <tr>
+                                        <td colspan="6" class="loading">
+                                            <i class="fas fa-spinner"></i>
+                                            Başvurular yükleniyor...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESTAURANTS SECTION -->
+            <div class="content-section" id="restaurants-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Restoran Yönetimi</h2>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary btn-sm" onclick="refreshRestaurants()">
+                            <i class="fas fa-sync"></i>
+                            Yenile
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>İşletme</th>
+                                        <th>İletişim</th>
+                                        <th>Adres</th>
+                                        <th>Giriş Bilgileri</th>
+                                        <th>Kayıt Tarihi</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="restaurants-table">
+                                    <tr>
+                                        <td colspan="6" class="loading">
+                                            <i class="fas fa-spinner"></i>
+                                            Restoranlar yükleniyor...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PACKAGES SECTION -->
+            <div class="content-section" id="packages-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Paket Yönetimi</h2>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary btn-sm" onclick="refreshPackages()">
+                            <i class="fas fa-sync"></i>
+                            Yenile
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Paket</th>
+                                        <th>Restoran</th>
+                                        <th>Kategori</th>
+                                        <th>Fiyat</th>
+                                        <th>Stok</th>
+                                        <th>Son Kullanma</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="packages-table">
+                                    <tr>
+                                        <td colspan="7" class="loading">
+                                            <i class="fas fa-spinner"></i>
+                                            Paketler yükleniyor...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ORDERS SECTION -->
+            <div class="content-section" id="orders-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Sipariş Yönetimi</h2>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <select id="order-status-filter" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                            <option value="">Tüm Siparişler</option>
+                            <option value="pending">Beklemede</option>
+                            <option value="confirmed">Onaylandı</option>
+                            <option value="preparing">Hazırlanıyor</option>
+                            <option value="ready">Hazır</option>
+                            <option value="delivered">Teslim Edildi</option>
+                            <option value="cancelled">İptal Edildi</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="refreshOrders()">
+                            <i class="fas fa-sync"></i>
+                            Yenile
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Sipariş</th>
+                                        <th>Müşteri</th>
+                                        <th>Restoran</th>
+                                        <th>Detaylar</th>
+                                        <th>Durum</th>
+                                        <th>Ödeme</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-table">
+                                    <tr>
+                                        <td colspan="7" class="loading">
+                                            <i class="fas fa-spinner"></i>
+                                            Siparişler yükleniyor...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- USERS SECTION -->
+            <div class="content-section" id="users-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Kullanıcı Yönetimi</h2>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <select id="user-type-filter" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                            <option value="">Tüm Kullanıcılar</option>
+                            <option value="customer">Müşteriler</option>
+                            <option value="restaurant_owner">Restoran Sahipleri</option>
+                            <option value="admin">Adminler</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="refreshUsers()">
+                            <i class="fas fa-sync"></i>
+                            Yenile
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Kullanıcı</th>
+                                        <th>Tip</th>
+                                        <th>Telefon</th>
+                                        <th>İşletme</th>
+                                        <th>Kayıt Tarihi</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table">
+                                    <tr>
+                                        <td colspan="6" class="loading">
+                                            <i class="fas fa-spinner"></i>
+                                            Kullanıcılar yükleniyor...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS SECTION -->
+            <div class="content-section" id="analytics-section">
+                <h2>Sistem Analizleri</h2>
+                
+                <div class="stats-grid" style="margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Toplam Gelir</div>
+                            <div class="stat-icon green">
+                                <i class="fas fa-lira-sign"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="total-revenue">₺0</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>Bu ay</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Bugün Sipariş</div>
+                            <div class="stat-icon blue">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="orders-today">0</div>
+                        <div class="stat-change neutral">
+                            <i class="fas fa-clock"></i>
+                            <span>Günlük</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Aktif Paket</div>
+                            <div class="stat-icon orange">
+                                <i class="fas fa-box"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="active-packages-analytics">0</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-check"></i>
+                            <span>Satışta</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Onay Oranı</div>
+                            <div class="stat-icon purple">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="conversion-rate">%0</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>Başvurular</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Popüler Kategoriler</h3>
+                        </div>
+                        <div class="card-content" id="top-categories">
+                            <div class="loading">Yükleniyor...</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Son Siparişler</h3>
+                        </div>
+                        <div class="card-content" id="recent-orders-analytics">
+                            <div class="loading">Yükleniyor...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section" id="settings-section">
+                <h2>Sistem Ayarları</h2>
+                <div class="loading">Bu bölüm yakında aktif edilecek...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPROVAL MODAL -->
+    <div id="approval-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 1rem; padding: 2rem; width: 90%; max-width: 500px;">
+            <h3 style="margin-bottom: 1rem;">Başvuru Onayı</h3>
+            <div style="margin-bottom: 1rem;">
+                <strong>İşletme:</strong> <span id="approval-business-name"></span>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label>Restaurant Giriş Bilgileri:</label>
+                <input type="text" id="approval-username" placeholder="Kullanıcı adı" style="width: 100%; padding: 0.5rem; margin: 0.25rem 0; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                <input type="text" id="approval-password" placeholder="Şifre" style="width: 100%; padding: 0.5rem; margin: 0.25rem 0; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+            </div>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="btn btn-danger btn-sm" onclick="dashboard.closeApprovalModal()">İptal</button>
+                <button class="btn btn-success btn-sm" onclick="dashboard.confirmApproval()">Onayla</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Functions -->
+    <script>
+        function refreshApplications() {
+            if (window.dashboard) {
+                window.dashboard.refreshApplications();
+            }
+        }
+        
+        function refreshRestaurants() {
+            if (window.dashboard) {
+                window.dashboard.loadRestaurantsData();
+            }
+        }
+        
+        function refreshPackages() {
+            if (window.dashboard) {
+                window.dashboard.loadPackagesData();
+            }
+        }
+        
+        function refreshOrders() {
+            if (window.dashboard) {
+                window.dashboard.loadOrdersData();
+            }
+        }
+        
+        function refreshUsers() {
+            if (window.dashboard) {
+                window.dashboard.loadUsersData();
+            }
+        }
+        
+        function closeApprovalModal() {
+            if (window.dashboard) {
+                window.dashboard.closeApprovalModal();
+            }
+        }
+        
+        function confirmApproval() {
+            if (window.dashboard) {
+                window.dashboard.confirmApproval();
+            }
+        }
+    </script>
+
+    <script src="./js/admin-dashboard-professional.js?v=2025.08.23.02"></script>
+</body>
+</html>

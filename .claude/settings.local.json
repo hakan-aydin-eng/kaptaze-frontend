@@ -73,7 +73,9 @@
       "WebSearch",
       "Bash(find:*)",
       "Bash(sed:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:kaptaze.com)"
     ],
     "deny": [],
     "ask": [],
