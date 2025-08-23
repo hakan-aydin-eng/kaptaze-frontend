@@ -75,7 +75,9 @@
       "Bash(sed:*)",
       "Bash(rg:*)",
       "Bash(grep:*)",
-      "WebFetch(domain:kaptaze.com)"
+      "WebFetch(domain:kaptaze.com)",
+      "Bash(npm init:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": [],
