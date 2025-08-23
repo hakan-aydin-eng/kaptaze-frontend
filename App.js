@@ -157,4 +157,20 @@ const styles = StyleSheet.create({
     color: '#e2e8f0',
     fontWeight: '500',
   },
+  const express = require('express');
+const connectDB = require('./mongodb');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+connectDB().then(db => {
+    console.log('Database hazır, artık kullanabilirsin!');
+});
+
+app.get('/', (req, res) => {
+    res.send('KapTaze Backend çalışıyor!');
+});
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 });
