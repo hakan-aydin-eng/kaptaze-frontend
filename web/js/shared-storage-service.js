@@ -217,9 +217,18 @@ class KapTazeSharedStorage {
     }
     
     async addPackage(restaurantId, packageData) {
-        // This would need to be implemented in the Netlify function
-        console.warn('⚠️ addPackage not yet implemented in shared storage');
-        return null;
+        console.log('💾 Adding package for restaurant:', restaurantId);
+        
+        const packageWithId = {
+            id: `PKG_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            restaurantId: restaurantId,
+            ...packageData,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        
+        return this.makeRequest('addPackage', packageWithId);
     }
     
     // Statistics

@@ -1838,10 +1838,29 @@ async function loadPackagesData() {
             const restaurantUsers = allData.data.restaurantUsers || [];
             const restaurantProfiles = allData.data.restaurantProfiles || [];
             
+            console.log('📊 DEBUGGING - Raw shared storage data:', allData.data);
+            console.log('📦 DEBUGGING - Packages array:', packages);
+            console.log('👥 DEBUGGING - Restaurant users:', restaurantUsers.length);
+            console.log('📋 DEBUGGING - Restaurant profiles:', restaurantProfiles.length);
+            
+            // Check if packages exist in database.js (fallback)
+            if (packages.length === 0 && window.KapTazeDB) {
+                console.log('📂 DEBUGGING - Checking local KapTazeDB for packages...');
+                const localData = window.KapTazeDB.getData();
+                const localPackages = localData.packages || [];
+                console.log('📦 DEBUGGING - Local packages found:', localPackages.length, localPackages);
+                
+                if (localPackages.length > 0) {
+                    renderPackagesGrid(localPackages, restaurantUsers, restaurantProfiles);
+                    return;
+                }
+            }
+            
             console.log('📊 Packages loaded from shared storage:', packages.length);
             renderPackagesGrid(packages, restaurantUsers, restaurantProfiles);
         } else {
             console.log('⚠️ No packages data found, using fallback');
+            console.log('📊 DEBUGGING - Full response:', allData);
             renderPackagesFallback();
         }
         
@@ -1853,14 +1872,32 @@ async function loadPackagesData() {
 
 // Render packages grid for admin panel
 function renderPackagesGrid(packages, restaurantUsers, restaurantProfiles) {
+    console.log('🎨 DEBUGGING - renderPackagesGrid called with:', {
+        packagesCount: packages?.length || 0,
+        restaurantUsersCount: restaurantUsers?.length || 0,
+        restaurantProfilesCount: restaurantProfiles?.length || 0
+    });
+    
     const container = document.getElementById('packages-grid');
     
+    if (!container) {
+        console.error('❌ DEBUGGING - packages-grid container not found!');
+        return;
+    }
+    
     if (!packages || packages.length === 0) {
+        console.log('📦 DEBUGGING - No packages found, showing empty state');
         container.innerHTML = `
             <div class="empty-state-card">
                 <i class="fas fa-box" style="font-size: 3em; color: #ccc; margin-bottom: 20px;"></i>
                 <h3>Henüz paket bulunmuyor</h3>
                 <p>Restoranlar paket ekledikçe burada görünecekler.</p>
+                <div style="margin-top: 1rem; padding: 1rem; background: #f3f4f6; border-radius: 8px; font-size: 0.875rem;">
+                    <strong>Debug Info:</strong><br>
+                    Packages: ${packages?.length || 0}<br>
+                    Restaurant Users: ${restaurantUsers?.length || 0}<br>
+                    Restaurant Profiles: ${restaurantProfiles?.length || 0}
+                </div>
             </div>
         `;
         return;
@@ -2110,4 +2147,4 @@ console.log('🌐 Global functions registered:', {
 });
 
 // 🔥 FORCE CACHE CLEAR NOTIFICATION
-console.log('🚨 CACHE VERSION: 2025.08.22.34 - Admin packages display added!');
+console.log('🚨 CACHE VERSION: 2025.08.22.35 - DEBUGGING packages data source!');

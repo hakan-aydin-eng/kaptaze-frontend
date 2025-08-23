@@ -548,6 +548,19 @@ class RestaurantPanel {
                 this.packages.push(newPackage);
                 this.renderPackages();
                 this.updateStatistics();
+                
+                // SYNC FIX: Also save to shared storage for admin panel
+                try {
+                    if (window.KapTazeSharedStorage) {
+                        console.log('🔄 Syncing package to shared storage for admin panel...');
+                        await window.KapTazeSharedStorage.addPackage(this.currentUser.id, packageData);
+                        console.log('✅ Package synced to shared storage successfully');
+                    }
+                } catch (syncError) {
+                    console.warn('⚠️ Failed to sync package to shared storage:', syncError.message);
+                    // Don't fail the entire operation if sync fails
+                }
+                
                 this.showSuccessMessage('Paket başarıyla eklendi!');
                 return true;
             }
@@ -993,4 +1006,4 @@ document.addEventListener('DOMContentLoaded', function() {
     window.restaurantPanel = new RestaurantPanel();
 });
 
-console.log('🏪 Restaurant Panel JS loaded - v2025.08.22.33 - SECURITY FIX: User data isolation!');
+console.log('🏪 Restaurant Panel JS loaded - v2025.08.22.36 - SYNC FIX: Packages to admin panel!');
