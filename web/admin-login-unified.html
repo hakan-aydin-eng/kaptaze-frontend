@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KapTaze Admin Giriş - Unified</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/auth.css">
+    
+    <!-- Unified MongoDB System - NO localStorage/sessionStorage -->
+    <script src="./js/unified-mongodb-service.js?v=2025.08.23.01"></script>
+    <script src="./js/unified-auth.js?v=2025.08.23.01"></script>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-left">
+            <div class="brand-section">
+                <div class="logo">
+                    <span class="logo-icon">🏪</span>
+                    <span class="logo-text">KapTaze</span>
+                </div>
+                <h1>Yönetici Paneli</h1>
+                <p>Sistem yönetimi ve restoran onayları için güvenli giriş</p>
+                
+                <div class="features-list">
+                    <div class="feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Güvenli Admin Erişimi</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-database"></i>
+                        <span>MongoDB Atlas - Global Erişim</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Her Cihazdan Erişilebilir</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="auth-right">
+            <div class="auth-form-container">
+                <div class="auth-header">
+                    <h2>Yönetici Girişi</h2>
+                    <p>Sistem yönetimi için giriş yapın</p>
+                </div>
+                
+                <form id="admin-login-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="username">
+                            <i class="fas fa-user-shield"></i>
+                            Kullanıcı Adı
+                        </label>
+                        <input type="text" 
+                               id="username" 
+                               name="username" 
+                               class="form-control" 
+                               placeholder="Admin kullanıcı adı"
+                               required 
+                               autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i>
+                            Şifre
+                        </label>
+                        <div class="password-input-group">
+                            <input type="password" 
+                                   id="password" 
+                                   name="password" 
+                                   class="form-control" 
+                                   placeholder="Admin şifre"
+                                   required 
+                                   autocomplete="current-password">
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
+                                <i class="fas fa-eye" id="password-toggle-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="security-notice">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Bu oturum sadece bellekte saklanır. Tarayıcı kapandığında otomatik olarak sonlanır.</span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Giriş Yap
+                    </button>
+                </form>
+                
+                <div class="auth-footer">
+                    <div class="back-links">
+                        <a href="/" class="back-link">
+                            <i class="fas fa-home"></i>
+                            Ana Sayfa'ya Dön
+                        </a>
+                        <a href="/restaurant-login-unified.html" class="back-link">
+                            <i class="fas fa-utensils"></i>
+                            Restoran Girişi
+                        </a>
+                    </div>
+                    
+                    <div class="version-info">
+                        <small>Unified MongoDB Version 2025.08.23.01</small>
+                        <br>
+                        <small>No Local Storage - Global Access</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 🔐 ADMIN LOGIN SETUP
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔐 Admin Login - Unified MongoDB Loading...');
+            
+            // Check if user is already authenticated
+            setTimeout(() => {
+                if (window.KapTazeAuth && window.KapTazeAuth.checkAuth('admin')) {
+                    console.log('✅ Admin already authenticated, redirecting...');
+                    window.location.href = '/admin-panel-unified.html';
+                    return;
+                }
+                
+                // Setup login form
+                window.KapTazeAuth.setupLoginForm('admin-login-form', 'admin');
+            }, 100);
+            
+            console.log('🚨 UNIFIED VERSION: 2025.08.23.01 - NO LOCAL STORAGE!');
+        });
+        
+        // Password visibility toggle
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('password-toggle-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+        
+        // Demo credentials info (for development)
+        console.log('🔑 Demo Admin Credentials: admin / kaptaze2024');
+    </script>
+</body>
+</html>

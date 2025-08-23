@@ -804,6 +804,98 @@
         window.logoutRestaurant = logoutRestaurant;
         
         console.log('🚨 CACHE VERSION: 2025.08.22.36 - SYNC FIX: Packages to admin panel!');
+        
+        // 🔧 NAVIGATION FUNCTION - Missing from restaurant panel
+        function showSection(sectionId, event) {
+            if (event) {
+                event.preventDefault();
+            }
+            
+            console.log('📍 Navigating to section:', sectionId);
+            
+            // Hide all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav items
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show the requested section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                
+                // Add active class to corresponding nav item
+                const navItem = document.querySelector(`a[href="#${sectionId}"]`);
+                if (navItem) {
+                    navItem.classList.add('active');
+                }
+                
+                console.log(`✅ Section ${sectionId} activated`);
+                
+                // Load section-specific data
+                loadSectionData(sectionId);
+            } else {
+                console.error(`❌ Section ${sectionId} not found`);
+            }
+            
+            return false;
+        }
+        
+        // 📊 LOAD SECTION DATA
+        function loadSectionData(sectionId) {
+            switch(sectionId) {
+                case 'dashboard':
+                    if (typeof loadDashboardData === 'function') loadDashboardData();
+                    break;
+                case 'packages':
+                    if (typeof loadPackagesData === 'function') loadPackagesData();
+                    break;
+                case 'orders':
+                    if (typeof loadOrdersData === 'function') loadOrdersData();
+                    break;
+                case 'customers':
+                    if (typeof loadCustomersData === 'function') loadCustomersData();
+                    break;
+                case 'analytics':
+                    if (typeof loadAnalyticsData === 'function') loadAnalyticsData();
+                    break;
+                case 'payments':
+                    if (typeof loadPaymentsData === 'function') loadPaymentsData();
+                    break;
+                case 'profile':
+                    if (typeof loadProfileData === 'function') loadProfileData();
+                    break;
+            }
+        }
+        
+        // 🎯 TOGGLE SIDEBAR
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+        
+        // 🔔 TOGGLE NOTIFICATIONS
+        function toggleNotifications() {
+            const panel = document.getElementById('notification-panel');
+            panel.classList.toggle('active');
+        }
+        
+        // 🚪 LOGOUT ALIAS
+        function logout() {
+            logoutRestaurant();
+        }
+        
+        // Make functions globally available
+        window.showSection = showSection;
+        window.toggleSidebar = toggleSidebar;
+        window.toggleNotifications = toggleNotifications;
+        window.logout = logout;
     </script>
 </body>
 </html>
