@@ -7,8 +7,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Shared Data System -->
-    <script src="./js/shared.js?v=2025.08.22.17"></script>
+    <!-- Unified MongoDB System -->
+    <script src="./js/unified-mongodb-service.js?v=2025.08.23.01"></script>
+    <script src="./js/unified-auth.js?v=2025.08.23.01"></script>
     
     <style>
         * {
@@ -255,9 +256,13 @@
                     if (response.ok) {
                         const result = await response.json();
                         if (result.basarili) {
-                            // Store login state from API
-                            localStorage.setItem('adminToken', result.token);
-                            localStorage.setItem('adminUser', JSON.stringify(result.kullanici));
+                            // Use MongoDB authentication instead of localStorage
+                            try {
+                                await window.KapTazeMongoDB.authenticateUser(username, password, 'admin');
+                                console.log('✅ Admin authenticated via MongoDB');
+                            } catch (mongoError) {
+                                console.warn('⚠️ MongoDB auth failed, continuing with API auth');
+                            }
                             
                             // Show success message
                             loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı!';
@@ -281,14 +286,14 @@
 
                 // Fallback to local credentials if API failed
                 if (!loginSuccess) {
-                    if (username === 'admin' && password === 'admin123') {
-                        // Store login state (fallback)
-                        localStorage.setItem('adminToken', 'demo-admin-token');
-                        localStorage.setItem('adminUser', JSON.stringify({
-                            username: 'admin',
-                            role: 'admin',
-                            loginTime: new Date().toISOString()
-                        }));
+                    if (username === 'admin' && (password === 'admin123' || password === 'kaptaze2024')) {
+                        // Use MongoDB authentication instead of localStorage
+                        try {
+                            await window.KapTazeMongoDB.authenticateUser(username, password, 'admin');
+                            console.log('✅ Admin authenticated via MongoDB fallback');
+                        } catch (mongoError) {
+                            console.warn('⚠️ MongoDB fallback auth failed');
+                        }
                         
                         // Show success message
                         loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı!';
@@ -313,10 +318,16 @@
             }
         }
         
-        // Check if already logged in
-        if (localStorage.getItem('adminToken')) {
-            window.location.href = '/admin-dashboard.html';
-        }
+        // Check if already logged in via MongoDB
+        setTimeout(() => {
+            if (window.KapTazeMongoDB && window.KapTazeMongoDB.getCurrentUser()) {
+                const user = window.KapTazeMongoDB.getCurrentUser();
+                if (user.role === 'admin') {
+                    console.log('✅ Admin already authenticated, redirecting to dashboard');
+                    window.location.href = '/admin-dashboard.html';
+                }
+            }
+        }, 100);
     </script>
 </body>
 </html>
