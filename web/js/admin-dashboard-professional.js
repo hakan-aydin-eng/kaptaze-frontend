@@ -137,8 +137,10 @@ class KapTazeAdminDashboard {
         try {
             console.log('📊 Loading dashboard data...');
             
-            // Load data using MongoDB if available, else use localStorage
-            if (window.KapTazeMongoDB) {
+            // Try KapTazeShared first (matches customer registration system)
+            if (window.KapTazeShared) {
+                await this.loadDataFromSharedStorage();
+            } else if (window.KapTazeMongoDB) {
                 await this.loadDataFromMongoDB();
             } else {
                 await this.loadDataFromLocalStorage();
@@ -150,6 +152,60 @@ class KapTazeAdminDashboard {
         } catch (error) {
             console.error('❌ Dashboard data load error:', error);
             this.showError('Dashboard verileri yüklenirken hata: ' + error.message);
+        }
+    }
+
+    async loadDataFromSharedStorage() {
+        try {
+            console.log('🌐 Loading from KapTaze Shared Storage...');
+            
+            // Get all data from shared storage
+            const sharedData = await window.KapTazeShared.getAllData();
+            console.log('📊 Shared storage data loaded:', sharedData);
+            
+            // Extract applications
+            this.data.applications = sharedData.applications || [];
+            
+            // Extract packages  
+            this.data.packages = sharedData.packages || [];
+            
+            // Extract restaurants from restaurantUsers (approved applications)
+            const restaurantUsers = sharedData.restaurantUsers || [];
+            const restaurantProfiles = sharedData.restaurantProfiles || [];
+            
+            // Combine restaurant data
+            this.data.restaurants = [
+                ...restaurantUsers.map(user => ({
+                    ...user,
+                    source: 'restaurantUser'
+                })),
+                ...restaurantProfiles
+            ];
+            
+            // Extract orders
+            this.data.orders = sharedData.orders || [];
+            
+            // Extract users
+            this.data.users = [
+                ...(sharedData.customerUsers || []),
+                ...(sharedData.restaurantUsers || [])
+            ];
+
+            console.log('✅ Shared Storage data loaded:', {
+                applications: this.data.applications.length,
+                packages: this.data.packages.length,
+                restaurants: this.data.restaurants.length,
+                orders: this.data.orders.length,
+                users: this.data.users.length
+            });
+            
+        } catch (error) {
+            console.warn('⚠️ Shared Storage failed, trying MongoDB:', error);
+            if (window.KapTazeMongoDB) {
+                await this.loadDataFromMongoDB();
+            } else {
+                await this.loadDataFromLocalStorage();
+            }
         }
     }
 
