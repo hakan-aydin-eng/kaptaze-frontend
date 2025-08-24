@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KapTaze Restoran Girişi</title>
+    <title>KapTaze Restaurant Girişi</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Database and Shared Systems -->
-    <script src="./js/env-inject.js"></script>
-    <script src="./js/config.js"></script>
-    <script src="./js/shared.js?v=2025.08.22.22"></script>
-    <script src="./js/database.js"></script>
-    <script src="./js/shared-storage-service.js?v=2025.08.22.32"></script>
+    <!-- API Configuration -->
+    <script src="./js/api-config.js?v=2025.08.23"></script>
+    <script src="./js/api-service.js?v=2025.08.23"></script>
     
     <style>
         * {
@@ -23,7 +20,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -39,6 +36,7 @@
             width: 100%;
             max-width: 400px;
             text-align: center;
+            position: relative;
         }
 
         .logo {
@@ -50,19 +48,23 @@
         }
 
         .logo-icon {
-            font-size: 2.5rem;
+            font-size: 3rem;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .logo-text {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            color: #667eea;
+            color: #1f2937;
         }
 
-        h1 {
-            color: #1e293b;
+        .subtitle {
+            color: #6b7280;
             margin-bottom: 2rem;
-            font-weight: 600;
+            font-size: 1.1rem;
         }
 
         .form-group {
@@ -70,31 +72,15 @@
             text-align: left;
         }
 
-        .form-group label {
+        label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #374151;
             font-weight: 500;
+            color: #374151;
         }
 
-        .input-wrapper {
+        .input-container {
             position: relative;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 0.875rem;
-            padding-left: 3rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .input-icon {
@@ -103,210 +89,305 @@
             top: 50%;
             transform: translateY(-50%);
             color: #9ca3af;
-            font-size: 1.1rem;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+            background: white;
         }
 
         .login-btn {
             width: 100%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #f97316, #ea580c);
             color: white;
             border: none;
-            padding: 1rem;
             border-radius: 12px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .login-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(249, 115, 22, 0.3);
         }
 
         .login-btn:disabled {
-            opacity: 0.6;
+            opacity: 0.7;
             cursor: not-allowed;
             transform: none;
         }
 
         .error-message {
-            background: #fee2e2;
+            background: #fef2f2;
             color: #dc2626;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            margin-top: 1rem;
-            font-size: 0.875rem;
-            display: none;
-        }
-
-        .demo-info {
-            background: #f0f9ff;
-            border: 1px solid #0ea5e9;
             padding: 1rem;
             border-radius: 8px;
-            margin-top: 2rem;
-            font-size: 0.875rem;
-            color: #0369a1;
+            margin-top: 1rem;
+            display: none;
+            border: 1px solid #fecaca;
         }
 
-        .demo-info strong {
-            color: #0c4a6e;
+        .success-message {
+            background: #f0fdf4;
+            color: #16a34a;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+            border: 1px solid #bbf7d0;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .footer-links {
             margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid #e5e7eb;
+            text-align: center;
         }
 
-        .footer-link {
+        .footer-links a {
             color: #6b7280;
             text-decoration: none;
-            font-size: 0.875rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin: 0 1rem;
-            transition: color 0.2s ease;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
         }
 
-        .footer-link:hover {
-            color: #667eea;
+        .footer-links a:hover {
+            color: #f97316;
+        }
+
+        .api-status {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .api-status.online {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+        .api-status.offline {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 2rem;
+            }
+
+            .logo-text {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- API Status Indicator -->
+    <div id="apiStatus" class="api-status offline">
+        <i class="fas fa-circle"></i>
+        <span>API Bağlantısı Kontrol Ediliyor...</span>
+    </div>
+
     <div class="login-container">
         <div class="logo">
             <span class="logo-icon">🏪</span>
             <span class="logo-text">KapTaze</span>
         </div>
         
-        <h1>Restoran Panel Girişi</h1>
-        
-        <form id="loginForm" onsubmit="handleLogin(event)">
+        <p class="subtitle">Restaurant Panel Girişi</p>
+
+        <form id="loginForm">
             <div class="form-group">
-                <label for="username">Restoran Kullanıcı Adı</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-store input-icon"></i>
-                    <input type="text" id="username" name="username" required>
+                <label for="username">Kullanıcı Adı</label>
+                <div class="input-container">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" id="username" name="username" required autocomplete="username">
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label for="password">Şifre</label>
-                <div class="input-wrapper">
+                <div class="input-container">
                     <i class="fas fa-lock input-icon"></i>
-                    <input type="password" id="password" name="password" required>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
                 </div>
             </div>
-            
+
             <button type="submit" class="login-btn" id="loginBtn">
                 <i class="fas fa-sign-in-alt"></i>
                 Giriş Yap
             </button>
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
         </form>
-        
-        <div class="error-message" id="errorMessage"></div>
-        
-        <div class="demo-info">
-            <strong>📋 Restoran Giriş Bilgileri</strong><br>
-            Admin tarafından onaylanan restoran başvurunuzda verilen kullanıcı adı ve şifre ile giriş yapın.<br>
-            <small>Henüz başvuru yapmadıysanız, <a href="./customer-registration.html">buradan başvuru yapabilirsiniz</a>.</small><br><br>
-            
-            <strong>🔄 Nasıl Çalışır:</strong><br>
-            1. Müşteri kaydı yapın → Admin onayı bekleyin<br>
-            2. Onaylanan bilgilerle restoran paneline giriş yapın<br>
-            3. KapTazeDB'de güvenli şekilde saklanır
-        </div>
-        
+
         <div class="footer-links">
-            <a href="/" class="footer-link">
-                <i class="fas fa-home"></i>
-                Ana Portal
-            </a>
-            <a href="/admin-panel.html" class="footer-link">
-                <i class="fas fa-shield-alt"></i>
-                Admin Panel
-            </a>
+            <a href="/index.html">← Ana Sayfaya Dön</a> |
+            <a href="/admin-login-v2.html">Admin Girişi</a>
         </div>
     </div>
 
     <script>
-        // Restaurant login logic
-        const DEMO_RESTAURANTS = {
-            'seraser': {
-                password: 'rest123',
-                name: 'Seraser Restaurant',
-                id: 'rest_001',
-                status: 'approved'
-            },
-            'larabalik': {
-                password: 'rest123',
-                name: 'Lara Balık Evi',
-                id: 'rest_002',
-                status: 'pending'
-            },
-            'kosekebap': {
-                password: 'rest123',
-                name: 'Köşe Kebap',
-                id: 'rest_003',
-                status: 'approved'
-            }
-        };
+        // Global variables
+        let isApiOnline = false;
 
-        // 🔐 RESTAURANT LOGIN WITH KAPTAZE DATABASE AUTHENTICATION
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏪 KapTaze Restaurant Login - Backend API Integration');
+            
+            // Check API status
+            checkApiStatus();
+            
+            // Setup form handler
+            setupLoginForm();
+            
+            // Auto-focus username field
+            document.getElementById('username').focus();
+        });
+
+        async function checkApiStatus() {
+            const statusElement = document.getElementById('apiStatus');
+            
+            try {
+                console.log('🔍 Checking API status...');
+                const response = await window.KapTazeAPIService.public.healthCheck();
+                
+                if (response.status === 'OK') {
+                    isApiOnline = true;
+                    statusElement.className = 'api-status online';
+                    statusElement.innerHTML = '<i class="fas fa-check-circle"></i> <span>API Bağlantısı Aktif</span>';
+                    console.log('✅ API is online');
+                } else {
+                    throw new Error('API health check failed');
+                }
+            } catch (error) {
+                isApiOnline = false;
+                statusElement.className = 'api-status offline';
+                statusElement.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>API Bağlantısı Yok</span>';
+                console.error('❌ API is offline:', error);
+            }
+        }
+
+        function setupLoginForm() {
+            const loginForm = document.getElementById('loginForm');
+            loginForm.addEventListener('submit', handleLogin);
+        }
+
         async function handleLogin(event) {
             event.preventDefault();
             
             const loginBtn = document.getElementById('loginBtn');
             const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            
+
+            // Reset messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+
+            // Validation
+            if (!username || !password) {
+                errorMessage.textContent = 'Lütfen kullanıcı adı ve şifre girin.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            if (!isApiOnline) {
+                errorMessage.textContent = 'API bağlantısı yok. Lütfen daha sonra tekrar deneyin.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
             // Show loading state
             loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> KapTazeDB kontrol ediliyor...';
-            errorMessage.style.display = 'none';
-            
+            loginBtn.innerHTML = '<div class="loading-spinner"></div> Giriş yapılıyor...';
+
             try {
-                console.log('🔐 Restaurant login attempt:', { username, passwordLength: password.length });
+                console.log('🔐 Attempting restaurant login...');
                 
-                // 💾 AUTHENTICATE AGAINST KAPTAZE DATABASE
-                const loginResult = await authenticateRestaurant(username, password);
+                // Call restaurant login API
+                const loginResult = await window.KapTazeAPIService.auth.restaurantLogin(username, password);
                 
-                if (loginResult.success) {
-                    // Store authentication data
-                    localStorage.setItem('restaurantToken', loginResult.token);
-                    localStorage.setItem('restaurantUser', JSON.stringify(loginResult.user));
-                    localStorage.setItem('restaurantProfile', JSON.stringify(loginResult.profile));
-                    
-                    // Show success message
-                    loginBtn.innerHTML = '<i class="fas fa-check"></i> Başarılı! Hoşgeldin ' + (loginResult.user.businessName || loginResult.user.username);
-                    loginBtn.style.background = '#059669';
-                    
-                    console.log('✅ Restaurant login successful:', {
-                        username: loginResult.user.username,
-                        businessName: loginResult.user.businessName,
-                        userId: loginResult.user.id
-                    });
-                    
-                    // Redirect to restaurant panel
-                    setTimeout(() => {
-                        window.location.href = '/restaurant-panel.html';
-                    }, 2000);
-                    
-                } else {
-                    throw new Error(loginResult.error || 'Giriş başarısız');
-                }
+                console.log('✅ Restaurant login successful:', loginResult);
+                
+                // Store authentication data
+                window.KapTazeAPI.setAuth(loginResult.data.token, 'restaurant', loginResult.data.user);
+                
+                // Show success message
+                successMessage.innerHTML = `
+                    <i class="fas fa-check-circle"></i> 
+                    Hoş geldiniz, ${loginResult.data.user.firstName}! Panel'e yönlendiriliyorsunuz...
+                `;
+                successMessage.style.display = 'block';
+                
+                // Redirect to restaurant panel after delay
+                setTimeout(() => {
+                    window.location.href = '/restaurant-panel.html';
+                }, 2000);
                 
             } catch (error) {
                 console.error('❌ Restaurant login failed:', error);
                 
                 // Show error message
-                errorMessage.textContent = error.message || 'Giriş başarısız oldu.';
+                let errorText = 'Giriş başarısız oldu.';
+                
+                if (error.message.includes('Invalid credentials') || error.message.includes('hatalı')) {
+                    errorText = 'Kullanıcı adı veya şifre hatalı. Admin tarafından onaylanan bilgileri kontrol edin.';
+                } else if (error.message.includes('Restaurant access required')) {
+                    errorText = 'Bu hesap restaurant erişimi için yetkilendirilmemiş.';
+                } else if (error.message.includes('not active')) {
+                    errorText = 'Hesabınız aktif değil. Admin ile iletişime geçin.';
+                } else if (error.message.includes('locked')) {
+                    errorText = 'Hesabınız çok fazla başarısız giriş denemesi nedeniyle kilitlendi.';
+                } else if (error.message) {
+                    errorText = error.message;
+                }
+                
+                errorMessage.textContent = errorText;
                 errorMessage.style.display = 'block';
                 
                 // Reset button
@@ -314,184 +395,18 @@
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Giriş Yap';
             }
         }
-        
-        // 💾 AUTHENTICATE RESTAURANT AGAINST KAPTAZE DATABASE
-        async function authenticateRestaurant(username, password) {
-            try {
-                console.log('🔍 Authenticating restaurant against KapTaze database...');
-                
-                // Initialize shared storage if not available
-                if (!window.KapTazeSharedStorage) {
-                    console.log('🔧 Initializing KapTaze Shared Storage...');
-                    if (typeof KapTazeSharedStorage !== 'undefined') {
-                        window.KapTazeSharedStorage = new KapTazeSharedStorage();
-                    } else {
-                        throw new Error('KapTazeSharedStorage class not available');
-                    }
-                }
-                
-                // Load restaurant users from shared storage
-                const sharedData = await window.KapTazeSharedStorage.getAllData();
-                console.log('📊 Shared data loaded:', {
-                    restaurantUsers: sharedData.restaurantUsers?.length || 0,
-                    customerUsers: sharedData.customerUsers?.length || 0
-                });
-                
-                // Search in restaurant users
-                const restaurantUsers = sharedData.restaurantUsers || [];
-                
-                // 🔍 DEBUG: Log all restaurant users to see structure
-                console.log('🔍 All restaurant users in database:', restaurantUsers);
-                console.log('🔍 Looking for username:', username, 'password length:', password.length);
-                
-                // Check each user individually for debugging
-                restaurantUsers.forEach((user, index) => {
-                    console.log(`🔍 User ${index}:`, {
-                        username: user.username,
-                        hasPassword: !!user.password,
-                        passwordLength: user.password?.length,
-                        status: user.status,
-                        role: user.role,
-                        usernameMatch: user.username === username,
-                        passwordMatch: user.password === password,
-                        statusMatch: user.status === 'active'
-                    });
-                });
-                
-                const matchingUser = restaurantUsers.find(user => 
-                    user.username === username && user.password === password && user.status === 'active'
-                );
-                
-                if (matchingUser) {
-                    console.log('✅ Restaurant user found in shared storage:', matchingUser.id);
-                    
-                    return {
-                        success: true,
-                        token: `RESTAURANT_TOKEN_${Date.now()}_${Math.random().toString(36)}`,
-                        user: {
-                            id: matchingUser.id,
-                            username: matchingUser.username,
-                            firstName: matchingUser.firstName,
-                            lastName: matchingUser.lastName,
-                            email: matchingUser.email,
-                            phone: matchingUser.phone,
-                            businessName: matchingUser.businessName,
-                            role: 'restaurant',
-                            status: 'active',
-                            source: 'shared_storage',
-                            loginTime: new Date().toISOString()
-                        },
-                        profile: {
-                            businessName: matchingUser.businessName,
-                            businessType: matchingUser.businessType || 'restaurant',
-                            registrationDate: matchingUser.registrationDate,
-                            approvalDate: matchingUser.approvalDate
-                        }
-                    };
-                }
-                
-                // Fallback: Check approved users from local storage
-                const approvedUsers = JSON.parse(localStorage.getItem('kaptaze_approved_users') || '[]');
-                const localUser = approvedUsers.find(user => 
-                    user.username === username && user.password === password && user.status === 'active' && user.role === 'restaurant'
-                );
-                
-                if (localUser) {
-                    console.log('✅ Restaurant user found in local storage:', localUser.id);
-                    
-                    return {
-                        success: true,
-                        token: `RESTAURANT_TOKEN_${Date.now()}_${Math.random().toString(36)}`,
-                        user: {
-                            id: localUser.id,
-                            username: localUser.username,
-                            firstName: localUser.firstName,
-                            lastName: localUser.lastName,
-                            email: localUser.email,
-                            phone: localUser.phone,
-                            businessName: localUser.businessName,
-                            role: 'restaurant',
-                            status: 'active',
-                            source: 'local_storage',
-                            loginTime: new Date().toISOString()
-                        },
-                        profile: {
-                            businessName: localUser.businessName,
-                            businessType: 'restaurant',
-                            registrationDate: localUser.registrationDate
-                        }
-                    };
-                }
-                
-                // Demo fallback (keep for testing)
-                const demoRestaurant = DEMO_RESTAURANTS[username];
-                if (demoRestaurant && demoRestaurant.password === password) {
-                    console.log('✅ Demo restaurant user found:', username);
-                    
-                    return {
-                        success: true,
-                        token: `DEMO_TOKEN_${Date.now()}`,
-                        user: {
-                            id: demoRestaurant.id,
-                            username: username,
-                            businessName: demoRestaurant.name,
-                            role: 'restaurant',
-                            status: 'active',
-                            source: 'demo',
-                            loginTime: new Date().toISOString()
-                        },
-                        profile: {
-                            businessName: demoRestaurant.name,
-                            businessType: 'restaurant'
-                        }
-                    };
-                }
-                
-                // No user found
-                console.log('❌ No matching restaurant user found');
-                return {
-                    success: false,
-                    error: 'Kullanıcı adı veya şifre hatalı. Admin tarafından onaylanan bilgileri kontrol edin.'
-                };
-                
-            } catch (error) {
-                console.error('❌ Authentication error:', error);
-                return {
-                    success: false,
-                    error: 'Giriş kontrolü sırasında hata oluştu. Lütfen tekrar deneyin.'
-                };
+
+        // Auto-hide API status after 5 seconds if online
+        setTimeout(() => {
+            const statusElement = document.getElementById('apiStatus');
+            if (isApiOnline) {
+                statusElement.style.transition = 'opacity 0.5s ease';
+                statusElement.style.opacity = '0';
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 500);
             }
-        }
-        
-        // Check if already logged in and initialize services
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize KapTaze Shared Storage
-            if (typeof KapTazeSharedStorage !== 'undefined') {
-                window.KapTazeSharedStorage = new KapTazeSharedStorage();
-                console.log('✅ KapTaze Shared Storage initialized');
-            } else {
-                console.warn('⚠️ KapTazeSharedStorage class not available, using fallback');
-            }
-            
-            // Check existing login
-            const restaurantToken = localStorage.getItem('restaurantToken');
-            const restaurantUser = localStorage.getItem('restaurantUser');
-            
-            if (restaurantToken && restaurantUser) {
-                try {
-                    const user = JSON.parse(restaurantUser);
-                    console.log('🔄 Already logged in, redirecting:', user.username);
-                    window.location.href = '/restaurant-panel.html';
-                } catch (error) {
-                    // Clear invalid session data
-                    localStorage.removeItem('restaurantToken');
-                    localStorage.removeItem('restaurantUser');
-                    localStorage.removeItem('restaurantProfile');
-                }
-            }
-            
-            console.log('🚨 CACHE VERSION: 2025.08.22.22 - Added debug logging for restaurant users!');
-        });
+        }, 5000);
     </script>
 </body>
 </html>
