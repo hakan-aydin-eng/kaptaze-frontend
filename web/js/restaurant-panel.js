@@ -28,8 +28,8 @@ class RestaurantPanel {
         this.setupEventListeners();
         
         // Load initial data
-        this.loadDashboardData();
-        this.loadPackages();
+        await this.loadDashboardData();
+        await this.loadPackages();
         
         // Setup real-time data updates
         this.setupDataSync();
@@ -285,11 +285,12 @@ class RestaurantPanel {
         });
     }
 
-    loadDashboardData() {
+    async loadDashboardData() {
         if (!this.restaurantProfile) return;
         
         // Load packages for statistics
-        const packages = window.KapTazeDB.getRestaurantPackages(this.restaurantProfile.id);
+        // Use Render API instead of local DB
+        const packages = await this.getRestaurantPackages(this.restaurantProfile.id);
         
         // Update statistics
         document.getElementById('active-packages').textContent = packages.length;
@@ -299,7 +300,7 @@ class RestaurantPanel {
         document.getElementById('total-earnings').textContent = '₺0';
     }
 
-    loadPackages() {
+    async loadPackages() {
         if (!this.currentUser) {
             console.error('❌ No current user - cannot load packages');
             return;
@@ -307,7 +308,7 @@ class RestaurantPanel {
         
         // Use the current user ID as restaurant ID for package filtering
         console.log('📦 Loading packages for restaurant:', this.currentUser.id);
-        const packages = window.KapTazeDB.getRestaurantPackages(this.currentUser.id);
+        const packages = await this.getRestaurantPackages(this.currentUser.id);
         this.packages = packages;
         
         console.log('📊 Loaded packages:', packages.length, 'for user:', this.currentUser.username);
@@ -528,8 +529,32 @@ class RestaurantPanel {
         document.getElementById('mainImageInput').click();
     }
 
+    // API Methods for Render Integration
+    async getRestaurantPackages(restaurantId) {
+        try {
+            const response = await window.KapTazeAPIService.request(`/restaurant/packages?restaurantId=${restaurantId}`);
+            return response.data || [];
+        } catch (error) {
+            console.error('❌ Failed to load packages:', error);
+            return [];
+        }
+    }
+
+    async addPackageAPI(restaurantId, packageData) {
+        try {
+            const response = await window.KapTazeAPIService.request('/restaurant/packages', {
+                method: 'POST',
+                body: { restaurantId, ...packageData }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('❌ Failed to add package:', error);
+            throw error;
+        }
+    }
+
     // Package Management Methods
-    addPackage(packageData) {
+    async addPackage(packageData) {
         if (!this.currentUser) {
             console.error('❌ No current user - cannot add package');
             return false;
@@ -538,24 +563,14 @@ class RestaurantPanel {
         try {
             // SECURITY FIX: Use current user ID as restaurant ID
             console.log('📦 Adding package for restaurant:', this.currentUser.id, 'by user:', this.currentUser.username);
-            const newPackage = window.KapTazeDB.addPackage(this.currentUser.id, packageData);
+            const newPackage = await this.addPackageAPI(this.currentUser.id, packageData);
             
             if (newPackage) {
                 this.packages.push(newPackage);
                 this.renderPackages();
                 this.updateStatistics();
                 
-                // SYNC FIX: Also save to shared storage for admin panel
-                try {
-                    if (window.KapTazeSharedStorage) {
-                        console.log('🔄 Syncing package to shared storage for admin panel...');
-                        await window.KapTazeSharedStorage.addPackage(this.currentUser.id, packageData);
-                        console.log('✅ Package synced to shared storage successfully');
-                    }
-                } catch (syncError) {
-                    console.warn('⚠️ Failed to sync package to shared storage:', syncError.message);
-                    // Don't fail the entire operation if sync fails
-                }
+                // RENDER API: No sync needed - all data goes to MongoDB Atlas
                 
                 this.showSuccessMessage('Paket başarıyla eklendi!');
                 return true;

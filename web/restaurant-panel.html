@@ -9,8 +9,9 @@
     <link rel="stylesheet" href="./css/restaurant.css">
     
     <!-- Unified MongoDB System - NO localStorage/sessionStorage -->
-    <script src="./js/unified-mongodb-service.js?v=2025.08.23.01"></script>
-    <script src="./js/unified-auth.js?v=2025.08.23.01"></script>
+    <!-- Render API Integration -->
+    <script src="./js/api-config.js?v=2025.08.23"></script>
+    <script src="./js/api-service.js?v=2025.08.23"></script>
 </head>
 <body>
     <!-- Sidebar -->
@@ -715,15 +716,16 @@
         </div>
     </div>
 
-    <script src="./js/restaurant-panel.js?v=2025.08.22.36"></script>
+    <script src="./js/restaurant-panel.js?v=2025.08.23"></script>
     
     <script>
         // 🔐 RESTAURANT PANEL AUTHENTICATION CHECK
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🔐 Checking restaurant authentication...');
             
-            const restaurantToken = localStorage.getItem('restaurantToken');
-            const restaurantUser = localStorage.getItem('restaurantUser');
+            // Use the same storage keys as in login
+            const restaurantToken = localStorage.getItem('kaptaze_auth_token');
+            const restaurantUser = localStorage.getItem('kaptaze_user_data');
             
             console.log('🔍 Restaurant auth check:', {
                 hasToken: !!restaurantToken,
@@ -756,9 +758,9 @@
                 
             } catch (error) {
                 console.error('❌ Invalid restaurant session data:', error);
-                localStorage.removeItem('restaurantToken');
-                localStorage.removeItem('restaurantUser');
-                localStorage.removeItem('restaurantProfile');
+                localStorage.removeItem('kaptaze_auth_token');
+                localStorage.removeItem('kaptaze_user_data');
+                localStorage.removeItem('kaptaze_user_role');
                 window.location.href = '/restaurant-login.html';
             }
         });
