@@ -349,13 +349,33 @@
             try {
                 console.log('🔐 Attempting restaurant login...');
                 
+                // Debug API availability
+                console.log('🔍 API Debug:', {
+                    KapTazeAPI: !!window.KapTazeAPI,
+                    KapTazeAPIService: !!window.KapTazeAPIService,
+                    setAuthToken: !!(window.KapTazeAPI && window.KapTazeAPI.setAuthToken),
+                    storage: !!(window.KapTazeAPI && window.KapTazeAPI.storage)
+                });
+                
+                if (!window.KapTazeAPIService || !window.KapTazeAPI) {
+                    throw new Error('API services not loaded. Please refresh the page.');
+                }
+                
                 // Call restaurant login API
                 const loginResult = await window.KapTazeAPIService.auth.restaurantLogin(username, password);
                 
                 console.log('✅ Restaurant login successful:', loginResult);
                 
                 // Store authentication data
-                window.KapTazeAPI.setAuth(loginResult.data.token, 'restaurant', loginResult.data.user);
+                if (window.KapTazeAPI && window.KapTazeAPI.setAuthToken && window.KapTazeAPI.storage) {
+                    window.KapTazeAPI.setAuthToken(loginResult.data.token);
+                    localStorage.setItem(window.KapTazeAPI.storage.userData, JSON.stringify(loginResult.data.user));
+                    localStorage.setItem(window.KapTazeAPI.storage.userRole, 'restaurant');
+                    console.log('✅ Authentication data stored successfully');
+                } else {
+                    console.error('❌ KapTazeAPI storage methods not available');
+                    throw new Error('Authentication storage failed');
+                }
                 
                 // Show success message
                 successMessage.innerHTML = `
