@@ -11,6 +11,9 @@
     <script src="./js/api-config.js?v=2025.08.23"></script>
     <script src="./js/api-service.js?v=2025.08.23"></script>
     
+    <!-- Google Maps API -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDvDmS8ZuRvrG4gKVII4wz65Krdidfl-tg&libraries=places&callback=initMap"></script>
+    
     <style>
         * {
             margin: 0;
@@ -187,6 +190,36 @@
             border-left: 4px solid #ef4444;
         }
 
+        /* Google Maps Styles */
+        .map-container {
+            margin-bottom: 1.5rem;
+        }
+        
+        #map {
+            width: 100%;
+            height: 300px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            margin-top: 0.5rem;
+        }
+        
+        .map-label {
+            display: block;
+            color: #374151;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .selected-location {
+            background: #f0fdf4;
+            border: 2px solid #16a34a;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #15803d;
+        }
+
         @media (max-width: 768px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -200,6 +233,10 @@
             
             body {
                 padding: 1rem;
+            }
+            
+            #map {
+                height: 250px;
             }
         }
     </style>
@@ -276,6 +313,20 @@
                             <option value="Pastry">Pastane</option>
                             <option value="Other">Diğer</option>
                         </select>
+                    </div>
+                </div>
+
+                <!-- Google Maps Integration -->
+                <div class="form-group map-container">
+                    <label class="map-label required">
+                        <i class="fas fa-map-marked-alt"></i> İşletme Konumu
+                    </label>
+                    <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">
+                        Haritadan işletmenizin konumunu seçin. Adres bilgileri otomatik olarak doldurulacaktır.
+                    </p>
+                    <div id="map"></div>
+                    <div id="selectedLocation" class="selected-location" style="display: none;">
+                        <strong>Seçilen Konum:</strong> <span id="locationText"></span>
                     </div>
                 </div>
 
@@ -381,9 +432,9 @@
                     city: data.city,
                     district: data.district,
                     notes: data.notes || '',
-                    // Demo location (Antalya) - in real app, get from map
-                    businessLatitude: 36.8969,
-                    businessLongitude: 30.7133
+                    // Location from Google Maps selection
+                    businessLatitude: window.selectedLocation ? window.selectedLocation.lat : 36.8969,
+                    businessLongitude: window.selectedLocation ? window.selectedLocation.lng : 30.7133
                 };
                 
                 console.log('📤 Submitting application...', applicationData);
@@ -426,6 +477,123 @@
                 submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Başvuru Gönder';
             }
         });
+        
+        // Google Maps Integration
+        let map;
+        let marker;
+        let geocoder;
+        window.selectedLocation = null;
+        
+        function initMap() {
+            // Initialize map centered on Antalya
+            const antalya = { lat: 36.8969, lng: 30.7133 };
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                center: antalya,
+                mapTypeId: 'roadmap',
+                styles: [
+                    {
+                        featureType: 'poi.business',
+                        elementType: 'labels',
+                        stylers: [{ visibility: 'on' }]
+                    }
+                ]
+            });
+            
+            geocoder = new google.maps.Geocoder();
+            
+            // Add click listener to map
+            map.addListener('click', function(event) {
+                selectLocation(event.latLng);
+            });
+            
+            // Initialize places autocomplete for business address field
+            const businessAddressInput = document.getElementById('businessAddress');
+            const autocomplete = new google.maps.places.Autocomplete(businessAddressInput);
+            autocomplete.bindTo('bounds', map);
+            
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                if (place.geometry) {
+                    selectLocation(place.geometry.location);
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(16);
+                }
+            });
+        }
+        
+        function selectLocation(latLng) {
+            // Update selected location
+            window.selectedLocation = {
+                lat: latLng.lat(),
+                lng: latLng.lng()
+            };
+            
+            // Clear existing marker
+            if (marker) {
+                marker.setMap(null);
+            }
+            
+            // Add new marker
+            marker = new google.maps.Marker({
+                position: latLng,
+                map: map,
+                title: 'İşletme Konumu',
+                animation: google.maps.Animation.DROP,
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#16a34a"/>
+                        </svg>
+                    `),
+                    scaledSize: new google.maps.Size(32, 32)
+                }
+            });
+            
+            // Reverse geocode to get address
+            geocoder.geocode({ location: latLng }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address;
+                    const addressComponents = results[0].address_components;
+                    
+                    // Update form fields
+                    document.getElementById('businessAddress').value = address;
+                    
+                    // Extract city and district from address components
+                    let city = '';
+                    let district = '';
+                    
+                    addressComponents.forEach(component => {
+                        if (component.types.includes('administrative_area_level_1')) {
+                            city = component.long_name;
+                        }
+                        if (component.types.includes('administrative_area_level_2') || 
+                            component.types.includes('sublocality_level_1')) {
+                            district = component.long_name;
+                        }
+                    });
+                    
+                    if (city) document.getElementById('city').value = city;
+                    if (district) document.getElementById('district').value = district;
+                    
+                    // Show selected location info
+                    document.getElementById('locationText').textContent = address;
+                    document.getElementById('selectedLocation').style.display = 'block';
+                    
+                    console.log('📍 Location selected:', {
+                        lat: latLng.lat(),
+                        lng: latLng.lng(),
+                        address: address,
+                        city: city,
+                        district: district
+                    });
+                }
+            });
+        }
+        
+        // Make initMap globally available
+        window.initMap = initMap;
     </script>
 </body>
 </html>
