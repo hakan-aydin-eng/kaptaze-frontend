@@ -16,13 +16,13 @@ class RestaurantPanel {
     async init() {
         console.log('🏪 Restaurant Panel initializing...');
         
-        // Check authentication
-        if (!this.checkAuth()) {
+        // Check authentication (admin pattern)
+        if (!this.checkAuthentication()) {
             return;
         }
 
-        // Load user data and profile
-        await this.loadUserData();
+        // Load restaurant profile from API
+        await this.loadRestaurantProfile();
         
         // Setup event listeners
         this.setupEventListeners();
@@ -37,51 +37,101 @@ class RestaurantPanel {
         console.log('✅ Restaurant Panel ready');
     }
 
-    checkAuth() {
-        // Check MongoDB authentication only
-        if (!window.KapTazeMongoDB) {
-            console.error('❌ Unified MongoDB service not loaded!');
-            window.location.href = '/restaurant-login.html';
-            return false;
-        }
+    checkAuthentication() {
+        console.log('🔐 Checking restaurant authentication...');
         
-        this.currentUser = window.KapTazeMongoDB.getCurrentUser();
-        console.log('🔍 Restaurant auth check - MongoDB only:', {
-            hasUser: !!this.currentUser,
-            role: this.currentUser ? this.currentUser.role : 'none'
+        const token = window.KapTazeAPI.getAuthToken();
+        const userRole = localStorage.getItem(window.KapTazeAPI.storage.userRole);
+        
+        console.log('🔍 Auth check:', {
+            hasToken: !!token,
+            userRole: userRole,
+            tokenPreview: token ? token.substring(0, 20) + '...' : 'null'
         });
         
-        if (!this.currentUser || this.currentUser.role !== 'restaurant') {
-            console.warn('⚠️ Not authenticated, redirecting to login');
+        if (!token || userRole !== 'restaurant') {
+            console.log('❌ No restaurant authentication found, redirecting to login');
             window.location.href = '/restaurant-login.html';
             return false;
         }
-        
-        console.log('✅ Restaurant authenticated via MongoDB:', this.currentUser.username);
+
+        // Get user data from API storage
+        const userData = localStorage.getItem(window.KapTazeAPI.storage.userData);
+        if (userData) {
+            this.currentUser = JSON.parse(userData);
+            console.log('✅ Restaurant authenticated:', {
+                username: this.currentUser.username,
+                businessName: this.currentUser.businessName,
+                email: this.currentUser.email
+            });
+        }
+
         return true;
     }
 
-    async loadUserData() {
-        if (!this.currentUser) return;
-        
+    async loadRestaurantProfile() {
         try {
-            // Get restaurant profile from MongoDB
-            this.restaurantProfile = await window.KapTazeMongoDB.getRestaurantByUserId(this.currentUser.id);
+            console.log('📋 Loading restaurant profile from API...');
+            const response = await window.KapTazeAPIService.request('/restaurant/me');
             
-            if (this.restaurantProfile) {
-                console.log('✅ Restaurant profile loaded from MongoDB:', this.restaurantProfile.businessName);
+            if (response.success && response.data) {
+                this.restaurantProfile = response.data;
+                console.log('✅ Restaurant profile loaded:', this.restaurantProfile);
+                this.updateRestaurantInfoDisplay();
             } else {
-                console.warn('⚠️ Restaurant profile not found in MongoDB');
-                return;
+                console.warn('⚠️ No restaurant profile found, using current user data');
+                this.createProfileFromUserData();
             }
-            
-            // Update UI with restaurant data
-            this.updateRestaurantInfo();
-            this.updateProfileDisplay();
-            
         } catch (error) {
-            console.error('❌ Error loading user data:', error);
+            console.error('❌ Failed to load restaurant profile:', error);
+            this.createProfileFromUserData();
         }
+    }
+
+    createProfileFromUserData() {
+        // Create profile from current user data if no restaurant profile exists
+        if (this.currentUser) {
+            this.restaurantProfile = {
+                name: this.currentUser.businessName || 'Restaurant',
+                owner: `${this.currentUser.firstName || ''} ${this.currentUser.lastName || ''}`.trim(),
+                email: this.currentUser.email,
+                phone: this.currentUser.phone,
+                category: this.currentUser.businessCategory || 'Restaurant',
+                address: this.currentUser.address,
+                city: this.currentUser.city,
+                district: this.currentUser.district
+            };
+            console.log('📝 Profile created from user data:', this.restaurantProfile);
+            this.updateRestaurantInfoDisplay();
+        }
+    }
+
+    updateRestaurantInfoDisplay() {
+        if (!this.restaurantProfile) return;
+
+        // Update header info
+        const nameElements = document.querySelectorAll('.restaurant-name');
+        nameElements.forEach(el => {
+            if (el) el.textContent = this.restaurantProfile.name || 'Restaurant';
+        });
+
+        // Update profile section  
+        if (this.restaurantProfile.owner) {
+            const ownerEl = document.querySelector('.restaurant-owner');
+            if (ownerEl) ownerEl.textContent = this.restaurantProfile.owner;
+        }
+
+        if (this.restaurantProfile.email) {
+            const emailEl = document.querySelector('.restaurant-email');
+            if (emailEl) emailEl.textContent = this.restaurantProfile.email;
+        }
+
+        if (this.restaurantProfile.phone) {
+            const phoneEl = document.querySelector('.restaurant-phone');
+            if (phoneEl) phoneEl.textContent = this.restaurantProfile.phone;
+        }
+
+        console.log('📊 Restaurant info display updated');
     }
 
     updateRestaurantInfo() {
