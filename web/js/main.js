@@ -123,11 +123,11 @@ function openPanel(panelType) {
     let targetUrl;
 
     if (panelType === 'customer') {
-        targetUrl = '/customer-registration.html';
+        targetUrl = '/customer-registration-v2.html';
     } else if (panelType === 'restaurant') {
-        targetUrl = '/restaurant-login.html';
+        targetUrl = '/restaurant-login-v2.html';
     } else if (panelType === 'admin') {
-        targetUrl = '/admin-login.html';
+        targetUrl = '/admin-login-v2.html';
     } else {
         targetUrl = `/${panelType}.html`;
     }
