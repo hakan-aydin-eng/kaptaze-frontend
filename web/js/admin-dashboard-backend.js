@@ -264,14 +264,14 @@ class KapTazeAdminDashboard {
                 <td>
                     <div style="display: flex; gap: 0.5rem;">
                         ${app.status === 'pending' ? `
-                            <button class="btn btn-success btn-sm" onclick="dashboard.approveApplication('${app._id}', '${app.businessName}')">
+                            <button class="btn btn-success btn-sm" onclick="dashboard.approveApplication('${app.applicationId}', '${app.businessName}')">
                                 <i class="fas fa-check"></i> Onayla
                             </button>
-                            <button class="btn btn-danger btn-sm" onclick="dashboard.rejectApplication('${app._id}')">
+                            <button class="btn btn-danger btn-sm" onclick="dashboard.rejectApplication('${app.applicationId}')">
                                 <i class="fas fa-times"></i> Reddet
                             </button>
                         ` : `
-                            <button class="btn btn-info btn-sm" onclick="dashboard.viewApplication('${app._id}')">
+                            <button class="btn btn-info btn-sm" onclick="dashboard.viewApplication('${app.applicationId}')">
                                 <i class="fas fa-eye"></i> Detay
                             </button>
                         `}
@@ -317,11 +317,11 @@ class KapTazeAdminDashboard {
                 </td>
                 <td>
                     ${app.status === 'pending' ? `
-                        <button class="btn btn-success btn-sm" onclick="dashboard.approveApplication('${app._id}', '${app.businessName}')">
+                        <button class="btn btn-success btn-sm" onclick="dashboard.approveApplication('${app.applicationId}', '${app.businessName}')">
                             <i class="fas fa-check"></i>
                         </button>
                     ` : `
-                        <button class="btn btn-info btn-sm" onclick="dashboard.viewApplication('${app._id}')">
+                        <button class="btn btn-info btn-sm" onclick="dashboard.viewApplication('${app.applicationId}')">
                             <i class="fas fa-eye"></i>
                         </button>
                     `}
@@ -359,6 +359,11 @@ class KapTazeAdminDashboard {
     }
 
     async rejectApplication(applicationId) {
+        const reason = prompt('Reddetme sebebini girin:');
+        if (!reason || reason.trim() === '') {
+            return;
+        }
+
         if (!confirm('Bu başvuruyu reddetmek istediğinizden emin misiniz?')) {
             return;
         }
@@ -366,7 +371,7 @@ class KapTazeAdminDashboard {
         try {
             console.log(`❌ Rejecting application: ${applicationId}`);
             
-            const response = await window.KapTazeAPIService.admin.rejectApplication(applicationId);
+            const response = await window.KapTazeAPIService.admin.rejectApplication(applicationId, reason.trim());
             
             console.log('✅ Application rejected:', response);
             
