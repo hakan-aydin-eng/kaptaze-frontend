@@ -249,11 +249,8 @@ class RestaurantPanel {
                 updates.mainImage = imageData;
             }
             
-            // Update database
-            const updatedProfile = window.KapTazeDB.updateRestaurantProfile(
-                this.restaurantProfile.id, 
-                updates
-            );
+            // Update via API
+            const updatedProfile = await this.updateRestaurantProfileAPI(updates);
             
             if (updatedProfile) {
                 this.restaurantProfile = updatedProfile;
@@ -446,14 +443,13 @@ class RestaurantPanel {
         }, 30000); // Update every 30 seconds
     }
 
-    updateStatistics() {
+    async updateStatistics() {
         if (!this.restaurantProfile) return;
         
-        const stats = window.KapTazeDB.getStatistics();
+        const stats = await this.getStatisticsAPI();
         
         // Update dashboard stats
-        document.getElementById('active-packages').textContent = 
-            window.KapTazeDB.getRestaurantPackages(this.restaurantProfile.id).length;
+        document.getElementById('active-packages').textContent = this.packages.length;
     }
 
     // Profile Management
@@ -532,7 +528,7 @@ class RestaurantPanel {
     // API Methods for Render Integration
     async getRestaurantPackages(restaurantId) {
         try {
-            const response = await window.KapTazeAPIService.request(`/restaurant/packages?restaurantId=${restaurantId}`);
+            const response = await window.KapTazeAPIService.request('/restaurant/packages');
             return response.data || [];
         } catch (error) {
             console.error('❌ Failed to load packages:', error);
@@ -544,12 +540,48 @@ class RestaurantPanel {
         try {
             const response = await window.KapTazeAPIService.request('/restaurant/packages', {
                 method: 'POST',
-                body: { restaurantId, ...packageData }
+                body: packageData
             });
             return response.data;
         } catch (error) {
             console.error('❌ Failed to add package:', error);
             throw error;
+        }
+    }
+
+    async updatePackageAPI(packageId, updates) {
+        try {
+            const response = await window.KapTazeAPIService.request(`/restaurant/packages/${packageId}`, {
+                method: 'PATCH',
+                body: updates
+            });
+            return response.data;
+        } catch (error) {
+            console.error('❌ Failed to update package:', error);
+            throw error;
+        }
+    }
+
+    async updateRestaurantProfileAPI(profileData) {
+        try {
+            const response = await window.KapTazeAPIService.request('/restaurant/me', {
+                method: 'PUT',
+                body: profileData
+            });
+            return response.data;
+        } catch (error) {
+            console.error('❌ Failed to update profile:', error);
+            throw error;
+        }
+    }
+
+    async getStatisticsAPI() {
+        try {
+            const response = await window.KapTazeAPIService.request('/restaurant/stats');
+            return response.data;
+        } catch (error) {
+            console.error('❌ Failed to get statistics:', error);
+            return { basic: { totalOrders: 0, totalRevenue: 0, activeMenuItems: 0 } };
         }
     }
 
@@ -584,9 +616,9 @@ class RestaurantPanel {
         }
     }
 
-    updatePackage(packageId, updates) {
+    async updatePackage(packageId, updates) {
         try {
-            const updatedPackage = window.KapTazeDB.updatePackage(packageId, updates);
+            const updatedPackage = await this.updatePackageAPI(packageId, updates);
             
             if (updatedPackage) {
                 // Update local packages array
@@ -608,9 +640,9 @@ class RestaurantPanel {
         }
     }
 
-    deletePackageById(packageId) {
+    async deletePackageById(packageId) {
         try {
-            const success = window.KapTazeDB.updatePackage(packageId, { status: 'deleted' });
+            const success = await this.updatePackageAPI(packageId, { status: 'deleted' });
             
             if (success) {
                 // Remove from local array

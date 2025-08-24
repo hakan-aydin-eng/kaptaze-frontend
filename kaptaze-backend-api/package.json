@@ -19,6 +19,7 @@
   "author": "KapTaze Team",
   "license": "MIT",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.5",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -34,7 +35,7 @@
     "nodemon": "^3.1.10"
   },
   "engines": {
-    "node": ">=18.0.0",
+    "node": "18.x",
     "npm": ">=8.0.0"
   }
 }

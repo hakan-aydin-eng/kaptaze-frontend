@@ -11,8 +11,8 @@ const connectDB = async () => {
     try {
         let mongoUri = process.env.MONGODB_URI;
 
-        // Use in-memory database for development if no MongoDB URI provided or if connection fails
-        if (!mongoUri || mongoUri.includes('localhost') || process.env.NODE_ENV === 'test') {
+        // Use in-memory database only for testing
+        if (process.env.NODE_ENV === 'test' || (!mongoUri && process.env.NODE_ENV === 'development')) {
             console.log('🧪 Starting in-memory MongoDB server...');
             mongoServer = await MongoMemoryServer.create({
                 instance: {
@@ -24,7 +24,7 @@ const connectDB = async () => {
         }
 
         console.log(`🔗 Connecting to MongoDB...`);
-        console.log(`📍 URI: ${mongoUri.replace(/:[^:]*@/, ':****@')}`);
+        console.log(`📍 URI: ${mongoUri ? mongoUri.replace(/:[^:]*@/, ':****@') : 'undefined'}`);
         
         const conn = await mongoose.connect(mongoUri, {
             // Modern connection options

@@ -10,8 +10,12 @@ const { authenticate, authorize } = require('../middleware/auth');
 const Application = require('../models/Application');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
+const EmailService = require('../services/emailService');
 
 const router = express.Router();
+
+// Initialize email service
+const emailService = new EmailService();
 
 // All admin routes require authentication and admin role
 router.use(authenticate);
@@ -249,7 +253,33 @@ router.post('/applications/:applicationId/approve', [
 
         console.log(`✅ Application approved: ${application.applicationId} - ${application.businessName}`);
 
-        // TODO: Send approval email with credentials
+        // Send approval email with credentials
+        let emailStatus = { sent: false, error: null };
+        try {
+            const emailResult = await emailService.sendApplicationApprovalEmail(application, {
+                username: finalUsername,
+                password: finalPassword
+            });
+            
+            if (emailResult.success) {
+                console.log(`📧 Approval email sent successfully to: ${application.email}`);
+                emailStatus = { sent: true, messageId: emailResult.messageId };
+                
+                // Update application with email status
+                application.emailSent = true;
+                application.emailSentAt = new Date();
+                application.emailMessageId = emailResult.messageId;
+                await application.save();
+            }
+        } catch (emailError) {
+            console.error('❌ Failed to send approval email:', emailError.message);
+            emailStatus = { sent: false, error: emailError.message };
+            
+            // Update application with email error
+            application.emailSent = false;
+            application.emailError = emailError.message;
+            await application.save();
+        }
 
         res.json({
             success: true,
@@ -270,7 +300,8 @@ router.post('/applications/:applicationId/approve', [
                     id: restaurantUser._id,
                     username: restaurantUser.username,
                     email: restaurantUser.email
-                }
+                },
+                emailStatus: emailStatus
             }
         });
 
@@ -329,7 +360,14 @@ router.post('/applications/:applicationId/reject', [
 
         console.log(`❌ Application rejected: ${application.applicationId} - ${reason}`);
 
-        // TODO: Send rejection email
+        // Send rejection email
+        try {
+            await emailService.sendApplicationRejectionEmail(application, reason);
+            console.log(`📧 Rejection email sent to: ${application.email}`);
+        } catch (emailError) {
+            console.error('❌ Failed to send rejection email:', emailError.message);
+            // Don't fail the rejection process if email fails
+        }
 
         res.json({
             success: true,
@@ -427,6 +465,94 @@ router.patch('/restaurants/:restaurantId', [
             success: true,
             message: 'Restaurant updated successfully',
             data: restaurant
+        });
+
+    } catch (error) {
+        next(error);
+    }
+});
+
+// @route   GET /admin/users
+// @desc    Get all users
+// @access  Private (Admin)
+router.get('/users', async (req, res, next) => {
+    try {
+        const { role, status, search, page = 1, limit = 20 } = req.query;
+
+        const filter = {};
+        if (role) filter.role = role;
+        if (status) filter.status = status;
+        if (search) {
+            filter.$or = [
+                { firstName: { $regex: search, $options: 'i' } },
+                { lastName: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+                { username: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const skip = (page - 1) * limit;
+        const users = await User.find(filter)
+            .populate('restaurantId', 'name category status')
+            .select('-password') // Exclude password field
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        const total = await User.countDocuments(filter);
+
+        res.json({
+            success: true,
+            data: {
+                users,
+                pagination: {
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    total,
+                    pages: Math.ceil(total / limit)
+                }
+            }
+        });
+
+    } catch (error) {
+        next(error);
+    }
+});
+
+// @route   PATCH /admin/users/:userId
+// @desc    Update user status
+// @access  Private (Admin)
+router.patch('/users/:userId', [
+    body('status').optional().isIn(['active', 'inactive', 'suspended']),
+    body('notes').optional().trim().isLength({ max: 500 })
+], async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        const { status, notes } = req.body;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        if (status) user.status = status;
+        if (notes) user.adminNotes = notes;
+
+        await user.save();
+
+        // If user is restaurant owner, also update restaurant status
+        if (user.role === 'restaurant' && user.restaurantId) {
+            const restaurantStatus = status === 'active' ? 'active' : 'inactive';
+            await Restaurant.findByIdAndUpdate(user.restaurantId, { status: restaurantStatus });
+        }
+
+        res.json({
+            success: true,
+            message: 'User updated successfully',
+            data: user
         });
 
     } catch (error) {

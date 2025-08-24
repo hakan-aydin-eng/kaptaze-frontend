@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: kaptaze-backend-api
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    # Environment variables configured manually in Render dashboard
+    # Custom domain configuration  
+    domains:
+      - api.kaptaze.com
+    plan: free
