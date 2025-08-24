@@ -125,7 +125,7 @@ function openPanel(panelType) {
     if (panelType === 'customer') {
         targetUrl = '/customer-registration-v2.html';
     } else if (panelType === 'restaurant') {
-        targetUrl = '/restaurant-login-v2.html';
+        targetUrl = '/restaurant-login.html';
     } else if (panelType === 'admin') {
         targetUrl = '/admin-login-v2.html';
     } else {
