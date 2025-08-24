@@ -152,8 +152,11 @@ class KapTazeAdminDashboard {
         try {
             console.log('📊 Loading dashboard data...');
             
-            // Load applications for dashboard stats
-            await this.loadApplicationsData();
+            // Load applications and restaurants for dashboard stats
+            await Promise.all([
+                this.loadApplicationsData(),
+                this.loadRestaurantsData()
+            ]);
             
             // Update stats
             this.updateDashboardStats();
@@ -195,17 +198,28 @@ class KapTazeAdminDashboard {
         const pending = apps.filter(app => app.status === 'pending').length;
         document.getElementById('pending-applications').textContent = pending;
         
-        // Approved restaurants (mock for now)
-        const approved = apps.filter(app => app.status === 'approved').length;
-        document.getElementById('active-restaurants').textContent = approved;
+        // Active restaurants (from restaurants data)
+        const activeRestaurants = this.data.restaurants.filter(r => r.status === 'active').length;
+        document.getElementById('active-restaurants').textContent = activeRestaurants;
         
-        // Mock data for other stats
-        document.getElementById('total-packages').textContent = '0';
-        document.getElementById('today-applications').textContent = apps.filter(app => {
+        // Today's applications
+        const todayApps = apps.filter(app => {
             const today = new Date().toDateString();
             return new Date(app.submittedAt).toDateString() === today;
         }).length;
-        document.getElementById('week-approvals').textContent = '0';
+        document.getElementById('today-applications').textContent = todayApps;
+        
+        // Week approvals 
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const weekApprovals = apps.filter(app => 
+            app.status === 'approved' && 
+            new Date(app.reviewedAt) >= weekAgo
+        ).length;
+        document.getElementById('week-approvals').textContent = weekApprovals;
+        
+        // Mock data for other stats (coming soon)
+        document.getElementById('total-packages').textContent = '0';
         document.getElementById('active-packages').textContent = '0';
         document.getElementById('total-orders').textContent = '0';
         
@@ -390,20 +404,90 @@ class KapTazeAdminDashboard {
         await this.loadApplicationsData();
     }
 
-    // Placeholder methods for other sections
+    // Restaurant management
     async loadRestaurantsData() {
-        console.log('🏪 Restaurants section - Coming soon');
+        try {
+            console.log('🏪 Loading restaurants data...');
+            
+            const response = await window.KapTazeAPIService.admin.getRestaurants();
+            this.data.restaurants = response.data.restaurants || [];
+            
+            console.log(`✅ Loaded ${this.data.restaurants.length} restaurants`);
+            
+            // Update restaurants table
+            this.updateRestaurantsTable();
+            
+        } catch (error) {
+            console.error('❌ Restaurants load failed:', error);
+            this.showError('Restoranlar yüklenirken hata oluştu: ' + error.message);
+        }
+    }
+
+    updateRestaurantsTable() {
         const tbody = document.getElementById('restaurants-table');
-        if (tbody) {
+        if (!tbody) return;
+
+        if (this.data.restaurants.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 2rem; color: #6b7280;">
                         <i class="fas fa-store" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-                        Bu özellik yakında aktif edilecek
+                        Henüz onaylanan restoran bulunmuyor
                     </td>
                 </tr>
             `;
+            return;
         }
+
+        tbody.innerHTML = this.data.restaurants.map(restaurant => `
+            <tr>
+                <td>
+                    <div>
+                        <strong>${restaurant.name}</strong><br>
+                        <small style="color: #6b7280;">${restaurant.category}</small>
+                    </div>
+                </td>
+                <td>
+                    <div style="font-size: 0.875rem;">
+                        <div>${restaurant.email}</div>
+                        <div style="color: #6b7280;">${restaurant.phone}</div>
+                    </div>
+                </td>
+                <td style="font-size: 0.875rem;">
+                    <div>${restaurant.address?.street || 'N/A'}</div>
+                    <div style="color: #6b7280;">${restaurant.address?.district || ''}, ${restaurant.address?.city || ''}</div>
+                </td>
+                <td>
+                    <div style="font-size: 0.875rem;">
+                        <div><strong>User:</strong> ${restaurant.ownerId?.username || 'N/A'}</div>
+                        <div style="color: #6b7280;">Email: ${restaurant.ownerId?.email || 'N/A'}</div>
+                        <div style="color: #6b7280;">Son Giriş: ${restaurant.ownerId?.lastLogin ? new Date(restaurant.ownerId.lastLogin).toLocaleDateString('tr-TR') : 'Hiç giriş yapmamış'}</div>
+                    </div>
+                </td>
+                <td style="font-size: 0.875rem; color: #6b7280;">
+                    ${new Date(restaurant.createdAt).toLocaleDateString('tr-TR')}
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <span class="status-badge ${restaurant.status}">
+                            ${this.getRestaurantStatusText(restaurant.status)}
+                        </span>
+                        <button class="btn btn-info btn-sm" onclick="dashboard.viewRestaurant('${restaurant._id}')">
+                            <i class="fas fa-eye"></i> Detay
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    getRestaurantStatusText(status) {
+        const statusMap = {
+            active: 'Aktif',
+            inactive: 'Pasif',
+            suspended: 'Askıda'
+        };
+        return statusMap[status] || status;
     }
 
     async loadPackagesData() {
@@ -436,18 +520,134 @@ class KapTazeAdminDashboard {
         }
     }
 
+    // User management
     async loadUsersData() {
-        console.log('👥 Users section - Coming soon');
+        try {
+            console.log('👥 Loading users data...');
+            
+            const response = await window.KapTazeAPIService.admin.getUsers();
+            this.data.users = response.data.users || [];
+            
+            console.log(`✅ Loaded ${this.data.users.length} users`);
+            
+            // Update users table
+            this.updateUsersTable();
+            
+        } catch (error) {
+            console.error('❌ Users load failed:', error);
+            this.showError('Kullanıcılar yüklenirken hata oluştu: ' + error.message);
+        }
+    }
+
+    updateUsersTable() {
         const tbody = document.getElementById('users-table');
-        if (tbody) {
+        if (!tbody) return;
+
+        if (this.data.users.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 2rem; color: #6b7280;">
                         <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-                        Bu özellik yakında aktif edilecek
+                        Henüz kullanıcı bulunmuyor
                     </td>
                 </tr>
             `;
+            return;
+        }
+
+        tbody.innerHTML = this.data.users.map(user => `
+            <tr>
+                <td>
+                    <div>
+                        <strong>${user.firstName} ${user.lastName}</strong><br>
+                        <small style="color: #6b7280;">${user.email}</small>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge ${user.role === 'admin' ? 'purple' : user.role === 'restaurant' ? 'blue' : 'green'}">
+                        ${this.getUserRoleText(user.role)}
+                    </span>
+                </td>
+                <td style="font-size: 0.875rem;">
+                    ${user.phone || 'N/A'}
+                </td>
+                <td>
+                    <div style="font-size: 0.875rem;">
+                        ${user.role === 'restaurant' && user.restaurantId ? `
+                            <div><strong>${user.restaurantId.name}</strong></div>
+                            <div style="color: #6b7280;">${user.restaurantId.category}</div>
+                        ` : 'N/A'}
+                    </div>
+                </td>
+                <td style="font-size: 0.875rem; color: #6b7280;">
+                    ${new Date(user.createdAt).toLocaleDateString('tr-TR')}
+                </td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span class="status-badge ${user.status}">
+                            ${this.getUserStatusText(user.status)}
+                        </span>
+                        ${user.role !== 'admin' ? `
+                            <button class="btn btn-info btn-sm" onclick="dashboard.viewUser('${user._id}')">
+                                <i class="fas fa-eye"></i> Detay
+                            </button>
+                            ${user.status === 'active' ? `
+                                <button class="btn btn-warning btn-sm" onclick="dashboard.suspendUser('${user._id}', '${user.firstName} ${user.lastName}')">
+                                    <i class="fas fa-pause"></i> Askıya Al
+                                </button>
+                            ` : `
+                                <button class="btn btn-success btn-sm" onclick="dashboard.activateUser('${user._id}', '${user.firstName} ${user.lastName}')">
+                                    <i class="fas fa-play"></i> Aktif Et
+                                </button>
+                            `}
+                        ` : `
+                            <span style="font-size: 0.75rem; color: #6b7280;">Admin Kullanıcısı</span>
+                        `}
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    getUserRoleText(role) {
+        const roleMap = {
+            admin: 'Admin',
+            restaurant: 'Restoran Sahibi',
+            customer: 'Müşteri'
+        };
+        return roleMap[role] || role;
+    }
+
+    getUserStatusText(status) {
+        const statusMap = {
+            active: 'Aktif',
+            inactive: 'Pasif',
+            suspended: 'Askıda'
+        };
+        return statusMap[status] || status;
+    }
+
+    async suspendUser(userId, userName) {
+        if (!confirm(`${userName} kullanıcısını askıya almak istediğinizden emin misiniz?`)) {
+            return;
+        }
+
+        try {
+            await window.KapTazeAPIService.admin.updateUser(userId, { status: 'suspended' });
+            this.showSuccess(`${userName} askıya alındı.`);
+            await this.loadUsersData();
+        } catch (error) {
+            this.showError('Kullanıcı askıya alınırken hata oluştu: ' + error.message);
+        }
+    }
+
+    async activateUser(userId, userName) {
+        try {
+            await window.KapTazeAPIService.admin.updateUser(userId, { status: 'active' });
+            this.showSuccess(`${userName} aktif edildi.`);
+            await this.loadUsersData();
+        } catch (error) {
+            this.showError('Kullanıcı aktif edilirken hata oluştu: ' + error.message);
         }
     }
 

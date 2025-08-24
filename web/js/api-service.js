@@ -153,6 +153,25 @@ window.KapTazeAPIService = {
                 : window.KapTazeAPI.endpoints.admin.restaurants;
                 
             return await window.KapTazeAPIService.request(endpoint);
+        },
+        
+        async getUsers(filters = {}) {
+            const params = new URLSearchParams(filters).toString();
+            const endpoint = params 
+                ? `${window.KapTazeAPI.endpoints.admin.users}?${params}`
+                : window.KapTazeAPI.endpoints.admin.users;
+                
+            return await window.KapTazeAPIService.request(endpoint);
+        },
+        
+        async updateUser(userId, data) {
+            return await window.KapTazeAPIService.request(
+                `${window.KapTazeAPI.endpoints.admin.users}/${userId}`,
+                {
+                    method: 'PATCH',
+                    body: data
+                }
+            );
         }
     },
     
