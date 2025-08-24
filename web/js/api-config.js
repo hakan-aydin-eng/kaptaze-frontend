@@ -8,7 +8,7 @@ window.KapTazeAPI = {
     config: {
         baseUrl: window.location.hostname === 'localhost' 
             ? 'http://localhost:3002' 
-            : 'https://kaptaze-backend-api.onrender.com',
+            : 'https://api.kaptaze.com',
         timeout: 15000, // Increased timeout for production
         version: 'v1'
     },
