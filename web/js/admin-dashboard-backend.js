@@ -271,9 +271,16 @@ class KapTazeAdminDashboard {
                     ${new Date(app.submittedAt).toLocaleDateString('tr-TR')}
                 </td>
                 <td>
-                    <span class="status-badge ${app.status}">
-                        ${this.getStatusText(app.status)}
-                    </span>
+                    <div>
+                        <span class="status-badge ${app.status}">
+                            ${this.getStatusText(app.status)}
+                        </span>
+                        ${app.status === 'approved' && app.emailSent !== undefined ? `
+                            <br><small style="color: ${app.emailSent ? '#059669' : '#dc2626'}; font-size: 0.75rem; margin-top: 4px; display: block;">
+                                ${app.emailSent ? '📧 Email gönderildi' : '⚠️ Email gönderilemedi'}
+                            </small>
+                        ` : ''}
+                    </div>
                 </td>
                 <td>
                     <div style="display: flex; gap: 0.5rem;">
@@ -361,7 +368,17 @@ class KapTazeAdminDashboard {
             
             console.log('✅ Application approved:', response);
             
-            this.showSuccess(`${businessName} başvurusu onaylandı!`);
+            // Show success message with email status
+            const emailStatus = response.data.emailStatus;
+            let message = `${businessName} başvurusu onaylandı!`;
+            
+            if (emailStatus.sent) {
+                message += ' 📧 Giriş bilgileri email ile gönderildi.';
+            } else if (emailStatus.error) {
+                message += ` ⚠️ Email gönderilemedi: ${emailStatus.error}`;
+            }
+            
+            this.showSuccess(message);
             
             // Refresh applications
             await this.loadApplicationsData();
