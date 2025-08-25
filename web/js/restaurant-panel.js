@@ -410,8 +410,14 @@ class RestaurantPanel {
     }
 
     renderPackageCard(pkg) {
-        const discountPercent = Math.round((1 - pkg.discountedPrice / pkg.originalPrice) * 100);
-        const isLowStock = pkg.quantity <= 3;
+        // Safe field access with fallbacks
+        const originalPrice = pkg.originalPrice || pkg.price || 0;
+        const discountedPrice = pkg.discountedPrice || pkg.price || 0;
+        const quantity = pkg.quantity || 0;
+        
+        const discountPercent = originalPrice > 0 ? 
+            Math.round((1 - discountedPrice / originalPrice) * 100) : 0;
+        const isLowStock = quantity <= 3;
         const isExpiringSoon = pkg.availableUntil ? 
             (new Date(pkg.availableUntil) - new Date()) < (24 * 60 * 60 * 1000) : false;
         
@@ -430,17 +436,17 @@ class RestaurantPanel {
                     </div>
                     
                     <div class="package-price-info">
-                        <div class="original-price">₺${pkg.originalPrice.toFixed(2)}</div>
-                        <div class="discounted-price">₺${pkg.discountedPrice.toFixed(2)}</div>
+                        <div class="original-price">₺${originalPrice.toFixed(2)}</div>
+                        <div class="discounted-price">₺${discountedPrice.toFixed(2)}</div>
                         <div class="discount-badge">${discountPercent}% İndirim</div>
-                        <div class="savings">₺${(pkg.originalPrice - pkg.discountedPrice).toFixed(2)} tasarruf</div>
+                        <div class="savings">₺${(originalPrice - discountedPrice).toFixed(2)} tasarruf</div>
                     </div>
                 </div>
                 
                 <div class="package-details">
                     <div class="detail-item ${isLowStock ? 'warning' : ''}">
                         <i class="fas fa-cubes"></i>
-                        <span>Stok: ${pkg.quantity} adet</span>
+                        <span>Stok: ${quantity} adet</span>
                         ${isLowStock ? '<i class="fas fa-exclamation-triangle warning-icon"></i>' : ''}
                     </div>
                     <div class="detail-item ${isExpiringSoon ? 'warning' : ''}">
