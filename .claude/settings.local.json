@@ -98,7 +98,11 @@
       "Bash(start https://kaptaze.com/admin-login-v2.html)",
       "Bash(start https://kaptaze.com/admin-dashboard-professional.html)",
       "Bash(start https://kaptaze.com/restaurant-login-v2.html)",
-      "Bash(start https://kaptaze.com/customer-registration-v2.html)"
+      "Bash(start https://kaptaze.com/customer-registration-v2.html)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(start http://localhost:8083)",
+      "Bash(start http://localhost:8084)"
     ],
     "deny": [],
     "ask": [],

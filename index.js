@@ -1,8 +1,7 @@
 
-// Expo frontend kodu aşağıda yorum satırı olarak bırakıldı.
-// import { registerRootComponent } from 'expo';
-// import App from './App';
-// registerRootComponent(App);
+// KapTaze Mobile App Entry Point
+import { registerRootComponent } from 'expo';
+import App from './App';
 
-// Render için sunucu başlatıcı kod:
-require('./kaptaze-backend/src/server');
+// Register the main App component
+registerRootComponent(App);

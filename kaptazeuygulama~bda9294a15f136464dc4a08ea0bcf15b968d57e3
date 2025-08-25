@@ -1,0 +1,1855 @@
+import React, { useState, useEffect } from 'react';
+import { Heart, MapPin, Clock, Star, ArrowLeft, Plus, Minus, Settings, User, Package, DollarSign, ChevronRight, Bell, Navigation, MessageCircle, Book, AlertTriangle } from 'lucide-react';
+
+const TazeKutuApp = () => {
+  const [currentScreen, setCurrentScreen] = useState('welcome');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isGuestUser, setIsGuestUser] = useState(false);
+  const [showReservationModal, setShowReservationModal] = useState(false);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [orderQuantity, setOrderQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState('pickup');
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [displayedRestaurants, setDisplayedRestaurants] = useState(3);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userLocation, setUserLocation] = useState('Antalya Merkez');
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [registerData, setRegisterData] = useState({
+    name: '',
+    surname: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [registerErrors, setRegisterErrors] = useState({});
+  const [userStats, setUserStats] = useState({ packagesRescued: 0, savings: 0, co2Saved: 0 });
+
+  // Sample user database
+  const users = [
+    {
+      id: 1,
+      email: 'hakan@aydin.com',
+      password: '123456',
+      name: 'Hakan',
+      surname: 'AYDIN',
+      phone: '+90 555 123 4567'
+    }
+  ];
+
+  // Filter categories
+  const filterCategories = [
+    { id: 'all', name: 'Tümü', emoji: '🍽️' },
+    { id: 'local', name: 'Yerel', emoji: '🏠' },
+    { id: 'sweet', name: 'Tatlı', emoji: '🧁' },
+    { id: 'vegan', name: 'Vegan', emoji: '🥗' },
+  ];
+
+  // Promoted restaurants (admin selected, within 2km)
+  const promotedRestaurants = [
+    {
+      id: 101,
+      name: "Şirince Restaurant",
+      category: "Geleneksel Türk",
+      image: "/api/placeholder/250/150",
+      packages: 4,
+      rating: 4.8,
+      distance: "1.2km",
+      hours: "18:00 - 22:00",
+      originalPrice: 55.00,
+      salePrice: 28.50,
+      status: "pickup_now",
+      promoted: true
+    },
+    {
+      id: 102,
+      name: "Kebab House Antalya",
+      category: "Et & Kebap",
+      image: "/api/placeholder/250/150",
+      packages: 2,
+      rating: 4.6,
+      distance: "0.8km",
+      hours: "12:00 - 23:00",
+      originalPrice: 42.00,
+      salePrice: 21.00,
+      status: "pickup_now",
+      promoted: true
+    },
+    {
+      id: 103,
+      name: "Mediterra Balık",
+      category: "Deniz Ürünleri",
+      image: "/api/placeholder/250/150",
+      packages: 3,
+      rating: 4.9,
+      distance: "1.5km",
+      hours: "17:00 - 24:00",
+      originalPrice: 65.00,
+      salePrice: 32.50,
+      status: "last_package",
+      promoted: true
+    },
+    {
+      id: 104,
+      name: "Paşa Börek Evi",
+      category: "Börek & Kahvaltı",
+      image: "/api/placeholder/250/150",
+      packages: 1,
+      rating: 4.4,
+      distance: "0.6km",
+      hours: "07:00 - 16:00",
+      originalPrice: 28.00,
+      salePrice: 14.00,
+      status: "pickup_now",
+      promoted: true
+    },
+    {
+      id: 105,
+      name: "Antalya Pide Salonu",
+      category: "Pide & Lahmacun",
+      image: "/api/placeholder/250/150",
+      packages: 5,
+      rating: 4.7,
+      distance: "1.8km",
+      hours: "11:00 - 22:00",
+      originalPrice: 35.00,
+      salePrice: 17.50,
+      status: "pickup_now",
+      promoted: true
+    }
+  ];
+
+  // Mock data - Extended restaurant list for infinite scroll
+  const restaurants = [
+    {
+      id: 1,
+      name: "Café Milano",
+      category: "Kahve & Pasta",
+      image: "/api/placeholder/300/200",
+      packages: 2,
+      rating: 4.7,
+      distance: "0.3km",
+      hours: "19:45 - 21:55",
+      originalPrice: 33.80,
+      salePrice: 16.90,
+      status: "pickup_now",
+      description: "Taze kahve ve nefis pastalarımızla gününüze lezzet katın. Paketinizde çeşitli pasta ve tatlılar bulabilirsiniz.",
+      address: "Muratpaşa Mah. Atatürk Cad. No:15",
+      website: "www.cafemilano.com"
+    },
+    {
+      id: 2,
+      name: "Cukiernia Sowa Chmielna",
+      category: "Fırın & Ekmek",
+      image: "/api/placeholder/300/200",
+      packages: 3,
+      rating: 4.6,
+      distance: "0.3km",
+      hours: "11:00 - 20:00",
+      originalPrice: 40.00,
+      salePrice: 19.99,
+      status: "last_package",
+      description: "Günlük taze ekmek ve hamur işlerimizle sofranıza lezzet getiriyoruz. Çeşitli ekmek türleri ve tatlılar bulabilirsiniz.",
+      address: "Konyaaltı Mah. Cumhuriyet Cad. No:28",
+      website: "www.cukiernisowa.com"
+    },
+    {
+      id: 3,
+      name: "Eter Vegan Bistro",
+      category: "Vegan Yemekler",
+      image: "/api/placeholder/300/200",
+      packages: 1,
+      rating: 4.8,
+      distance: "0.5km",
+      hours: "18:00 - 22:00",
+      originalPrice: 45.00,
+      salePrice: 22.50,
+      status: "last_package",
+      description: "Organik ve vegan yemeklerimizle sağlıklı beslenmenizi destekliyoruz.",
+      address: "Lara Mah. Gürsu Cad. No:42",
+      website: "www.etervegan.com"
+    },
+    {
+      id: 4,
+      name: "Sushi Palace",
+      category: "Japon Mutfağı",
+      packages: 2,
+      rating: 4.5,
+      distance: "0.7km",
+      hours: "17:00 - 23:00",
+      originalPrice: 75.00,
+      salePrice: 37.50,
+      status: "pickup_now"
+    },
+    {
+      id: 5,
+      name: "Pizza Corner",
+      category: "İtalyan Mutfağı",
+      packages: 4,
+      rating: 4.3,
+      distance: "0.9km",
+      hours: "12:00 - 24:00",
+      originalPrice: 48.00,
+      salePrice: 24.00,
+      status: "pickup_now"
+    },
+    {
+      id: 6,
+      name: "Dönerci Mahmut",
+      category: "Türk Mutfağı",
+      packages: 3,
+      rating: 4.4,
+      distance: "0.4km",
+      hours: "10:00 - 22:00",
+      originalPrice: 32.00,
+      salePrice: 16.00,
+      status: "pickup_now"
+    },
+    {
+      id: 7,
+      name: "Burger Street",
+      category: "Fast Food",
+      packages: 2,
+      rating: 4.2,
+      distance: "0.6km",
+      hours: "11:00 - 02:00",
+      originalPrice: 42.00,
+      salePrice: 21.00,
+      status: "pickup_now"
+    },
+    {
+      id: 8,
+      name: "Tatlı Dünyası",
+      category: "Tatlı & Dondurma",
+      packages: 1,
+      rating: 4.6,
+      distance: "0.8km",
+      hours: "09:00 - 23:00",
+      originalPrice: 35.00,
+      salePrice: 17.50,
+      status: "last_package"
+    },
+    {
+      id: 9,
+      name: "Organic Garden",
+      category: "Vegan Yemekler",
+      packages: 2,
+      rating: 4.7,
+      distance: "1.1km",
+      hours: "08:00 - 20:00",
+      originalPrice: 52.00,
+      salePrice: 26.00,
+      status: "pickup_now"
+    },
+    {
+      id: 10,
+      name: "Deniz Restaurant",
+      category: "Deniz Ürünleri",
+      packages: 3,
+      rating: 4.8,
+      distance: "1.3km",
+      hours: "16:00 - 24:00",
+      originalPrice: 85.00,
+      salePrice: 42.50,
+      status: "pickup_now"
+    }
+  ];
+
+  const [orders, setOrders] = useState([]);
+
+  const statusTexts = {
+    preparing: { text: "Hazırlanıyor", icon: "⏰", color: "text-yellow-600" },
+    ready: { text: "Teslim Almaya Hazır", icon: "🎯", color: "text-green-600" },
+    completed: { text: "Teslim Alındı", icon: "✅", color: "text-blue-600" },
+    cancelled: { text: "İptal Edildi", icon: "❌", color: "text-red-600" }
+  };
+
+  // Welcome Screen
+  const WelcomeScreen = () => (
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex flex-col items-center justify-center p-6">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-green-700 mb-4">TazeKutu</h1>
+        <p className="text-lg text-gray-600 mb-4">Atıkları kurtarın, tasarruf edin!</p>
+        <div className="text-6xl mt-8">🥗</div>
+        <p className="text-sm text-gray-500 mt-4">Her yıl üretilen gıdaların 1/3'ü çöpe gidiyor.<br/>Bizimle bu misyona katılın!</p>
+      </div>
+      
+      <div className="w-full max-w-sm space-y-4">
+        {/* Ana Giriş Butonları */}
+        <button 
+          onClick={() => setCurrentScreen('login')}
+          className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold text-lg shadow-md hover:bg-green-700 transition-colors"
+        >
+          Giriş Yap
+        </button>
+        
+        <button 
+          onClick={() => setCurrentScreen('register')}
+          className="w-full border-2 border-green-600 text-green-600 py-4 rounded-xl font-semibold text-lg hover:bg-green-50 transition-colors"
+        >
+          Kayıt Ol
+        </button>
+
+        {/* Misafir Girişi */}
+        <button 
+          onClick={handleGuestLogin}
+          className="w-full bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-200 transition-colors border border-gray-300"
+        >
+          Kayıt Olmadan Devam Et
+        </button>
+        
+        <div className="text-center text-gray-500 my-6">veya</div>
+        
+        {/* Sosyal Medya Girişleri */}
+        <div className="space-y-3">
+          <button 
+            onClick={() => handleSocialLogin('google')}
+            className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium flex items-center justify-center shadow-sm hover:bg-blue-700 transition-colors"
+          >
+            <span className="mr-3">🔵</span> Google ile devam et
+          </button>
+          
+          <button 
+            onClick={() => handleSocialLogin('facebook')}
+            className="w-full bg-blue-800 text-white py-3 rounded-xl font-medium flex items-center justify-center shadow-sm hover:bg-blue-900 transition-colors"
+          >
+            <span className="mr-3">📘</span> Facebook ile devam et
+          </button>
+          
+          <button 
+            onClick={() => handleSocialLogin('apple')}
+            className="w-full bg-black text-white py-3 rounded-xl font-medium flex items-center justify-center shadow-sm hover:bg-gray-800 transition-colors"
+          >
+            <span className="mr-3">🍎</span> Apple ile devam et
+          </button>
+        </div>
+
+        {/* Misafir Bilgilendirme */}
+        <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+          <div className="flex items-start">
+            <span className="text-yellow-600 mr-2">ℹ️</span>
+            <div>
+              <p className="text-yellow-800 text-sm font-medium mb-1">Misafir Olarak Devam</p>
+              <p className="text-yellow-700 text-xs">
+                Kayıt olmadan uygulamayı keşfedebilirsiniz. Sipariş vermek için sonra kayıt olmanız gerekecek.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Login Screen
+  const LoginScreen = () => {
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      handleLogin(loginEmail, loginPassword);
+    };
+
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="bg-white px-4 py-6 shadow-sm">
+          <div className="flex items-center mb-4">
+            <button 
+              onClick={() => setCurrentScreen('welcome')}
+              className="mr-4"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-800">Giriş Yap</h1>
+          </div>
+        </div>
+
+        <div className="flex-1 px-4 py-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                E-posta Adresi
+              </label>
+              <input
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="ornek@email.com"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Şifre
+              </label>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            {loginError && (
+              <div className="text-red-600 text-sm text-center bg-red-50 py-2 px-4 rounded-lg">
+                {loginError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold text-lg shadow-md"
+            >
+              Giriş Yap
+            </button>
+          </form>
+
+          <div className="mt-8">
+            <div className="text-center text-gray-500 mb-4">veya</div>
+            <div className="space-y-3">
+              <button 
+                onClick={() => handleSocialLogin('google')}
+                className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium flex items-center justify-center"
+              >
+                <span className="mr-3">🔵</span> Google ile giriş yap
+              </button>
+              
+              <button 
+                onClick={() => handleSocialLogin('facebook')}
+                className="w-full bg-blue-800 text-white py-3 rounded-xl font-medium flex items-center justify-center"
+              >
+                <span className="mr-3">📘</span> Facebook ile giriş yap
+              </button>
+              
+              <button 
+                onClick={() => handleSocialLogin('apple')}
+                className="w-full bg-black text-white py-3 rounded-xl font-medium flex items-center justify-center"
+              >
+                <span className="mr-3">🍎</span> Apple ile giriş yap
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <span className="text-gray-600">Hesabınız yok mu? </span>
+            <button 
+              onClick={() => setCurrentScreen('register')}
+              className="text-green-600 font-medium"
+            >
+              Kayıt olun
+            </button>
+          </div>
+
+          {/* Demo credentials info */}
+          <div className="mt-8 bg-blue-50 p-4 rounded-xl">
+            <h3 className="font-medium text-blue-800 mb-2">Demo Giriş Bilgileri:</h3>
+            <p className="text-blue-700 text-sm">E-posta: hakan@aydin.com</p>
+            <p className="text-blue-700 text-sm">Şifre: 123456</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Register Screen
+  const RegisterScreen = () => {
+    const handleChange = (field, value) => {
+      setRegisterData(prev => ({ ...prev, [field]: value }));
+      if (registerErrors[field]) {
+        setRegisterErrors(prev => ({ ...prev, [field]: '' }));
+      }
+    };
+
+    const validateForm = () => {
+      const newErrors = {};
+      
+      if (!registerData.name.trim()) newErrors.name = 'Ad zorunludur';
+      if (!registerData.surname.trim()) newErrors.surname = 'Soyad zorunludur';
+      if (!registerData.email.trim()) newErrors.email = 'E-posta zorunludur';
+      if (!registerData.password) newErrors.password = 'Şifre zorunludur';
+      if (registerData.password !== registerData.confirmPassword) {
+        newErrors.confirmPassword = 'Şifreler eşleşmiyor';
+      }
+      if (registerData.password && registerData.password.length < 6) {
+        newErrors.password = 'Şifre en az 6 karakter olmalıdır';
+      }
+
+      setRegisterErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      if (validateForm()) {
+        handleRegister(registerData);
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="bg-white px-4 py-6 shadow-sm">
+          <div className="flex items-center mb-4">
+            <button 
+              onClick={() => setCurrentScreen('welcome')}
+              className="mr-4"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-800">Kayıt Ol</h1>
+          </div>
+        </div>
+
+        <div className="flex-1 px-4 py-6 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Ad *
+              </label>
+              <input
+                type="text"
+                value={registerData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  registerErrors.name ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Adınız"
+              />
+              {registerErrors.name && <p className="text-red-500 text-xs mt-1">{registerErrors.name}</p>}
+            </div>
+
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Soyad *
+              </label>
+              <input
+                type="text"
+                value={registerData.surname}
+                onChange={(e) => handleChange('surname', e.target.value)}
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  registerErrors.surname ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Soyadınız"
+              />
+              {registerErrors.surname && <p className="text-red-500 text-xs mt-1">{registerErrors.surname}</p>}
+            </div>
+
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                E-posta Adresi *
+              </label>
+              <input
+                type="email"
+                value={registerData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  registerErrors.email ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="ornek@email.com"
+              />
+              {registerErrors.email && <p className="text-red-500 text-xs mt-1">{registerErrors.email}</p>}
+            </div>
+
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Telefon Numarası (Opsiyonel)
+              </label>
+              <input
+                type="tel"
+                value={registerData.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="+90 555 123 4567"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Şifre *
+              </label>
+              <input
+                type="password"
+                value={registerData.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  registerErrors.password ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="En az 6 karakter"
+              />
+              {registerErrors.password && <p className="text-red-500 text-xs mt-1">{registerErrors.password}</p>}
+            </div>
+
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Şifre Tekrar *
+              </label>
+              <input
+                type="password"
+                value={registerData.confirmPassword}
+                onChange={(e) => handleChange('confirmPassword', e.target.value)}
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  registerErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Şifrenizi tekrar girin"
+              />
+              {registerErrors.confirmPassword && <p className="text-red-500 text-xs mt-1">{registerErrors.confirmPassword}</p>}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold text-lg shadow-md mt-6"
+            >
+              Kayıt Ol
+            </button>
+          </form>
+
+          <div className="mt-6">
+            <div className="text-center text-gray-500 mb-4">veya</div>
+            <div className="space-y-3">
+              <button 
+                onClick={() => handleSocialLogin('google')}
+                className="w-full bg-blue-600 text-white py-3 rounded-xl font-medium flex items-center justify-center"
+              >
+                <span className="mr-3">🔵</span> Google ile kayıt ol
+              </button>
+              
+              <button 
+                onClick={() => handleSocialLogin('facebook')}
+                className="w-full bg-blue-800 text-white py-3 rounded-xl font-medium flex items-center justify-center"
+              >
+                <span className="mr-3">📘</span> Facebook ile kayıt ol
+              </button>
+              
+              <button 
+                onClick={() => handleSocialLogin('apple')}
+                className="w-full bg-black text-white py-3 rounded-xl font-medium flex items-center justify-center"
+              >
+                <span className="mr-3">🍎</span> Apple ile kayıt ol
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-6 text-center pb-6">
+            <span className="text-gray-600">Zaten hesabınız var mı? </span>
+            <button 
+              onClick={() => setCurrentScreen('login')}
+              className="text-green-600 font-medium"
+            >
+              Giriş yapın
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Location Permission Modal
+  const LocationModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center">
+        <div className="text-6xl mb-4">📍</div>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Konum İzni</h2>
+        <p className="text-gray-600 mb-8 leading-relaxed">
+          Size en yakın restoranları bulabilmek için konum bilginize ihtiyacımız var. İzin verir misiniz?
+        </p>
+        <div className="space-y-3">
+          <button 
+            onClick={handleLocationPermission}
+            className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold text-lg shadow-md"
+          >
+            İzin Ver
+          </button>
+          <button 
+            onClick={() => setShowLocationModal(false)}
+            className="w-full border border-gray-300 text-gray-600 py-3 rounded-xl font-medium"
+          >
+            Şimdi Değil
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Map Screen
+  const MapScreen = () => (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white px-4 py-6 shadow-sm">
+        <div className="flex items-center mb-4">
+          <button 
+            onClick={() => {
+              console.log('Geri butonuna tıklandı');
+              setCurrentScreen('main');
+            }}
+            className="mr-4 hover:bg-gray-100 p-1 rounded-full transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
+          <h1 className="text-xl font-bold text-gray-800">Antalya Haritası</h1>
+        </div>
+        <p className="text-gray-600 text-sm">Kayıtlı işletmelerin konumları</p>
+      </div>
+
+      <div className="px-4 py-6 pb-20">
+        {/* Map Container */}
+        <div className="bg-gray-200 rounded-xl h-96 mb-6 flex items-center justify-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100">
+            {/* Simulate Antalya map with restaurant markers */}
+            
+            {/* User location marker (green) */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg z-10">
+              <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
+            </div>
+            
+            {/* Restaurant markers around Antalya */}
+            <div className="absolute top-16 left-20 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg cursor-pointer hover:scale-110 transition-transform">
+              🍽️
+            </div>
+            <div className="absolute top-32 right-16 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg cursor-pointer hover:scale-110 transition-transform">
+              ☕
+            </div>
+            <div className="absolute bottom-24 left-16 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg cursor-pointer hover:scale-110 transition-transform">
+              🍞
+            </div>
+            <div className="absolute bottom-32 right-20 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg cursor-pointer hover:scale-110 transition-transform">
+              🥗
+            </div>
+            <div className="absolute top-24 left-1/2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg cursor-pointer hover:scale-110 transition-transform">
+              🍖
+            </div>
+            <div className="absolute bottom-16 left-1/3 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg cursor-pointer hover:scale-110 transition-transform">
+              🐟
+            </div>
+            
+            {/* Antalya city outline simulation */}
+            <div className="absolute top-12 left-12 w-2 h-2 bg-gray-600 rounded-full"></div>
+            <div className="absolute bottom-12 right-12 w-2 h-2 bg-gray-600 rounded-full"></div>
+            <div className="absolute top-20 right-24 w-1 h-1 bg-gray-500 rounded-full"></div>
+            <div className="absolute bottom-20 left-24 w-1 h-1 bg-gray-500 rounded-full"></div>
+          </div>
+          
+          {/* Map title overlay */}
+          <div className="absolute top-4 left-4 bg-white bg-opacity-90 rounded-lg px-3 py-2 shadow-md">
+            <p className="text-gray-800 font-bold text-sm">📍 Antalya</p>
+            <p className="text-gray-600 text-xs">6 kayıtlı işletme</p>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+          <h3 className="font-bold text-gray-800 mb-3">Harita Açıklaması</h3>
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-red-500 rounded-full mr-3"></div>
+              <span className="text-gray-700 text-sm">Aktif restoranlar (6 adet)</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
+              <span className="text-gray-700 text-sm">Sizin konumunuz</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-gray-600 rounded-full mr-3"></div>
+              <span className="text-gray-700 text-sm">Antalya merkez noktaları</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Restaurant List */}
+        <div className="bg-white rounded-xl p-4 mb-4 shadow-sm">
+          <h3 className="font-bold text-gray-800 mb-3">Yakındaki İşletmeler</h3>
+          <div className="space-y-3">
+            {promotedRestaurants.slice(0, 3).map((restaurant, index) => (
+              <div key={restaurant.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs mr-3">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 text-sm">{restaurant.name}</p>
+                    <p className="text-gray-500 text-xs">{restaurant.distance}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    setSelectedRestaurant(restaurant);
+                    setCurrentScreen('restaurant-detail');
+                  }}
+                  className="text-green-600 text-xs font-medium"
+                >
+                  Görüntüle
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <h3 className="font-bold text-gray-800 mb-3">Hızlı İşlemler</h3>
+          <div className="space-y-3">
+            <button 
+              onClick={() => setCurrentScreen('main')}
+              className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 transition-colors"
+            >
+              Teklifleri Gör
+            </button>
+            <button 
+              onClick={requestLocationAccess}
+              className="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+            >
+              Konumumu Güncelle
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+  const PromotedRestaurantCard = ({ restaurant, onClick }) => (
+    <div 
+      onClick={() => onClick(restaurant)}
+      className="bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-105 flex-shrink-0 w-60 mr-4"
+    >
+      <div className="relative">
+        <div className="h-32 bg-gradient-to-r from-blue-200 to-purple-200 flex items-center justify-center">
+          <span className="text-3xl">
+            {restaurant.category.includes('Türk') ? '🍖' : 
+             restaurant.category.includes('Kebap') ? '🥙' :
+             restaurant.category.includes('Balık') || restaurant.category.includes('Deniz') ? '🐟' :
+             restaurant.category.includes('Börek') ? '🥧' :
+             restaurant.category.includes('Pide') ? '🍕' : '🍽️'}
+          </span>
+        </div>
+        
+        <div className="absolute top-2 left-2 bg-orange-500 text-white rounded-lg px-2 py-1 text-xs font-bold">
+          ÖNERİLEN
+        </div>
+        
+        <div className="absolute top-2 right-2 bg-white rounded-lg px-2 py-1 text-xs font-medium text-gray-700">
+          {restaurant.packages} PAKET
+        </div>
+        
+        {restaurant.status === "last_package" && (
+          <div className="absolute bottom-2 left-2 bg-pink-100 border border-pink-300 rounded-lg px-2 py-1 text-xs font-medium text-pink-700">
+            SON PAKET
+          </div>
+        )}
+        
+        <div className="absolute bottom-2 right-2 bg-white rounded-lg px-2 py-1 shadow-md">
+          <span className="text-gray-400 line-through text-xs">{restaurant.originalPrice.toFixed(2)}₺</span>
+          <span className="text-sm font-bold text-gray-800 ml-1">{restaurant.salePrice.toFixed(2)}₺</span>
+        </div>
+      </div>
+      
+      <div className="p-3">
+        <h3 className="font-bold text-sm text-gray-800 mb-1 line-clamp-1">{restaurant.name}</h3>
+        <p className="text-gray-500 text-xs mb-2 line-clamp-1">{restaurant.category}</p>
+        
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center">
+            <Star className="w-3 h-3 text-yellow-400 fill-current mr-1" />
+            <span className="font-medium">{restaurant.rating}</span>
+          </div>
+          
+          <div className="flex items-center text-gray-500">
+            <MapPin className="w-3 h-3 mr-1" />
+            <span>{restaurant.distance}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Infinite scroll handler
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollHeight - scrollTop <= clientHeight * 1.5 && !isLoading && displayedRestaurants < restaurants.length) {
+      setIsLoading(true);
+      setTimeout(() => {
+        setDisplayedRestaurants(prev => Math.min(prev + 3, restaurants.length));
+        setIsLoading(false);
+      }, 1000);
+    }
+  };
+
+  // Reset displayed restaurants when filter changes
+  useEffect(() => {
+    setDisplayedRestaurants(3);
+  }, [activeFilter]);
+
+  // Login handler
+  const handleLogin = (email, password) => {
+    const user = users.find(u => u.email === email && u.password === password);
+    if (user) {
+      setCurrentUser(user);
+      setIsGuestUser(false);
+      setCurrentScreen('main');
+      setLoginError('');
+      return true;
+    } else {
+      setLoginError('E-posta veya şifre hatalı!');
+      return false;
+    }
+  };
+
+  // Social login handler
+  const handleSocialLogin = (provider) => {
+    // Simulate social login
+    const socialUser = {
+      id: Date.now(),
+      email: `user@${provider}.com`,
+      name: 'Demo',
+      surname: 'User',
+      phone: '',
+      provider: provider
+    };
+    setCurrentUser(socialUser);
+    setIsGuestUser(false);
+    setCurrentScreen('main');
+  };
+
+  // Register handler
+  const handleRegister = (userData) => {
+    const newUser = {
+      id: Date.now(),
+      ...userData
+    };
+    users.push(newUser);
+    setCurrentUser(newUser);
+    setIsGuestUser(false);
+    setCurrentScreen('main');
+  };
+
+  // Guest login handler
+  const handleGuestLogin = () => {
+    const guestUser = {
+      id: 'guest_' + Date.now(),
+      email: '',
+      name: 'Misafir',
+      surname: 'Kullanıcı',
+      phone: '',
+      isGuest: true
+    };
+    setCurrentUser(guestUser);
+    setIsGuestUser(true);
+    setCurrentScreen('main');
+  };
+
+  // Logout handler
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setIsGuestUser(false);
+    setCurrentScreen('welcome');
+    setActiveTab('pickup');
+  };
+  const requestLocationAccess = () => {
+    setShowLocationModal(true);
+  };
+
+  const handleLocationPermission = () => {
+    // Simulate getting user location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Simulate converting coordinates to address
+          setUserLocation('Muratpaşa, Antalya');
+          setShowLocationModal(false);
+        },
+        (error) => {
+          // If permission denied or error, set default location
+          setUserLocation('Antalya Merkez');
+          setShowLocationModal(false);
+        }
+      );
+    } else {
+      setUserLocation('Antalya Merkez');
+      setShowLocationModal(false);
+    }
+  };
+  const RestaurantCard = ({ restaurant, onClick }) => (
+    <div 
+      onClick={() => onClick(restaurant)}
+      className="bg-white rounded-2xl shadow-lg overflow-hidden mb-4 cursor-pointer transform transition-transform hover:scale-105"
+    >
+      <div className="relative">
+        <div className="h-48 bg-gradient-to-r from-orange-200 to-red-200 flex items-center justify-center">
+          <span className="text-4xl">
+            {restaurant.category.includes('Kahve') ? '☕' : 
+             restaurant.category.includes('Fırın') ? '🍞' :
+             restaurant.category.includes('Vegan') ? '🥗' : '🍽️'}
+          </span>
+        </div>
+        
+        <div className="absolute top-3 left-3 bg-white rounded-lg px-2 py-1 text-sm font-medium text-gray-700">
+          {restaurant.packages} PAKET
+        </div>
+        
+        <button className="absolute top-3 right-3 bg-white rounded-full p-2 shadow-md">
+          <Heart className="w-5 h-5 text-gray-400" />
+        </button>
+        
+        {restaurant.status === "last_package" && (
+          <div className="absolute top-12 left-3 bg-pink-100 border border-pink-300 rounded-lg px-2 py-1 text-xs font-medium text-pink-700">
+            SON PAKET
+          </div>
+        )}
+        
+        <div className="absolute bottom-3 right-3 bg-white rounded-lg px-3 py-1 shadow-md">
+          <span className="text-gray-400 line-through text-sm">{restaurant.originalPrice.toFixed(2)}₺</span>
+          <span className="text-lg font-bold text-gray-800 ml-2">{restaurant.salePrice.toFixed(2)}₺</span>
+        </div>
+      </div>
+      
+      <div className="p-4">
+        <h3 className="font-bold text-lg text-gray-800 mb-1">{restaurant.name}</h3>
+        <p className="text-gray-500 text-sm mb-3">{restaurant.category}</p>
+        
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center">
+            <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
+            <span className="font-medium">{restaurant.rating}</span>
+          </div>
+          
+          <div className="flex items-center text-gray-500">
+            <MapPin className="w-4 h-4 mr-1" />
+            <span>{restaurant.distance}</span>
+          </div>
+          
+          <div className="flex items-center text-gray-500">
+            <Clock className="w-4 h-4 mr-1" />
+            <span>{restaurant.hours}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Main Screen (Offers)
+  const MainScreen = () => {
+    if (activeTab === 'orders') {
+      return <OrdersScreen />;
+    }
+    if (activeTab === 'favourites') {
+      return <FavouritesScreen />;
+    }
+    if (activeTab === 'more') {
+      return <MoreScreen />;
+    }
+
+    // Filter restaurants based on active filter
+    const filteredRestaurants = restaurants.filter(restaurant => {
+      if (activeFilter === 'all') return true;
+      if (activeFilter === 'local') return restaurant.category.includes('Fırın') || restaurant.category.includes('Kahve') || restaurant.category.includes('Türk');
+      if (activeFilter === 'sweet') return restaurant.category.includes('Pasta') || restaurant.category.includes('Tatlı') || restaurant.category.includes('Dondurma');
+      if (activeFilter === 'vegan') return restaurant.category.includes('Vegan');
+      return true;
+    });
+
+    // Get only displayed restaurants for infinite scroll
+    const displayedFilteredRestaurants = filteredRestaurants.slice(0, displayedRestaurants);
+
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white px-4 py-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-gray-800">Teklifler</h1>
+            <button 
+              onClick={() => {
+                console.log('Harita butonuna tıklandı');
+                setCurrentScreen('map');
+              }}
+              className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+            >
+              <Navigation className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+          
+          <button 
+            onClick={requestLocationAccess}
+            className="flex items-center text-gray-600 mb-4 hover:text-green-600 transition-colors"
+          >
+            <MapPin className="w-5 h-5 mr-2" />
+            <span>{userLocation} +/- 5km</span>
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </button>
+
+          {/* Filter Categories */}
+          <div className="flex space-x-3 overflow-x-auto pb-2">
+            {filterCategories.map(category => (
+              <button
+                key={category.id}
+                onClick={() => setActiveFilter(category.id)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors ${
+                  activeFilter === category.id
+                    ? 'bg-green-100 text-green-700 border border-green-300'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                <span className="text-lg">{category.emoji}</span>
+                <span className="font-medium">{category.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content - Scrollable */}
+        <div 
+          className="px-4 py-6 pb-20 overflow-y-auto"
+          style={{ height: 'calc(100vh - 200px)' }}
+          onScroll={handleScroll}
+        >
+          {/* Promoted section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">Keşfettin mi? 🤔</h2>
+              <span className="text-xs text-gray-500">2km çevren</span>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">Yöneticinin önerdiği yakın yerler</p>
+            
+            {/* Horizontal scrollable promoted restaurants */}
+            <div className="flex overflow-x-auto pb-4 -mx-4 px-4">
+              {promotedRestaurants.map(restaurant => (
+                <PromotedRestaurantCard 
+                  key={restaurant.id} 
+                  restaurant={restaurant}
+                  onClick={(restaurant) => {
+                    setSelectedRestaurant(restaurant);
+                    setCurrentScreen('restaurant-detail');
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Pick up now section */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Şimdi teslim al 🍽️</h2>
+            <p className="text-sm text-gray-500 mb-4">Bu paketler hazır ve sizi bekliyor.</p>
+          </div>
+
+          {/* Restaurant List */}
+          <div className="space-y-4">
+            {displayedFilteredRestaurants.map(restaurant => (
+              <RestaurantCard 
+                key={restaurant.id} 
+                restaurant={restaurant}
+                onClick={(restaurant) => {
+                  setSelectedRestaurant(restaurant);
+                  setCurrentScreen('restaurant-detail');
+                }}
+              />
+            ))}
+            
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                <p className="text-gray-500 mt-2">Yeni restoranlar yükleniyor...</p>
+              </div>
+            )}
+            
+            {/* No results */}
+            {filteredRestaurants.length === 0 && (
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">🔍</div>
+                <h2 className="text-xl font-bold text-gray-800 mb-2">Bu kategoride henüz restoran yok</h2>
+                <p className="text-gray-600">Farklı bir kategori deneyin</p>
+              </div>
+            )}
+            
+            {/* End of list */}
+            {!isLoading && displayedRestaurants >= filteredRestaurants.length && filteredRestaurants.length > 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-500">🎉 Tüm restoranları gördünüz!</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Restaurant Detail Screen
+  const RestaurantDetailScreen = () => (
+    <div className="min-h-screen bg-white">
+      {/* Header Image */}
+      <div className="relative h-80">
+        <div className="h-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center">
+          <span className="text-8xl">
+            {selectedRestaurant?.category.includes('Kahve') ? '☕' : 
+             selectedRestaurant?.category.includes('Fırın') ? '🍞' :
+             selectedRestaurant?.category.includes('Vegan') ? '🥗' : '🍽️'}
+          </span>
+        </div>
+        
+        <button 
+          onClick={() => setCurrentScreen('main')}
+          className="absolute top-4 left-4 bg-white rounded-full p-3 shadow-lg"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-700" />
+        </button>
+        
+        {selectedRestaurant?.status === "last_package" && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-pink-100 border border-pink-300 rounded-lg px-3 py-2 text-sm font-medium text-pink-700">
+            SON PAKET
+          </div>
+        )}
+        
+        <button className="absolute top-4 right-4 bg-white rounded-full p-3 shadow-lg">
+          <Heart className="w-5 h-5 text-gray-400" />
+        </button>
+        
+        <div className="absolute bottom-4 right-4 bg-white rounded-xl px-4 py-2 shadow-lg">
+          <span className="text-gray-400 line-through text-sm">{selectedRestaurant?.originalPrice.toFixed(2)}₺</span>
+          <span className="text-xl font-bold text-gray-800 ml-2">{selectedRestaurant?.salePrice.toFixed(2)}₺</span>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 py-6 pb-24">
+        {/* Restaurant Info */}
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">{selectedRestaurant?.name}</h1>
+        <p className="text-gray-500 mb-4">{selectedRestaurant?.category}</p>
+        
+        <div className="flex items-center space-x-6 mb-6">
+          <div className="flex items-center">
+            <Star className="w-5 h-5 text-yellow-400 fill-current mr-1" />
+            <span className="font-medium">{selectedRestaurant?.rating}</span>
+          </div>
+          
+          <div className="flex items-center text-gray-500">
+            <MapPin className="w-5 h-5 mr-1" />
+            <span>{selectedRestaurant?.distance}</span>
+          </div>
+          
+          <div className="flex items-center text-gray-500">
+            <Clock className="w-5 h-5 mr-1" />
+            <span>Bugün, {selectedRestaurant?.hours}</span>
+          </div>
+        </div>
+
+        {/* What will you rescue */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Neyi kurtaracaksın?</h2>
+          <p className="text-gray-600 leading-relaxed">
+            🧁🥐🍪 {selectedRestaurant?.description}
+          </p>
+        </div>
+
+        {/* Important Information */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+          <div className="flex items-start">
+            <div className="bg-yellow-200 rounded-full p-2 mr-3 mt-1">
+              <AlertTriangle className="w-5 h-5 text-yellow-700" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-800 mb-2">Önemli bilgiler !!</h3>
+              <p className="text-gray-700 text-sm">
+                📦🥪 Paketinizi almak istiyorsanız: 5 dakika mesafedeki bir market bulabilir, paket alabilirsiniz. İçerik değişebilir.
+              </p>
+              <button className="text-gray-600 text-sm underline mt-2">Daha fazla göster</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Vendor Info */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+          <div className="flex items-start">
+            <div className="bg-blue-200 rounded-full p-2 mr-3 mt-1">
+              <Package className="w-5 h-5 text-blue-700" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-800 mb-2">Paketler satıcılar tarafından satılır</h3>
+              <p className="text-gray-600 text-sm mb-2">
+                Tüketici hakları koruması kapsamında olduğunuzu unutmayın
+              </p>
+              <button className="text-blue-600 text-sm underline">Şirket Bilgileri & Sorumluluklar</button>
+            </div>
+          </div>
+        </div>
+
+        {/* About Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Hakkında</h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <div className="bg-gray-100 rounded-full p-3 mr-4">
+                <span className="text-xl">🌐</span>
+              </div>
+              <div>
+                <p className="font-medium text-gray-800">Website</p>
+                <p className="text-blue-600 text-sm">Sayfayı Görüntüle</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center">
+              <div className="bg-gray-100 rounded-full p-3 mr-4">
+                <MapPin className="w-6 h-6 text-gray-600" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-800">{selectedRestaurant?.address}</p>
+                <p className="text-blue-600 text-sm">Teslim Alma Yerine Git</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Map */}
+        <div className="bg-gray-200 rounded-xl h-48 mb-8 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
+              <MapPin className="w-6 h-6 text-white" />
+            </div>
+            <p className="text-gray-600 font-medium">{selectedRestaurant?.name}</p>
+            <p className="text-gray-500 text-sm">Harita konumu</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Fixed Bottom Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => setOrderQuantity(Math.max(1, orderQuantity - 1))}
+              className="bg-gray-200 rounded-full p-3"
+            >
+              <Minus className="w-5 h-5 text-gray-600" />
+            </button>
+            
+            <span className="text-xl font-bold text-gray-800">{orderQuantity}</span>
+            
+            <button 
+              onClick={() => setOrderQuantity(orderQuantity + 1)}
+              className="bg-gray-200 rounded-full p-3"
+            >
+              <Plus className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+          
+          <button 
+            onClick={() => setShowReservationModal(true)}
+            className="bg-green-600 text-white px-8 py-4 rounded-xl font-semibold text-lg"
+          >
+            Rezerve Et
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Reservation Modal
+  const ReservationModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center transform transition-all">
+        <div className="text-6xl mb-4">🎁</div>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Paketiniz bir sürpriz!</h2>
+        <p className="text-gray-600 mb-8 leading-relaxed">
+          İçerik değişebilir, satıcıya alerjenler hakkında sorabilirsiniz
+        </p>
+        <button 
+          onClick={() => {
+            setShowReservationModal(false);
+            setCurrentScreen('summary');
+          }}
+          className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold text-lg shadow-md"
+        >
+          Mükemmel, alıyorum!
+        </button>
+      </div>
+    </div>
+  );
+
+  // Summary Screen
+  const SummaryScreen = () => (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white px-4 py-6 shadow-sm">
+        <div className="flex items-center mb-4">
+          <button 
+            onClick={() => setCurrentScreen('restaurant-detail')}
+            className="mr-4"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
+          <h1 className="text-xl font-bold text-gray-800">Özet</h1>
+        </div>
+      </div>
+
+      <div className="px-4 py-6 space-y-6 pb-24">
+        {/* Restaurant Info */}
+        <div className="bg-white rounded-xl p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-gray-800 mb-4">{selectedRestaurant?.name}</h2>
+          <p className="text-gray-600 mb-2">{selectedRestaurant?.address}</p>
+          <p className="text-green-600 font-medium mb-4">
+            <MapPin className="w-4 h-4 inline mr-1" />
+            {selectedRestaurant?.distance} uzaklıkta
+          </p>
+          <div className="flex items-center text-gray-600">
+            <Clock className="w-5 h-5 mr-2" />
+            <span>Teslim Saati: Bugün, {selectedRestaurant?.hours}</span>
+          </div>
+        </div>
+
+        {/* Pickup Info */}
+        <div className="bg-white rounded-xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Teslim Alma Bilgisi</h3>
+          
+          <div className="bg-gray-200 rounded-xl h-32 mb-4 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                <MapPin className="w-6 h-6 text-white" />
+              </div>
+              <p className="text-sm font-medium text-gray-800">{selectedRestaurant?.name}</p>
+            </div>
+          </div>
+          
+          <p className="text-gray-600 text-sm mb-2">{selectedRestaurant?.address}</p>
+          <button className="text-blue-600 text-sm font-medium">Haritada Göster</button>
+        </div>
+
+        {/* Payment */}
+        <div className="bg-white rounded-xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Ödeme Metodu</h3>
+          
+          <div className="border border-gray-200 rounded-xl p-4 mb-4 bg-blue-50">
+            <div className="flex items-center">
+              <div className="bg-blue-100 rounded-lg p-2 mr-3">
+                <span className="text-blue-600 text-xl">💳</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-800">Kredi Kartı</span>
+                <p className="text-sm text-gray-500">Güvenli ödeme</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-200 pt-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-gray-600">Paket Fiyatı</span>
+              <span className="font-medium">{selectedRestaurant?.salePrice.toFixed(2)}₺</span>
+            </div>
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-gray-600">Adet</span>
+              <span className="font-medium">{orderQuantity}</span>
+            </div>
+            <div className="flex justify-between items-center text-lg font-bold border-t pt-3">
+              <span>Toplam</span>
+              <span className="text-green-600">{(selectedRestaurant?.salePrice * orderQuantity).toFixed(2)}₺</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Fixed Bottom */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+        <button 
+          onClick={() => {
+            // Add order to orders list
+            const newOrder = {
+              id: Date.now(),
+              restaurantName: selectedRestaurant.name,
+              packageType: "Sürpriz Paketi",
+              status: "preparing",
+              pickupTime: selectedRestaurant.hours,
+              address: selectedRestaurant.address,
+              price: selectedRestaurant.salePrice * orderQuantity,
+              orderDate: new Date().toISOString()
+            };
+            setOrders([newOrder, ...orders]);
+            setUserStats(prev => ({
+              ...prev,
+              packagesRescued: prev.packagesRescued + orderQuantity,
+              savings: prev.savings + (selectedRestaurant.originalPrice - selectedRestaurant.salePrice) * orderQuantity
+            }));
+            
+            // Misafir kullanıcı için uyarı
+            if (isGuestUser) {
+              alert('Sipariş verdiğiniz için teşekkürler! Gelecek siparişleriniz için kayıt olmanızı öneririz.');
+            }
+            
+            setActiveTab('orders');
+            setCurrentScreen('main');
+          }}
+          className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold text-lg shadow-md"
+        >
+          Öde
+        </button>
+      </div>
+    </div>
+  );
+
+  // Orders Screen
+  const OrdersScreen = () => (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white px-4 py-6 shadow-sm">
+        <h1 className="text-2xl font-bold text-gray-800">Siparişlerim</h1>
+      </div>
+
+      <div className="px-4 py-6 pb-20">
+        {orders.length > 0 ? (
+          <>
+            {/* Current Order */}
+            <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
+              <div className="flex items-center mb-4">
+                <Package className="w-6 h-6 text-green-600 mr-2" />
+                <h2 className="text-lg font-bold text-gray-800">Güncel Siparişiniz</h2>
+              </div>
+              
+              <div className="space-y-3">
+                <h3 className="font-bold text-gray-800">{orders[0].restaurantName}</h3>
+                <p className="text-gray-600">Paket: {orders[0].packageType}</p>
+                <div className="flex items-center">
+                  <span className={`${statusTexts[orders[0].status].color} font-medium mr-2`}>
+                    {statusTexts[orders[0].status].icon}
+                  </span>
+                  <span className={statusTexts[orders[0].status].color}>
+                    Durum: {statusTexts[orders[0].status].text}
+                  </span>
+                </div>
+                <p className="text-gray-600">Teslim Saati: Bugün, {orders[0].pickupTime}</p>
+                <p className="text-gray-600 text-sm">{orders[0].address}</p>
+                
+                <div className="flex space-x-3 mt-4">
+                  <button className="bg-white border border-gray-300 px-4 py-2 rounded-lg text-sm font-medium">
+                    Detayları Gör
+                  </button>
+                  <button className="bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-medium">
+                    İptal Et
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Progress */}
+            <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+              <h3 className="font-bold text-gray-800 mb-4">Sipariş Durumu</h3>
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                  <span className="text-gray-800">Sipariş Alındı</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-white text-xs">⏰</span>
+                  </div>
+                  <span className="text-gray-800">Hazırlanıyor</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-gray-500 text-xs">🎯</span>
+                  </div>
+                  <span className="text-gray-500">Teslim Almaya Hazır</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-gray-500 text-xs">✓</span>
+                  </div>
+                  <span className="text-gray-500">Teslim Alındı</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Order History */}
+            {orders.length > 1 && (
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <h3 className="font-bold text-gray-800 mb-4">📋 Geçmiş Siparişlerim</h3>
+                <div className="space-y-4">
+                  {orders.slice(1).map((order) => (
+                    <div key={order.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium text-gray-800">{order.restaurantName}</h4>
+                        <span className="text-sm text-gray-500">
+                          {new Date(order.orderDate).toLocaleDateString('tr-TR')}
+                        </span>
+                      </div>
+                      <p className="text-gray-600 text-sm mb-1">{order.packageType} - {order.price.toFixed(2)}₺</p>
+                      <p className={`text-sm ${statusTexts[order.status].color}`}>
+                        Durum: {statusTexts[order.status].text}
+                      </p>
+                      <div className="flex space-x-3 mt-3">
+                        <button className="text-blue-600 text-sm">Tekrar Sipariş Ver</button>
+                        {order.status === 'completed' && (
+                          <button className="text-green-600 text-sm">Değerlendir</button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-16">
+            <div className="text-6xl mb-4">📦</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Henüz sipariş yok</h2>
+            <p className="text-gray-600 mb-6">İlk paketinizi kurtarmaya başlayın!</p>
+            <button 
+              onClick={() => setActiveTab('pickup')}
+              className="bg-green-600 text-white px-6 py-3 rounded-xl font-semibold"
+            >
+              Teklifleri Gör
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Favourites Screen
+  const FavouritesScreen = () => (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white px-4 py-6 shadow-sm">
+        <h1 className="text-2xl font-bold text-gray-800">Favorilerim</h1>
+      </div>
+
+      <div className="px-4 py-6 pb-20">
+        <div className="text-center py-16">
+          <div className="text-6xl mb-4">❤️</div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Henüz favori yok</h2>
+          <p className="text-gray-600 mb-6">Beğendiğiniz restoranları favorilere ekleyin</p>
+          <button 
+            onClick={() => setActiveTab('pickup')}
+            className="bg-green-600 text-white px-6 py-3 rounded-xl font-semibold"
+          >
+            Restoranları Keşfet
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // More Screen
+  const MoreScreen = () => (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white px-4 py-6 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Hey, {currentUser?.name}</h1>
+            <h2 className="text-2xl font-bold text-gray-800">{currentUser?.surname?.toUpperCase()}!</h2>
+          </div>
+          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+            <User className="w-6 h-6 text-green-600" />
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 py-6 pb-20">
+        {/* Impact Section */}
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Sayılarla etkiniz! 💪</h3>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-6 text-center shadow-sm">
+            <div className="text-3xl mb-2">📦</div>
+            <p className="text-gray-600 text-sm mb-1">Kurtarılan paket</p>
+            <p className="text-2xl font-bold text-gray-800">{userStats.packagesRescued}</p>
+          </div>
+          
+          <div className="bg-white rounded-xl p-6 text-center shadow-sm">
+            <div className="text-3xl mb-2">💰</div>
+            <p className="text-gray-600 text-sm mb-1">Tasarruf</p>
+            <p className="text-2xl font-bold text-gray-800">{userStats.savings.toFixed(0)} ₺</p>
+          </div>
+        </div>
+
+        {/* User Profile */}
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+          <div className="flex items-center mb-4">
+            <User className="w-6 h-6 text-gray-600 mr-2" />
+            <h3 className="text-lg font-bold text-gray-800">Kullanıcı profili</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700">Profiliniz</span>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700">Kayıtlı adresler</span>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Good to Know */}
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Bilmen İyi Olur</h3>
+          <p className="text-gray-600 text-sm mb-4">TazeKutu'yu nasıl kolayca kullanacağını öğren</p>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-yellow-100 rounded-2xl p-4 border-2 border-yellow-300 border-dashed">
+              <h4 className="font-bold text-gray-800 mb-2">TazeKutu'yu</h4>
+              <h4 className="font-bold text-gray-800 mb-3">daha iyi tanı</h4>
+              <div className="text-2xl">🧁🥐🍪💚</div>
+            </div>
+            
+            <div className="bg-gray-100 rounded-2xl p-4 border-2 border-gray-300 border-dashed">
+              <h4 className="font-medium text-gray-500 mb-2">Yeni ipuçları</h4>
+              <h4 className="font-medium text-gray-500 mb-3">yakında geliyor!</h4>
+              <div className="text-2xl">⭐🎉⏰</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Access Settings */}
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+          <div className="flex items-center mb-4">
+            <Settings className="w-6 h-6 text-gray-600 mr-2" />
+            <h3 className="text-lg font-bold text-gray-800">Erişim ayarları</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700">Bildirimler</span>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700">Konum</span>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700">Pazarlama onayları</span>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Contact */}
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+          <div className="flex items-center">
+            <div className="text-2xl mr-3">💌</div>
+            <div>
+              <h4 className="font-bold text-gray-800">Aklında bir şey mi var?</h4>
+              <button className="text-blue-600 underline text-sm">İletişime geç</button>
+            </div>
+          </div>
+        </div>
+
+        {/* About Section */}
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+          <div className="flex items-center mb-4">
+            <Book className="w-6 h-6 text-gray-600 mr-2" />
+            <h3 className="text-lg font-bold text-gray-800">Hakkında</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700">SSS</span>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700">Şartlar ve Koşullar</span>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700">Gizlilik politikası</span>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-700">Lisanslar</span>
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Business Partnership */}
+        <div className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+          <div className="flex items-center">
+            <div className="text-2xl mr-3">⭐</div>
+            <div>
+              <h4 className="font-bold text-gray-800">TazeKutu'da fazla ürün satmaya başlamak ister misin?</h4>
+              <button className="text-blue-600 underline text-sm mt-1">TazeKutu'ya Katıl</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Social Media */}
+        <div className="mb-6">
+          <h3 className="text-center text-gray-600 mb-4">Bizi takip edin</h3>
+          <div className="flex justify-center space-x-4">
+            <button className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center">
+              <span className="text-white text-xl">f</span>
+            </button>
+            <button className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center">
+              <span className="text-white text-xl">📷</span>
+            </button>
+            <button className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center">
+              <span className="text-white text-xl">🎵</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Logout */}
+        <div className="border border-gray-300 rounded-xl p-4 text-center">
+          <button 
+            onClick={handleLogout}
+            className="text-gray-700 font-medium w-full"
+          >
+            Çıkış Yap
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Bottom Navigation
+  const BottomNavigation = () => (
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
+      <div className="flex justify-around">
+        <button 
+          onClick={() => setActiveTab('pickup')}
+          className={`flex flex-col items-center py-2 px-3 ${activeTab === 'pickup' ? 'text-green-600' : 'text-gray-400'}`}
+        >
+          <Package className="w-6 h-6 mb-1" />
+          <span className="text-xs font-medium">Teslim Al</span>
+        </button>
+        
+        <button 
+          onClick={() => setActiveTab('orders')}
+          className={`flex flex-col items-center py-2 px-3 ${activeTab === 'orders' ? 'text-green-600' : 'text-gray-400'}`}
+        >
+          <Clock className="w-6 h-6 mb-1" />
+          <span className="text-xs font-medium">Siparişler</span>
+        </button>
+        
+        <button 
+          onClick={() => setActiveTab('favourites')}
+          className={`flex flex-col items-center py-2 px-3 ${activeTab === 'favourites' ? 'text-green-600' : 'text-gray-400'}`}
+        >
+          <Heart className="w-6 h-6 mb-1" />
+          <span className="text-xs font-medium">Favoriler</span>
+        </button>
+        
+        <button 
+          onClick={() => setActiveTab('more')}
+          className={`flex flex-col items-center py-2 px-3 ${activeTab === 'more' ? 'text-green-600' : 'text-gray-400'}`}
+        >
+          <User className="w-6 h-6 mb-1" />
+          <span className="text-xs font-medium">Daha Fazla</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="max-w-md mx-auto bg-white min-h-screen relative">
+      {currentScreen === 'welcome' && <WelcomeScreen />}
+      {currentScreen === 'main' && <MainScreen />}
+      {currentScreen === 'restaurant-detail' && <RestaurantDetailScreen />}
+      {currentScreen === 'summary' && <SummaryScreen />}
+      
+      {currentScreen === 'main' && <BottomNavigation />}
+      
+      {showReservationModal && <ReservationModal />}
+    </div>
+  );
+};
+

@@ -1,5 +1,5 @@
-// API Service for React Native App
-const API_BASE_URL = 'https://kaptaze-backend.onrender.com/api'; // Render backend URL
+// API Service for React Native App - Updated for KapTaze Backend API
+const API_BASE_URL = 'https://kaptaze-backend-api.onrender.com'; // Updated backend URL
 
 class ApiService {
   constructor() {
@@ -42,21 +42,79 @@ class ApiService {
       body: JSON.stringify(data),
     });
   }
+
+  async patch(endpoint, data) {
+    return this.request(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Mobile App Specific Methods
+  async getRestaurants(filters = {}) {
+    const queryParams = new URLSearchParams(filters).toString();
+    const endpoint = queryParams ? `/public/restaurants?${queryParams}` : '/public/restaurants';
+    return this.get(endpoint);
+  }
+
+  async getRestaurantById(id) {
+    return this.get(`/public/restaurants/${id}`);
+  }
+
+  async getPackages(filters = {}) {
+    const queryParams = new URLSearchParams(filters).toString();
+    const endpoint = queryParams ? `/public/packages?${queryParams}` : '/public/packages';
+    return this.get(endpoint);
+  }
+
+  async getCategories() {
+    return this.get('/public/categories');
+  }
+
+  async getCities() {
+    return this.get('/public/cities');
+  }
+
+  // Order Management
+  async createOrder(orderData) {
+    return this.post('/orders', orderData);
+  }
+
+  async getOrder(orderId) {
+    return this.get(`/orders/${orderId}`);
+  }
+
+  async getCustomerOrders(customerId, filters = {}) {
+    const queryParams = new URLSearchParams(filters).toString();
+    const endpoint = queryParams ? `/orders/customer/${customerId}?${queryParams}` : `/orders/customer/${customerId}`;
+    return this.get(endpoint);
+  }
+
+  async updateOrderStatus(orderId, status, note = '') {
+    return this.patch(`/orders/${orderId}/status`, { status, note });
+  }
+
+  async addReview(orderId, rating, comment = '') {
+    return this.post(`/orders/${orderId}/review`, { rating, comment });
+  }
+
+  // Authentication (if needed)
+  async login(credentials) {
+    return this.post('/auth/login', credentials);
+  }
 }
 
-export default new ApiService();
-// Otomatik bağlantı testi
+const apiService = new ApiService();
+export default apiService;
+
+// Connection test for development
 if (__DEV__) {
   (async () => {
     try {
-      const result = await new ApiService().get('/');
-      console.log('API bağlantı testi başarılı:', result);
+      const result = await apiService.get('/health');
+      console.log('✅ KapTaze API connection successful:', result);
     } catch (err) {
-      console.error('API bağlantı testi hatası:', err);
+      console.error('❌ KapTaze API connection failed:', err.message);
     }
   })();
 }
-// Test için örnek GET isteği
-// apiService.get('/test-endpoint')
-//   .then(data => console.log(data))
-//   .catch(err => console.error(err));

@@ -554,9 +554,15 @@ class KapTazeAdminDashboard {
                             </span>
                         </td>
                         <td>
-                            <small style="color: #6b7280;">
-                                ${new Date(pkg.createdAt).toLocaleDateString('tr-TR')}
-                            </small>
+                            <div style="font-size: 0.875rem;">
+                                <div style="color: #374151;">
+                                    ${new Date(pkg.createdAt).toLocaleDateString('tr-TR')}
+                                </div>
+                                <small style="color: #6b7280;">
+                                    ${new Date(pkg.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                </small>
+                                ${this.isNewPackage(pkg.createdAt) ? '<span class="new-badge">YENİ</span>' : ''}
+                            </div>
                         </td>
                     </tr>
                 `).join('');
@@ -595,6 +601,13 @@ class KapTazeAdminDashboard {
             deleted: 'Silinmiş'
         };
         return statusMap[status] || status;
+    }
+
+    isNewPackage(createdAt) {
+        const now = new Date();
+        const packageDate = new Date(createdAt);
+        const diffHours = (now - packageDate) / (1000 * 60 * 60);
+        return diffHours <= 24; // 24 saat içinde eklenen paketleri "YENİ" olarak işaretle
     }
 
     async loadOrdersData() {
