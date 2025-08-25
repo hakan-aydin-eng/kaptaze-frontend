@@ -508,18 +508,93 @@ class KapTazeAdminDashboard {
     }
 
     async loadPackagesData() {
-        console.log('📦 Packages section - Coming soon');
-        const tbody = document.getElementById('packages-table');
-        if (tbody) {
+        try {
+            console.log('📦 Loading packages data...');
+            const tbody = document.getElementById('packages-table');
+            if (!tbody) return;
+
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 2rem; color: #6b7280;">
-                        <i class="fas fa-box" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-                        Bu özellik yakında aktif edilecek
+                    <td colspan="7" style="text-align: center; padding: 1rem;">
+                        <i class="fas fa-spinner fa-spin"></i> Paketler yükleniyor...
                     </td>
                 </tr>
             `;
+
+            const response = await window.KapTazeAPIService.request('/admin/packages');
+            
+            if (response.success && response.data.packages.length > 0) {
+                tbody.innerHTML = response.data.packages.map(pkg => `
+                    <tr>
+                        <td>
+                            <div class="restaurant-info">
+                                <strong>${pkg.restaurant.name}</strong>
+                                <small style="display: block; color: #6b7280;">${pkg.restaurant.category}</small>
+                                <small style="display: block; color: #6b7280;">${pkg.restaurant.owner?.name || 'N/A'}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="package-info">
+                                <strong>${pkg.name}</strong>
+                                <small style="display: block; color: #6b7280;">${pkg.description || 'Açıklama yok'}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="price-info">
+                                <strong style="color: #dc2626;">₺${(pkg.discountedPrice || pkg.price || 0).toFixed(2)}</strong>
+                                ${pkg.originalPrice && pkg.originalPrice > (pkg.discountedPrice || pkg.price) ? 
+                                    `<small style="text-decoration: line-through; color: #6b7280;">₺${pkg.originalPrice.toFixed(2)}</small>` : ''}
+                            </div>
+                        </td>
+                        <td><span class="category-badge">${pkg.category || 'Genel'}</span></td>
+                        <td>${pkg.quantity || 0} adet</td>
+                        <td>
+                            <span class="status-badge status-${pkg.status}">
+                                ${this.getPackageStatusText(pkg.status)}
+                            </span>
+                        </td>
+                        <td>
+                            <small style="color: #6b7280;">
+                                ${new Date(pkg.createdAt).toLocaleDateString('tr-TR')}
+                            </small>
+                        </td>
+                    </tr>
+                `).join('');
+
+                console.log(`✅ Loaded ${response.data.packages.length} packages from ${response.data.summary.totalRestaurants} restaurants`);
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 2rem; color: #6b7280;">
+                            <i class="fas fa-box" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                            Henüz paket eklenmemiş
+                        </td>
+                    </tr>
+                `;
+            }
+
+        } catch (error) {
+            console.error('❌ Failed to load packages:', error);
+            const tbody = document.getElementById('packages-table');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 2rem; color: #dc2626;">
+                            <i class="fas fa-exclamation-triangle"></i> Paketler yüklenirken hata oluştu
+                        </td>
+                    </tr>
+                `;
+            }
         }
+    }
+
+    getPackageStatusText(status) {
+        const statusMap = {
+            active: 'Aktif',
+            inactive: 'Pasif',
+            deleted: 'Silinmiş'
+        };
+        return statusMap[status] || status;
     }
 
     async loadOrdersData() {
