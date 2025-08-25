@@ -824,13 +824,15 @@ class RestaurantPanel {
             return;
         }
         
-        // Collect form data
+        // Collect form data and format for backend API
         const formData = {
             name: document.getElementById('packageName').value,
             category: document.getElementById('packageCategory').value,
             description: document.getElementById('packageDescription').value,
+            price: parseFloat(document.getElementById('discountedPrice').value), // Use discounted price as main price
+            
+            // Additional frontend fields (stored but not validated by backend)
             originalPrice: parseFloat(document.getElementById('originalPrice').value),
-            discountedPrice: parseFloat(document.getElementById('discountedPrice').value),
             quantity: parseInt(document.getElementById('quantity').value),
             availableUntil: document.getElementById('availableUntil').value || null,
             tags: document.getElementById('packageTags').value
@@ -841,7 +843,17 @@ class RestaurantPanel {
         };
         
         // Validation
-        if (formData.originalPrice <= formData.discountedPrice) {
+        if (!formData.name || formData.name.trim().length === 0) {
+            this.showErrorMessage('Ürün adı zorunludur.');
+            return;
+        }
+
+        if (!formData.price || formData.price <= 0) {
+            this.showErrorMessage('Geçerli bir fiyat giriniz.');
+            return;
+        }
+
+        if (formData.originalPrice <= formData.price) {
             this.showErrorMessage('İndirimli fiyat orijinal fiyattan düşük olmalıdır.');
             return;
         }
