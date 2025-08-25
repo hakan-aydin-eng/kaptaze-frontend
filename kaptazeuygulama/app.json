@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "KapTaze",
+    "slug": "kaptaze",
+    "version": "1.0.3",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#16a34a"
+    },
+    "ios": {
+  "supportsTablet": true,
+  "bundleIdentifier": "com.kaptaze.app",
+  "jsEngine": "hermes",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#16a34a"
+      },
+      "package": "com.kaptaze.app",
+      "edgeToEdgeEnabled": true,
+      "jsEngine": "hermes"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "cli": {
+      "appVersionSource": "local"
+    },
+    "owner": "haknaydin",
+    "updates": {
+      "enabled": false
+    },
+    "extra": {
+      "eas": {
+        "projectId": "20e11315-3be4-4335-af55-44487c0e423a"
+      }
+    }
+  }
+}
