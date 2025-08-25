@@ -107,31 +107,57 @@ class RestaurantPanel {
     }
 
     updateRestaurantInfoDisplay() {
-        if (!this.restaurantProfile) return;
+        if (!this.restaurantProfile && !this.currentUser) return;
 
-        // Update header info
-        const nameElements = document.querySelectorAll('.restaurant-name');
-        nameElements.forEach(el => {
-            if (el) el.textContent = this.restaurantProfile.name || 'Restaurant';
-        });
+        // Use restaurant profile or current user data
+        const data = this.restaurantProfile || this.currentUser;
 
-        // Update profile section  
-        if (this.restaurantProfile.owner) {
+        // Update header restaurant name
+        const headerName = document.getElementById('restaurant-name');
+        if (headerName) {
+            headerName.textContent = data.name || data.businessName || 'Restaurant';
+        }
+
+        // Update profile section restaurant name
+        const profileName = document.getElementById('profile-restaurant-name');
+        if (profileName) {
+            profileName.textContent = data.name || data.businessName || 'Restaurant Adı';
+        }
+
+        // Update restaurant category
+        const categoryEl = document.getElementById('profile-restaurant-category');
+        if (categoryEl) {
+            categoryEl.textContent = data.category || data.businessCategory || 'Restaurant';
+        }
+
+        // Update admin approval data in profile (from currentUser)
+        if (this.currentUser) {
+            // Owner information (firstName + lastName)
+            const ownerName = `${this.currentUser.firstName || ''} ${this.currentUser.lastName || ''}`.trim();
             const ownerEl = document.querySelector('.restaurant-owner');
-            if (ownerEl) ownerEl.textContent = this.restaurantProfile.owner;
-        }
+            if (ownerEl && ownerName) {
+                ownerEl.textContent = ownerName;
+            }
 
-        if (this.restaurantProfile.email) {
+            // Contact information
             const emailEl = document.querySelector('.restaurant-email');
-            if (emailEl) emailEl.textContent = this.restaurantProfile.email;
-        }
+            if (emailEl && this.currentUser.email) {
+                emailEl.textContent = this.currentUser.email;
+            }
 
-        if (this.restaurantProfile.phone) {
             const phoneEl = document.querySelector('.restaurant-phone');
-            if (phoneEl) phoneEl.textContent = this.restaurantProfile.phone;
+            if (phoneEl && this.currentUser.phone) {
+                phoneEl.textContent = this.currentUser.phone;
+            }
+
+            // Business address information
+            const addressEl = document.querySelector('.restaurant-address');
+            if (addressEl && this.currentUser.businessAddress) {
+                addressEl.textContent = `${this.currentUser.businessAddress}, ${this.currentUser.district || ''}, ${this.currentUser.city || ''}`.trim();
+            }
         }
 
-        console.log('📊 Restaurant info display updated');
+        console.log('📊 Restaurant info display updated with admin data');
     }
 
     updateRestaurantInfo() {
