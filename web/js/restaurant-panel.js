@@ -26,6 +26,7 @@ class RestaurantPanel {
         
         // Setup event listeners
         this.setupEventListeners();
+        this.setupImageUpload();
         
         // Load initial data
         await this.loadDashboardData();
@@ -118,46 +119,69 @@ class RestaurantPanel {
             headerName.textContent = data.name || data.businessName || 'Restaurant';
         }
 
-        // Update profile section restaurant name
-        const profileName = document.getElementById('profile-restaurant-name');
-        if (profileName) {
-            profileName.textContent = data.name || data.businessName || 'Restaurant Adı';
-        }
-
-        // Update restaurant category
-        const categoryEl = document.getElementById('profile-restaurant-category');
-        if (categoryEl) {
-            categoryEl.textContent = data.category || data.businessCategory || 'Restaurant';
-        }
-
-        // Update admin approval data in profile (from currentUser)
+        // Update all profile section fields with real admin approval data
         if (this.currentUser) {
-            // Owner information (firstName + lastName)
-            const ownerName = `${this.currentUser.firstName || ''} ${this.currentUser.lastName || ''}`.trim();
-            const ownerEl = document.querySelector('.restaurant-owner');
-            if (ownerEl && ownerName) {
-                ownerEl.textContent = ownerName;
+            // Restaurant name and category
+            const profileName = document.getElementById('profile-restaurant-name');
+            if (profileName) {
+                profileName.textContent = this.currentUser.businessName || 'Restaurant Adı';
             }
 
-            // Contact information
-            const emailEl = document.querySelector('.restaurant-email');
-            if (emailEl && this.currentUser.email) {
-                emailEl.textContent = this.currentUser.email;
+            const categoryEl = document.getElementById('profile-restaurant-category');
+            if (categoryEl) {
+                categoryEl.textContent = this.currentUser.businessCategory || 'Restaurant';
             }
 
-            const phoneEl = document.querySelector('.restaurant-phone');
-            if (phoneEl && this.currentUser.phone) {
-                phoneEl.textContent = this.currentUser.phone;
+            // Contact information in profile
+            const profileEmail = document.getElementById('profile-email');
+            if (profileEmail && this.currentUser.email) {
+                profileEmail.textContent = this.currentUser.email;
             }
 
-            // Business address information
-            const addressEl = document.querySelector('.restaurant-address');
-            if (addressEl && this.currentUser.businessAddress) {
-                addressEl.textContent = `${this.currentUser.businessAddress}, ${this.currentUser.district || ''}, ${this.currentUser.city || ''}`.trim();
+            const profilePhone = document.getElementById('profile-phone');
+            if (profilePhone && this.currentUser.phone) {
+                profilePhone.textContent = this.currentUser.phone;
             }
+
+            // Business address (combine businessAddress, district, city)
+            const profileAddress = document.getElementById('profile-address');
+            if (profileAddress) {
+                const addressParts = [
+                    this.currentUser.businessAddress,
+                    this.currentUser.district,
+                    this.currentUser.city
+                ].filter(part => part && part.trim()); // Remove empty parts
+                
+                profileAddress.textContent = addressParts.length > 0 ? addressParts.join(', ') : 'Adres bilgisi';
+            }
+
+            // Add owner info to description section
+            const profileDescription = document.getElementById('profile-description');
+            if (profileDescription) {
+                const ownerName = `${this.currentUser.firstName || ''} ${this.currentUser.lastName || ''}`.trim();
+                if (ownerName) {
+                    profileDescription.textContent = `${this.currentUser.businessName || 'Restaurant'} - Sahibi: ${ownerName}`;
+                } else {
+                    profileDescription.textContent = `${this.currentUser.businessName || 'Restaurant'} hakkında...`;
+                }
+            }
+
+            // Update specialties with business category
+            const profileSpecialties = document.getElementById('profile-specialties');
+            if (profileSpecialties && this.currentUser.businessCategory) {
+                profileSpecialties.innerHTML = `<span class="specialty-tag">${this.currentUser.businessCategory}</span>`;
+            }
+
+            console.log('📊 Restaurant profile updated with real admin approval data:', {
+                businessName: this.currentUser.businessName,
+                owner: `${this.currentUser.firstName} ${this.currentUser.lastName}`,
+                email: this.currentUser.email,
+                phone: this.currentUser.phone,
+                address: `${this.currentUser.businessAddress}, ${this.currentUser.city}`
+            });
         }
 
-        console.log('📊 Restaurant info display updated with admin data');
+        console.log('📊 Restaurant info display updated');
     }
 
     updateRestaurantInfo() {
@@ -605,6 +629,75 @@ class RestaurantPanel {
 
     changeAvatar() {
         document.getElementById('mainImageInput').click();
+    }
+
+    // Restaurant Profile Image Upload
+    setupImageUpload() {
+        const imageInput = document.getElementById('restaurant-image-input');
+        if (imageInput) {
+            imageInput.addEventListener('change', (event) => this.handleImageUpload(event));
+        }
+    }
+
+    async handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            this.showErrorMessage('Lütfen bir resim dosyası seçin.');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            this.showErrorMessage('Resim boyutu 5MB\'dan küçük olmalıdır.');
+            return;
+        }
+
+        try {
+            console.log('📸 Uploading restaurant image...', file.name);
+            
+            // Show loading state
+            const avatar = document.getElementById('restaurant-avatar');
+            const originalSrc = avatar.src;
+            avatar.style.opacity = '0.5';
+
+            // Create preview immediately
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                avatar.src = e.target.result;
+                avatar.style.opacity = '1';
+            };
+            reader.readAsDataURL(file);
+
+            // Upload to backend
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const response = await window.KapTazeAPIService.request('/restaurant/profile/image', {
+                method: 'POST',
+                body: formData,
+                headers: {} // Let browser set content-type for FormData
+            });
+
+            if (response.success) {
+                console.log('✅ Restaurant image uploaded successfully:', response.data.imageUrl);
+                avatar.src = response.data.imageUrl;
+                this.showSuccessMessage('Restaurant görseli başarıyla güncellendi!');
+            } else {
+                throw new Error(response.error || 'Upload failed');
+            }
+
+        } catch (error) {
+            console.error('❌ Failed to upload restaurant image:', error);
+            this.showErrorMessage('Görsel yüklenirken hata oluştu: ' + error.message);
+            
+            // Restore original image on error
+            const avatar = document.getElementById('restaurant-avatar');
+            avatar.src = originalSrc || 'https://via.placeholder.com/120x120?text=🏪';
+            avatar.style.opacity = '1';
+        }
     }
 
     // API Methods for Render Integration

@@ -157,6 +157,10 @@ const restaurantSchema = new mongoose.Schema({
         cover: String,
         gallery: [String]
     },
+    profileImage: {
+        type: String,
+        trim: true
+    },
     
     // Social Media
     socialMedia: {
@@ -211,9 +215,33 @@ const restaurantSchema = new mongoose.Schema({
             required: true,
             min: 0
         },
+        originalPrice: {
+            type: Number,
+            min: 0
+        },
+        discountedPrice: {
+            type: Number,
+            min: 0
+        },
+        quantity: {
+            type: Number,
+            default: 1,
+            min: 1
+        },
         category: {
             type: String,
             default: 'general',
+            trim: true
+        },
+        tags: [{
+            type: String,
+            trim: true
+        }],
+        availableUntil: {
+            type: Date
+        },
+        specialInstructions: {
+            type: String,
             trim: true
         },
         status: {

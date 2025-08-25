@@ -420,18 +420,89 @@
             color: #1d4ed8;
         }
 
+        /* MOBILE MENU TOGGLE */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: #1e40af;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .mobile-menu-toggle:hover {
+            background: #1e3a8a;
+            transform: scale(1.05);
+        }
+
+        .mobile-menu-toggle i {
+            font-size: 1.25rem;
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
         /* RESPONSIVE */
         @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
             .sidebar {
                 transform: translateX(-100%);
             }
-
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .mobile-overlay.active {
+                display: block;
+            }
+            
             .main-content {
                 margin-left: 0;
             }
 
             .stats-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            /* Touch-friendly buttons */
+            .nav-item, .btn, .action-btn {
+                min-height: 44px;
+                padding: 0.75rem 1rem;
+            }
+            
+            /* Table responsiveness */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            table {
+                min-width: 600px;
+            }
+            
+            /* Form optimization */
+            .form-control, input, select, textarea {
+                min-height: 48px;
+                font-size: 16px; /* Prevents iOS zoom */
             }
         }
 
@@ -500,6 +571,14 @@
     </style>
 </head>
 <body>
+    <!-- MOBILE MENU TOGGLE -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- MOBILE OVERLAY -->
+    <div class="mobile-overlay" onclick="closeMobileMenu()"></div>
+    
     <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="sidebar-header">
@@ -1083,6 +1162,33 @@
                 window.dashboard.confirmApproval();
             }
         }
+    </script>
+
+    <script>
+        // Mobile menu functions
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
+        }
+        
+        function closeMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+        }
+        
+        // Close mobile menu when sidebar link is clicked
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', closeMobileMenu);
+            });
+        });
     </script>
 
     <script src="./js/admin-dashboard-backend.js?v=2025.08.24"></script>

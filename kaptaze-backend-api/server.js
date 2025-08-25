@@ -40,36 +40,40 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Rate Limiting
+// Health Check Endpoint (before rate limiting)
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        version: process.env.npm_package_version || '1.0.0',
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// Rate Limiting (TEMPORARILY DISABLED FOR DEVELOPMENT)
 const limiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 1000, // Increased from 100 to 1000 requests per windowMs
     message: {
         error: 'Too many requests from this IP, please try again later.',
         retryAfter: 15 * 60 * 1000
     },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    // Skip rate limiting for health check
+    skip: (req) => req.path === '/health'
 });
-app.use(limiter);
+// app.use(limiter);  // TEMPORARILY DISABLED FOR TESTING
 
 // Body Parser Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
+
 // Logging Middleware
 app.use(logger);
-
-// Health Check Endpoint
-app.get('/health', (req, res) => {
-    res.status(200).json({
-        status: 'OK',
-        message: 'KapTaze API is running',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0',
-        environment: process.env.NODE_ENV
-    });
-});
 
 // API Routes
 app.use('/auth', authRoutes);

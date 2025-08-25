@@ -212,9 +212,35 @@
             border: 1px solid #fecaca;
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
             .login-container {
                 padding: 2rem;
+                max-width: 100%;
+            }
+            
+            /* Mobile-friendly form inputs */
+            input[type="text"], 
+            input[type="password"], 
+            input[type="email"] {
+                min-height: 48px;
+                font-size: 16px; /* Prevents iOS zoom */
+                padding: 0.875rem 1rem;
+            }
+            
+            .btn {
+                min-height: 48px;
+                font-size: 16px;
+                padding: 0.875rem 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 1.5rem;
             }
 
             .logo-text {
