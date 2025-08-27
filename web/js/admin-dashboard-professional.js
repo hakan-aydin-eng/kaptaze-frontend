@@ -8,6 +8,7 @@ class KapTazeAdminDashboard {
     constructor() {
         this.currentSection = 'dashboard';
         this.currentUser = null;
+        this.authToken = null;
         this.data = {
             applications: [],
             restaurants: [],
@@ -23,11 +24,8 @@ class KapTazeAdminDashboard {
     async init() {
         console.log('🚀 Professional Admin Dashboard initializing...');
         
-        // Check authentication and wait for it to complete
-        const isAuthenticated = await this.checkAuthentication();
-        if (!isAuthenticated) {
-            return;
-        }
+        // Try to authenticate with backend
+        await this.attemptAuthentication();
 
         // Setup navigation
         this.setupNavigation();
@@ -41,47 +39,47 @@ class KapTazeAdminDashboard {
         console.log('✅ Professional Admin Dashboard ready');
     }
 
-    async checkAuthentication() {
-        console.log('🔐 Dashboard: Checking admin authentication...');
+    async attemptAuthentication() {
+        console.log('🔐 Attempting backend authentication...');
         
-        const token = localStorage.getItem('adminToken');
-        const adminUser = localStorage.getItem('adminUser');
-        
-        console.log('🔑 AdminToken:', token ? 'Found' : 'Missing');
-        console.log('🔑 AdminUser:', adminUser ? 'Found' : 'Missing');
-        
-        if (!token) {
-            console.log('❌ No admin token found, redirecting to login...');
+        try {
+            // Try auto-login with backend
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/admin/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: 'admin',
+                    password: 'admin123'
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data.token) {
+                    this.authToken = result.data.token;
+                    this.currentUser = result.data.user;
+                    console.log('✅ Backend authentication successful for:', result.data.user.username);
+                    return true;
+                }
+            }
+            
+            console.log('❌ Backend authentication failed, redirecting to login...');
+            window.location.href = '/admin-login-v2.html';
+            return false;
+            
+        } catch (error) {
+            console.log('❌ Authentication error:', error.message);
             window.location.href = '/admin-login-v2.html';
             return false;
         }
-
-        // Simple check - if we have token and user data, we're authenticated
-        if (adminUser) {
-            try {
-                const user = JSON.parse(adminUser);
-                if (user.role === 'admin') {
-                    console.log('✅ Admin authentication confirmed for:', user.username);
-                    return true;
-                }
-            } catch (e) {
-                console.log('❌ Invalid adminUser data');
-            }
-        }
-
-        // Clear bad auth data and redirect
-        console.log('❌ Authentication failed, clearing data...');
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
-        window.location.href = '/admin-login-v2.html';
-        return false;
     }
 
     getAuthHeaders() {
-        const token = localStorage.getItem('adminToken');
         return {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token || ''}`
+            'Authorization': `Bearer ${this.authToken || ''}`
         };
     }
 
