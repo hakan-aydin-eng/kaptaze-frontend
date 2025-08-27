@@ -44,11 +44,11 @@ class KapTazeAdminDashboard {
     async checkAuthentication() {
         console.log('🔐 Dashboard: Checking admin authentication...');
         
-        // Give localStorage time to sync if just redirected from login
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
         const token = localStorage.getItem('adminToken');
-        console.log('🔑 AdminToken from localStorage:', token ? `${token.substring(0, 20)}...` : 'null');
+        const adminUser = localStorage.getItem('adminUser');
+        
+        console.log('🔑 AdminToken:', token ? 'Found' : 'Missing');
+        console.log('🔑 AdminUser:', adminUser ? 'Found' : 'Missing');
         
         if (!token) {
             console.log('❌ No admin token found, redirecting to login...');
@@ -56,33 +56,25 @@ class KapTazeAdminDashboard {
             return false;
         }
 
-        // Validate token with backend
-        try {
-            console.log('🔑 Validating token with backend...');
-            const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/me', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`
+        // Simple check - if we have token and user data, we're authenticated
+        if (adminUser) {
+            try {
+                const user = JSON.parse(adminUser);
+                if (user.role === 'admin') {
+                    console.log('✅ Admin authentication confirmed for:', user.username);
+                    return true;
                 }
-            });
-
-            if (response.ok) {
-                console.log('✅ Admin token validated successfully');
-                return true;
-            } else {
-                console.log('❌ Token validation failed, clearing auth and redirecting...');
-                localStorage.removeItem('adminToken');
-                localStorage.removeItem('adminUser');
-                window.location.href = '/admin-login-v2.html';
-                return false;
+            } catch (e) {
+                console.log('❌ Invalid adminUser data');
             }
-        } catch (error) {
-            console.log('❌ Token validation error, clearing auth and redirecting...', error.message);
-            localStorage.removeItem('adminToken');
-            localStorage.removeItem('adminUser');
-            window.location.href = '/admin-login-v2.html';
-            return false;
         }
+
+        // Clear bad auth data and redirect
+        console.log('❌ Authentication failed, clearing data...');
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        window.location.href = '/admin-login-v2.html';
+        return false;
     }
 
     getAuthHeaders() {
