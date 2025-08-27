@@ -54,7 +54,7 @@ class KapTazeAdminDashboard {
         // Validate token with backend
         try {
             console.log('🔑 Validating token with backend...');
-            const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/admin/verify', {
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/me', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`

@@ -268,8 +268,8 @@
                 try {
                     console.log('🔑 Found existing token, verifying...');
                     
-                    // Use the same verification endpoint as dashboard
-                    const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/admin/verify', {
+                    // Use the correct verification endpoint
+                    const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/me', {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`
