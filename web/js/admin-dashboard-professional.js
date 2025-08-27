@@ -44,7 +44,12 @@ class KapTazeAdminDashboard {
     async checkAuthentication() {
         console.log('🔐 Dashboard: Checking admin authentication...');
         
+        // Give localStorage time to sync if just redirected from login
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const token = localStorage.getItem('adminToken');
+        console.log('🔑 AdminToken from localStorage:', token ? `${token.substring(0, 20)}...` : 'null');
+        
         if (!token) {
             console.log('❌ No admin token found, redirecting to login...');
             window.location.href = '/admin-login-v2.html';

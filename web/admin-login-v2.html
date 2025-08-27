@@ -340,24 +340,41 @@
             try {
                 console.log('🔐 Attempting admin login...', username);
                 
-                const response = await window.KapTazeAPIService.auth.adminLogin(username, password);
+                // Direct API call without KapTazeAPIService
+                const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Login failed');
+                }
+
+                const result = await response.json();
                 
-                console.log('✅ Login successful:', response.data.user);
+                if (!result.success) {
+                    throw new Error(result.error || 'Login failed');
+                }
                 
-                // Store authentication data
-                window.KapTazeAPI.setAuthToken(response.data.token);
-                localStorage.setItem(window.KapTazeAPI.storage.userData, JSON.stringify(response.data.user));
-                localStorage.setItem(window.KapTazeAPI.storage.userRole, 'admin');
+                console.log('✅ Login successful:', result.data.user);
                 
-                // Store legacy format for backward compatibility
-                localStorage.setItem('adminToken', response.data.token);
+                // Store authentication data in adminToken (what dashboard expects)
+                localStorage.setItem('adminToken', result.data.token);
                 localStorage.setItem('adminUser', JSON.stringify({
-                    username: response.data.user.username,
-                    firstName: response.data.user.firstName,
-                    lastName: response.data.user.lastName,
-                    email: response.data.user.email,
-                    role: response.data.user.role
+                    username: result.data.user.username,
+                    firstName: result.data.user.firstName,
+                    lastName: result.data.user.lastName,
+                    email: result.data.user.email,
+                    role: result.data.user.role
                 }));
+                
+                console.log('💾 Token stored in localStorage:', result.data.token.substring(0, 20) + '...');
                 
                 // Show success and redirect
                 loginBtn.innerHTML = '<i class="fas fa-check-circle"></i> Giriş başarılı!';
