@@ -146,7 +146,7 @@ async function updateStatistics() {
         }
         
     } catch (error) {
-        console.log('Using default statistics:', error.message);
+        // Silent error handling - don't show console logs for demo mode
         // Use default values if backend is not available
     }
 }
@@ -259,16 +259,13 @@ async function openAdminPanel(currentUser) {
     }
     
     // Show login required message for admin access
-    const confirmAccess = confirm('Admin paneline erişim için giriş yapmanız gerekiyor. Giriş sayfasına yönlendirilmek istiyor musunuz?');
+    // Direct redirect to admin login page
+    const loadingOverlay = showLoadingOverlay('Admin girişi açılıyor...');
     
-    if (confirmAccess) {
-        const loadingOverlay = showLoadingOverlay('Admin girişi açılıyor...');
-        
-        setTimeout(() => {
-            hideLoadingOverlay(loadingOverlay);
-            window.location.href = '/admin-login-v2.html';
-        }, 800);
-    }
+    setTimeout(() => {
+        hideLoadingOverlay(loadingOverlay);
+        window.location.href = '/admin-login-v2.html';
+    }, 800);
 }
 
 async function openRestaurantPanel(currentUser) {

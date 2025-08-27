@@ -59,7 +59,7 @@ class BackendService {
             
             return data;
         } catch (error) {
-            console.error('Backend API Error:', error);
+            // Silent error handling for demo mode - no console logs
             throw error;
         }
     }
