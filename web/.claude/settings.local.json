@@ -11,7 +11,8 @@
     "deny": [],
     "ask": [],
     "additionalDirectories": [
-      "C:\\Users\\hakan\\KapTazeApp\\kaptaze-backend-api"
+      "C:\\Users\\hakan\\KapTazeApp\\kaptaze-backend-api",
+      "C:\\Users\\hakan\\KapTazeApp"
     ]
   }
 }

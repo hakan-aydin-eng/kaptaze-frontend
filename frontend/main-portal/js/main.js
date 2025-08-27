@@ -2,8 +2,8 @@
 
 // Single domain configuration - All under https://kaptaze.com/
 const SINGLE_DOMAIN = {
-    customer: 'https://kaptaze.com/mobile',
-    restaurant: 'https://kaptaze.com/restaurant-panel', 
+    customer: 'https://kaptaze.com/customer-registration-v2.html',
+    restaurant: 'https://kaptaze.com/restaurant-panel.html', 
     admin: 'https://kaptaze.com/admin-login-v2.html',
     api: 'https://kaptaze-backend-api.onrender.com'
 };
@@ -129,13 +129,11 @@ function openPanel(panelType) {
         return;
     }
     
-    // For restaurant panel, redirect to login page
+    // For restaurant panel, use direct URL
     if (panelType === 'restaurant') {
-        if (isDevelopment) {
-            targetUrl = 'http://localhost:3002/login.html';
-        } else {
-            targetUrl = 'https://kaptaze-restaurant.netlify.app/login.html';
-        }
+        hideLoadingOverlay(loadingOverlay);
+        window.open(targetUrl, '_self');
+        return;
     }
     
     // Check if the target domain is accessible
@@ -592,10 +590,10 @@ if ('serviceWorker' in navigator) {
 
 // Customer registration function
 function openCustomerRegistration() {
-    const loadingOverlay = showLoadingOverlay('Restoran kayıt sayfası açılıyor...');
+    const loadingOverlay = showLoadingOverlay('Müşteri kayıt sayfası açılıyor...');
     
     // Customer registration domain'e yönlendir
-    const registrationUrl = 'https://kaptaze-customer.netlify.app';
+    const registrationUrl = 'https://kaptaze.com/customer-registration-v2.html';
     
     // Kısa loading sonrası yönlendir
     setTimeout(() => {
@@ -639,8 +637,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (btn) {
             btn.addEventListener('click', function() {
                 console.log(`🔘 Customer registration button ${index + 1} clicked`);
-                console.log('🚀 Opening: https://kaptaze-customer.netlify.app');
-                window.open('https://kaptaze-customer.netlify.app', '_blank');
+                console.log('🚀 Opening: https://kaptaze.com/customer-registration-v2.html');
+                window.open('https://kaptaze.com/customer-registration-v2.html', '_blank');
             });
             console.log(`✅ Customer registration button ${index + 1} event listener added`);
         } else {
