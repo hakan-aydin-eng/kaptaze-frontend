@@ -13,7 +13,8 @@ class KapTazeAdminDashboard {
             restaurants: [],
             packages: [],
             orders: [],
-            users: []
+            users: [],
+            consumers: []
         };
         
         this.init();
@@ -94,6 +95,7 @@ class KapTazeAdminDashboard {
             'applications': 'Başvuru Yönetimi',
             'restaurants': 'Restoran Yönetimi',
             'packages': 'Paket Yönetimi',
+            'consumers': 'Tüketici Yönetimi',
             'orders': 'Sipariş Yönetimi',
             'users': 'Kullanıcı Yönetimi',
             'analytics': 'Sistem Analizleri',
@@ -120,6 +122,9 @@ class KapTazeAdminDashboard {
                 break;
             case 'packages':
                 await this.loadPackagesData();
+                break;
+            case 'consumers':
+                await this.loadConsumersData();
                 break;
             case 'orders':
                 await this.loadOrdersData();
@@ -1673,7 +1678,294 @@ class KapTazeAdminDashboard {
         // Could implement a toast notification here
         alert('Hata: ' + message);
     }
+
+    // CONSUMERS DATA METHODS
+    async loadConsumersData() {
+        try {
+            console.log('👥 Loading consumers data...');
+            
+            // Try to fetch real consumer data from KapTaze backend API
+            let apiConsumers = [];
+            let apiStatus = 'pending';
+            
+            try {
+                const response = await fetch('https://kaptaze-backend-api.onrender.com/api/admin/consumers', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const apiData = await response.json();
+                    if (apiData.success && apiData.data && apiData.data.consumers) {
+                        apiConsumers = apiData.data.consumers.map(consumer => ({
+                            _id: consumer._id,
+                            name: consumer.name,
+                            surname: consumer.surname,
+                            email: consumer.email,
+                            phone: consumer.phone || 'Belirtilmemiş',
+                            registrationDate: new Date(consumer.createdAt || consumer.registrationDate),
+                            lastActivity: new Date(consumer.lastActivity || consumer.updatedAt || consumer.createdAt),
+                            orderCount: consumer.orders?.length || consumer.orderCount || 0,
+                            totalSpent: consumer.totalSpent || 0,
+                            status: consumer.status || 'active'
+                        }));
+                        apiStatus = 'connected';
+                        console.log(`✅ Loaded ${apiConsumers.length} consumers from API`);
+                    }
+                } else {
+                    const errorData = await response.json();
+                    if (errorData.message && errorData.message.includes('Route not found')) {
+                        apiStatus = 'not_implemented';
+                        console.log('⚠️ Consumer API endpoints not yet implemented in backend');
+                    } else {
+                        apiStatus = 'error';
+                        console.log('⚠️ API response not ok, using fallback data');
+                    }
+                }
+            } catch (apiError) {
+                apiStatus = 'error';
+                console.log('⚠️ API call failed, using fallback data:', apiError.message);
+            }
+            
+            // Store API status for display
+            this.apiStatus = apiStatus;
+            
+            // Fallback to mock data if API fails or returns no data
+            const mockConsumers = [
+                {
+                    _id: 'mock1',
+                    name: 'Ahmet',
+                    surname: 'Yılmaz', 
+                    email: 'ahmet@example.com',
+                    phone: '+905551234567',
+                    registrationDate: new Date('2025-01-15'),
+                    lastActivity: new Date('2025-08-26'),
+                    orderCount: 12,
+                    totalSpent: 450,
+                    status: 'active'
+                },
+                {
+                    _id: 'mock2',
+                    name: 'Ayşe',
+                    surname: 'Demir',
+                    email: 'ayse@example.com',
+                    phone: '+905559876543',
+                    registrationDate: new Date('2025-02-20'),
+                    lastActivity: new Date('2025-08-25'),
+                    orderCount: 8,
+                    totalSpent: 320,
+                    status: 'active'
+                },
+                {
+                    _id: 'mock3',
+                    name: 'Mehmet',
+                    surname: 'Kaya',
+                    email: 'mehmet@example.com',
+                    phone: '+905556789012',
+                    registrationDate: new Date('2025-03-10'),
+                    lastActivity: new Date('2025-07-15'),
+                    orderCount: 3,
+                    totalSpent: 75,
+                    status: 'inactive'
+                }
+            ];
+
+            // Combine API data with fallback data
+            this.data.consumers = apiConsumers.length > 0 ? apiConsumers : mockConsumers;
+            
+            this.renderConsumersTable();
+            this.updateConsumersStats();
+            this.updateApiStatusIndicator();
+            
+            console.log(`✅ Consumers data loaded: ${this.data.consumers.length} total consumers`);
+        } catch (error) {
+            console.error('❌ Error loading consumers:', error);
+            this.showError('Tüketici verileri yüklenirken hata oluştu');
+        }
+    }
+
+    renderConsumersTable() {
+        const tbody = document.getElementById('consumers-table');
+        if (!tbody) return;
+
+        if (this.data.consumers.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="no-data">
+                        <i class="fas fa-users"></i>
+                        <p>Henüz kayıtlı tüketici bulunmuyor</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = this.data.consumers.map(consumer => {
+            const statusClass = consumer.status === 'active' ? 'success' : 
+                              consumer.status === 'inactive' ? 'warning' : 'danger';
+            const statusText = consumer.status === 'active' ? 'Aktif' : 
+                             consumer.status === 'inactive' ? 'Pasif' : 'Yasaklı';
+
+            return `
+                <tr>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <div class="user-name">${consumer.name} ${consumer.surname}</div>
+                                <div class="user-id">ID: ${consumer._id}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="email-info">
+                            <span>${consumer.email}</span>
+                        </div>
+                    </td>
+                    <td>${consumer.phone || '-'}</td>
+                    <td>${new Date(consumer.registrationDate).toLocaleDateString('tr-TR')}</td>
+                    <td>${new Date(consumer.lastActivity).toLocaleDateString('tr-TR')}</td>
+                    <td>
+                        <div class="order-info">
+                            <span class="order-count">${consumer.orderCount}</span>
+                            <small>sipariş</small>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="spending-info">
+                            <span class="amount">₺${consumer.totalSpent}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-primary" onclick="viewConsumerDetails('${consumer._id}')" title="Detayları Görüntüle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="editConsumer('${consumer._id}')" title="Düzenle">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="toggleConsumerStatus('${consumer._id}')" title="Durumu Değiştir">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    updateConsumersStats() {
+        const totalConsumers = this.data.consumers.length;
+        const activeConsumers = this.data.consumers.filter(c => c.status === 'active').length;
+        const monthlyRegistrations = this.data.consumers.filter(c => {
+            const regDate = new Date(c.registrationDate);
+            const now = new Date();
+            return regDate.getMonth() === now.getMonth() && regDate.getFullYear() === now.getFullYear();
+        }).length;
+        const avgSpending = totalConsumers > 0 ? 
+            Math.round(this.data.consumers.reduce((sum, c) => sum + c.totalSpent, 0) / totalConsumers) : 0;
+
+        // Update DOM elements
+        document.getElementById('total-consumers').textContent = totalConsumers;
+        document.getElementById('active-consumers').textContent = activeConsumers;
+        document.getElementById('monthly-registrations').textContent = monthlyRegistrations;
+        document.getElementById('avg-orders').textContent = `₺${avgSpending}`;
+    }
+    
+    updateApiStatusIndicator() {
+        const statusText = document.getElementById('api-status-text');
+        const statusIcon = document.getElementById('api-status-icon');
+        
+        if (!statusText || !statusIcon) return;
+        
+        switch (this.apiStatus) {
+            case 'connected':
+                statusText.textContent = 'Backend API bağlantısı aktif';
+                statusText.style.color = '#10b981';
+                statusIcon.textContent = '✅';
+                break;
+            case 'not_implemented':
+                statusText.textContent = 'API endpoints henüz backend\'e eklenmemiş (mock data gösteriliyor)';
+                statusText.style.color = '#f59e0b';
+                statusIcon.textContent = '⚠️';
+                break;
+            case 'error':
+                statusText.textContent = 'Backend bağlantı hatası (mock data gösteriliyor)';
+                statusText.style.color = '#ef4444';
+                statusIcon.textContent = '❌';
+                break;
+            default:
+                statusText.textContent = 'Backend bağlantısı kontrol ediliyor...';
+                statusText.style.color = '#6b7280';
+                statusIcon.textContent = '⏳';
+        }
+    }
 }
+
+// CONSUMERS GLOBAL FUNCTIONS
+window.refreshConsumers = function() {
+    if (window.dashboard) {
+        window.dashboard.loadConsumersData();
+    }
+};
+
+window.exportConsumers = function() {
+    if (window.dashboard && window.dashboard.data.consumers.length > 0) {
+        // Create CSV content
+        const csvContent = [
+            ['Ad', 'Soyad', 'Email', 'Telefon', 'Kayıt Tarihi', 'Son Aktivite', 'Sipariş Sayısı', 'Toplam Harcama', 'Durum'],
+            ...window.dashboard.data.consumers.map(c => [
+                c.name,
+                c.surname, 
+                c.email,
+                c.phone || '',
+                new Date(c.registrationDate).toLocaleDateString('tr-TR'),
+                new Date(c.lastActivity).toLocaleDateString('tr-TR'),
+                c.orderCount,
+                c.totalSpent,
+                c.status === 'active' ? 'Aktif' : c.status === 'inactive' ? 'Pasif' : 'Yasaklı'
+            ])
+        ].map(row => row.join(',')).join('\n');
+
+        // Download CSV
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `kaptaze-tuketiciler-${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        
+        console.log('📊 Consumers data exported');
+    }
+};
+
+window.viewConsumerDetails = function(consumerId) {
+    const consumer = window.dashboard.data.consumers.find(c => c._id === consumerId);
+    if (consumer) {
+        alert(`Tüketici Detayları:\n\nAd: ${consumer.name} ${consumer.surname}\nEmail: ${consumer.email}\nTelefon: ${consumer.phone || 'Belirtilmemiş'}\nKayıt: ${new Date(consumer.registrationDate).toLocaleDateString('tr-TR')}\nSipariş: ${consumer.orderCount}\nHarcama: ₺${consumer.totalSpent}`);
+    }
+};
+
+window.editConsumer = function(consumerId) {
+    alert('Tüketici düzenleme özelliği yakında eklenecek.');
+};
+
+window.toggleConsumerStatus = function(consumerId) {
+    const consumer = window.dashboard.data.consumers.find(c => c._id === consumerId);
+    if (consumer && confirm(`${consumer.name} ${consumer.surname} adlı tüketicinin durumunu değiştirmek istiyor musunuz?`)) {
+        consumer.status = consumer.status === 'active' ? 'inactive' : 'active';
+        window.dashboard.renderConsumersTable();
+        window.dashboard.updateConsumersStats();
+        console.log(`👤 Consumer ${consumerId} status changed to ${consumer.status}`);
+    }
+};
 
 // LOGOUT FUNCTION
 function logout() {

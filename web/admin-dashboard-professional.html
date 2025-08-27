@@ -647,6 +647,10 @@
                     <i class="fas fa-box"></i>
                     <span>Paketler</span>
                 </a>
+                <a class="nav-item" data-section="consumers">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Tüketiciler</span>
+                </a>
             </div>
 
             <div class="nav-section">
@@ -943,6 +947,126 @@
                                         <td colspan="7" class="loading">
                                             <i class="fas fa-spinner"></i>
                                             Paketler yükleniyor...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONSUMERS SECTION -->
+            <div class="content-section" id="consumers-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <div>
+                        <h2>📱 Mobil Uygulama Tüketicileri</h2>
+                        <div id="api-status-indicator" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem; font-size: 0.875rem;">
+                            <span id="api-status-text">Backend bağlantısı kontrol ediliyor...</span>
+                            <span id="api-status-icon">⏳</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary btn-sm" onclick="refreshConsumers()">
+                            <i class="fas fa-sync"></i>
+                            Yenile
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="exportConsumers()">
+                            <i class="fas fa-download"></i>
+                            Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Consumer Statistics -->
+                <div class="stats-grid" style="margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Toplam Kullanıcı</span>
+                            <i class="fas fa-users" style="color: #3b82f6;"></i>
+                        </div>
+                        <div class="stat-value" id="total-consumers">0</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="consumers-change">+12 bu hafta</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Aktif Kullanıcı</span>
+                            <i class="fas fa-user-check" style="color: #10b981;"></i>
+                        </div>
+                        <div class="stat-value" id="active-consumers">0</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="active-consumers-change">+8 bugün</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Bu Ay Kayıt</span>
+                            <i class="fas fa-user-plus" style="color: #8b5cf6;"></i>
+                        </div>
+                        <div class="stat-value" id="monthly-registrations">0</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="monthly-change">%15 artış</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Ortalama Sipariş</span>
+                            <i class="fas fa-shopping-cart" style="color: #f59e0b;"></i>
+                        </div>
+                        <div class="stat-value" id="avg-orders">₺0</div>
+                        <div class="stat-change negative">
+                            <i class="fas fa-arrow-down"></i>
+                            <span id="avg-orders-change">₺25</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <!-- Filters -->
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                            <input type="text" id="consumer-search" placeholder="Ad, soyad veya email ara..." 
+                                style="flex: 1; min-width: 200px; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                            <select id="consumer-status-filter" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                                <option value="">Tüm Durumlar</option>
+                                <option value="active">Aktif</option>
+                                <option value="inactive">Pasif</option>
+                                <option value="banned">Yasaklı</option>
+                            </select>
+                            <select id="consumer-date-filter" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;">
+                                <option value="">Tüm Tarihler</option>
+                                <option value="today">Bugün</option>
+                                <option value="week">Bu Hafta</option>
+                                <option value="month">Bu Ay</option>
+                                <option value="year">Bu Yıl</option>
+                            </select>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Kullanıcı</th>
+                                        <th>Email</th>
+                                        <th>Telefon</th>
+                                        <th>Kayıt Tarihi</th>
+                                        <th>Son Aktivite</th>
+                                        <th>Siparişler</th>
+                                        <th>Harcama</th>
+                                        <th>Durum</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="consumers-table">
+                                    <tr>
+                                        <td colspan="9" class="loading">
+                                            <i class="fas fa-spinner"></i>
+                                            Tüketiciler yükleniyor...
                                         </td>
                                     </tr>
                                 </tbody>
