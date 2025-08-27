@@ -13,7 +13,12 @@ class BackendService {
     }
 
     getBackendURL() {
-        // Environment-based backend URL configuration
+        // Use unified API config if available
+        if (window.KapTazeAPI && window.KapTazeAPI.config) {
+            return window.KapTazeAPI.config.baseUrl;
+        }
+        
+        // Fallback: Environment-based backend URL configuration
         const hostname = window.location.hostname;
         
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
@@ -48,17 +53,30 @@ class BackendService {
         };
 
         try {
+            console.log('🌐 Making API request to:', url);
+            console.log('📋 Request config:', config);
+            
             const response = await fetch(url, config);
             
+            console.log('📨 Response status:', response.status, response.statusText);
+            
             if (!response.ok) {
-                throw new Error('API request failed');
+                const errorText = await response.text();
+                console.error('❌ API Error Response:', errorText);
+                throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
             }
             
             const data = await response.json();
+            console.log('✅ API Response data:', data);
             return data;
         } catch (error) {
-            // Silent error handling for demo mode
-            console.log('Using demo data - Backend not available:', error.message);
+            // Detailed error handling
+            console.error('🚨 Backend Service Error:', {
+                url: url,
+                error: error.message,
+                stack: error.stack
+            });
+            console.log('⚠️ Using demo data - Backend not available:', error.message);
             throw error;
         }
     }
