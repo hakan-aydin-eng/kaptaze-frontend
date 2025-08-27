@@ -7,10 +7,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Backend Integration -->
-    <script src="./js/backend-service.js?v=2025.08.27"></script>
-    <script src="./js/api-config.js?v=2025.08.23"></script>
-    <script src="./js/api-service.js?v=2025.08.23"></script>
+    <!-- Backend Integration - REMOVED (Not needed for demo mode) -->
     
     <style>
         * {
@@ -238,22 +235,25 @@
     </div>
 
     <script>
-        // Initialize backend service
-        let backendService;
-        
         // Check if already logged in
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🔍 Admin login page loaded...');
             
-            // Initialize backend service
-            backendService = new BackendService();
-            
             // Check if user is already logged in as admin
-            const currentUser = backendService.getCurrentUser();
-            if (currentUser && currentUser.userType === 'admin') {
-                console.log('✅ Admin already logged in, redirecting to dashboard');
-                window.location.href = './admin-dashboard-professional.html';
-                return;
+            const adminToken = localStorage.getItem('adminToken');
+            const adminUser = localStorage.getItem('adminUser');
+            
+            if (adminToken && adminUser) {
+                try {
+                    const userData = JSON.parse(adminUser);
+                    console.log('✅ Admin already logged in, redirecting to dashboard');
+                    window.location.href = './index.html';
+                    return;
+                } catch (e) {
+                    // Clear invalid data
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminUser');
+                }
             }
             
             await checkAPIStatus();
@@ -274,7 +274,7 @@
                     statusElement.innerHTML = '<i class="fas fa-check-circle"></i> API Bağlantısı Hazır';
                 } else {
                     statusElement.className = 'api-status error';
-                    statusElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> API Bekleniyor (Demo Mode)';
+                    statusElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Demo Mode Aktif';
                 }
                 
                 // Hide status after 3 seconds
@@ -285,13 +285,13 @@
                 
             } catch (error) {
                 statusElement.className = 'api-status error';
-                statusElement.innerHTML = '<i class="fas fa-times-circle"></i> API Hatası';
+                statusElement.innerHTML = '<i class="fas fa-times-circle"></i> Demo Mode';
             }
         }
 
         async function testBackendConnection() {
             try {
-                const response = await fetch(backendService.baseURL + '/api/auth/health', {
+                const response = await fetch('https://kaptaze-backend-api.onrender.com/health', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -326,52 +326,62 @@
             try {
                 console.log('🔐 Attempting admin login...', username);
                 
-                // Try backend login first
-                const result = await backendService.login(username, password, 'admin');
-                
-                if (result.success) {
-                    console.log('✅ Backend login successful');
-                    loginBtn.innerHTML = '<i class="fas fa-check-circle"></i> Giriş başarılı!';
-                    
-                    setTimeout(() => {
-                        window.location.href = './admin-dashboard-professional.html';
-                    }, 1000);
-                    return;
-                }
-                
-            } catch (error) {
-                console.log('Backend login failed, trying demo mode...');
-                
-                // Demo mode fallback
+                // Demo mode check
                 if (username === 'admin' && password === 'admin123') {
                     console.log('🔧 Demo mode: Admin access granted');
                     
                     const demoUser = {
                         id: 'demo-admin-001',
+                        username: 'admin',
                         name: 'Demo Admin',
                         email: 'admin@kaptaze.com',
                         userType: 'admin',
-                        permissions: ['all']
+                        permissions: ['all'],
+                        loginTime: new Date().toISOString()
                     };
                     
-                    backendService.saveUserData(demoUser, 'demo-admin-token');
+                    // Save to localStorage
+                    localStorage.setItem('adminToken', 'demo-admin-token-' + Date.now());
+                    localStorage.setItem('adminUser', JSON.stringify(demoUser));
                     
-                    loginBtn.innerHTML = '<i class="fas fa-check-circle"></i> Demo Giriş Başarılı!';
+                    loginBtn.innerHTML = '<i class="fas fa-check-circle"></i> Giriş Başarılı!';
                     
                     setTimeout(() => {
-                        window.location.href = './admin-dashboard-professional.html';
+                        window.location.href = './index.html';
                     }, 1000);
                     
                     return;
                 }
                 
-                // Show error
-                let errorMsg = 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.';
-                if (error.message && error.message.includes('fetch')) {
-                    errorMsg = 'Backend bağlantı hatası. Demo giriş için: admin / admin123';
+                // Try real backend login (if API is available)
+                try {
+                    const response = await fetch('https://kaptaze-backend-api.onrender.com/api/admin/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            localStorage.setItem('adminToken', result.token);
+                            localStorage.setItem('adminUser', JSON.stringify(result.user));
+                            
+                            loginBtn.innerHTML = '<i class="fas fa-check-circle"></i> Giriş Başarılı!';
+                            setTimeout(() => {
+                                window.location.href = './index.html';
+                            }, 1000);
+                            return;
+                        }
+                    }
+                } catch (apiError) {
+                    console.log('API not available, demo mode only');
                 }
                 
-                errorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${errorMsg}`;
+                // Show error
+                errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Hatalı kullanıcı adı veya şifre';
                 errorMessage.style.display = 'block';
                 
             } finally {

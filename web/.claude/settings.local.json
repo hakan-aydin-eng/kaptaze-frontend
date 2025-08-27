@@ -4,9 +4,13 @@
       "Read(C:\\Users\\hakan\\KapTazeApp\\frontend\\main-portal\\js/**)",
       "Read(C:\\Users\\hakan\\KapTazeApp\\frontend\\admin-panel\\js/**)",
       "Read(C:\\Users\\hakan\\KapTazeApp\\frontend\\restaurant-panel\\js/**)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "C:\\Users\\hakan\\KapTazeApp\\kaptaze-backend-api"
+    ]
   }
 }
