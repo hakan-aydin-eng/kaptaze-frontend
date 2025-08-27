@@ -51,15 +51,16 @@ class BackendService {
 
         try {
             const response = await fetch(url, config);
-            const data = await response.json();
             
             if (!response.ok) {
-                throw new Error(data.message || 'API request failed');
+                throw new Error('API request failed');
             }
             
+            const data = await response.json();
             return data;
         } catch (error) {
-            // Silent error handling for demo mode - no console logs
+            // Silent error handling for demo mode
+            console.log('Using demo data - Backend not available:', error.message);
             throw error;
         }
     }
