@@ -17,6 +17,10 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Backend Integration -->
+    <script src="./js/backend-service.js"></script>
+    <script src="./js/github-integration.js"></script>
+    
     <!-- Open Graph -->
     <meta property="og:title" content="KapTaze - Gıda İsrafını Önleme Platformu">
     <meta property="og:description" content="Restoranlardan uygun fiyatla yemek paketleri alın ve gıda israfına karşı durun.">
@@ -379,10 +383,15 @@
         window.KAPTAZE_DOMAIN = 'www.kaptaze.com';
         window.KAPTAZE_ENVIRONMENT = 'free';
         window.KAPTAZE_PROVIDER = 'netlify';
+        
+        // Initialize Backend Service
+        window.backendService = new BackendService();
+        console.log('🚀 Backend service initialized');
+        console.log('🔗 Backend URL:', window.backendService.baseURL);
     </script>
     
     <!-- JavaScript -->
     <script src="./js/shared.js?v=2025.08.22.18"></script>
-    <script defer src="./js/main.js?v=2025.08.22.18"></script>
+    <script src="./js/main-enhanced.js?v=2025.08.27.22"></script>
 </body>
 </html>

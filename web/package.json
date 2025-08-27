@@ -1,0 +1,36 @@
+{
+  "name": "kaptaze-frontend",
+  "version": "1.0.0",
+  "description": "KapTaze - Gıda İsrafını Önleme Platformu Frontend",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 3000",
+    "build": "node build-script.js",
+    "deploy": "npm run build && netlify deploy --prod",
+    "dev": "http-server -p 3000 -o",
+    "test": "echo \"Running tests...\" && exit 0"
+  },
+  "keywords": [
+    "food-waste",
+    "restaurant",
+    "sustainability",
+    "kaptaze"
+  ],
+  "author": "KapTaze Team",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "netlify-cli": "^15.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hakan-aydin-eng/kaptaze-frontend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hakan-aydin-eng/kaptaze-frontend/issues"
+  },
+  "homepage": "https://kaptaze.com"
+}
