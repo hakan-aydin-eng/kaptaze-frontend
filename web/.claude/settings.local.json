@@ -6,7 +6,8 @@
       "Read(C:\\Users\\hakan\\KapTazeApp\\frontend\\restaurant-panel\\js/**)",
       "Bash(git add:*)",
       "Bash(curl:*)",
-      "Read(C:\\Users\\hakan\\KapTazeApp\\frontend\\admin-panel/**)"
+      "Read(C:\\Users\\hakan\\KapTazeApp\\frontend\\admin-panel/**)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": [],

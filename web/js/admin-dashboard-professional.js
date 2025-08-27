@@ -71,7 +71,7 @@ class AdminDashboard {
     async loadApplications() {
         try {
             console.log('📋 Loading applications...');
-            const applications = await this.backendService.makeRequest('/api/admin/applications');
+            const applications = await this.backendService.makeRequest('/admin/applications');
             this.data.applications = applications || [];
             this.renderApplications();
             console.log(`✅ Loaded ${this.data.applications.length} applications`);
@@ -97,7 +97,7 @@ class AdminDashboard {
     async loadPackages() {
         try {
             console.log('📦 Loading packages...');
-            const packages = await this.backendService.getPackages();
+            const packages = await this.backendService.makeRequest('/admin/packages');
             this.data.packages = packages || [];
             this.renderPackages();
             console.log(`✅ Loaded ${this.data.packages.length} packages`);
