@@ -1310,6 +1310,30 @@ class AdminProDashboardV2 {
         // Redirect to login
         window.location.href = './admin-login-v3.html';
     }
+
+    // SendGrid API key setup for admins
+    setupSendGrid() {
+        const apiKey = prompt('SendGrid API Key girin (SG. ile başlamalı):');
+        if (apiKey && apiKey.startsWith('SG.')) {
+            localStorage.setItem('sendgrid_api_key', apiKey);
+            window.SENDGRID_API_KEY = apiKey;
+            
+            // Reload SendGrid service
+            if (window.sendGridService) {
+                window.sendGridService.loadAPIKey();
+            }
+            
+            console.log('✅ SendGrid API Key başarıyla kaydedildi');
+            console.log('📧 Email gönderimi aktif - Production ready!');
+            
+            this.showNotification('success', 'SendGrid API Key başarıyla kaydedildi!');
+            return true;
+        } else {
+            console.error('❌ Geçersiz API Key. SG. ile başlamalı.');
+            this.showNotification('error', 'Geçersiz API Key format!');
+            return false;
+        }
+    }
 }
 
 // Initialize dashboard when DOM is ready
@@ -1341,5 +1365,6 @@ console.log(`
     Commands:
     - adminDashboard.refreshAllData()
     - adminDashboard.showSection('applications')
+    - adminDashboard.setupSendGrid()
     - adminDashboard.logout()
 `);
