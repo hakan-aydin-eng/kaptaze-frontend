@@ -16,4 +16,4 @@ services:
       - key: JWT_SECRET  
         value: kaptaze_jwt_secret_production_2024_secure_key_v1
       - key: CORS_ORIGIN
-        value: https://kaptaze.netlify.app
+        value: https://https://kaptaze.com/

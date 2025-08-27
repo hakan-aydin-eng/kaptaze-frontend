@@ -1,7 +1,7 @@
 // KapTaze Admin Panel JavaScript
 
 // Configuration
-const API_BASE_URL = 'https://kaptaze-api.onrender.com';
+const API_BASE_URL = 'https://kaptaze-backend-api.onrender.com';
 const API_ENDPOINTS = {
     users: '/api/admin/kullanicilar',
     restaurants: '/api/admin/restoranlar', 
@@ -946,7 +946,7 @@ function closeApplicationModal() {
 async function approveApplication(applicationId) {
     try {
         // Try API first
-        const response = await fetch('https://kaptaze.netlify.app/.netlify/functions/approve-registration', {
+        const response = await fetch('https://https://kaptaze.com//.netlify/functions/approve-registration', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -973,6 +973,30 @@ async function approveApplication(applicationId) {
         console.log('API approval failed, falling back to localStorage:', error);
     }
 
+    // Try to update via Netlify Functions API
+    try {
+        const updateResponse = await fetch('/.netlify/functions/shared-storage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'update',
+                applicationId: applicationId,
+                status: 'approved'
+            })
+        });
+        
+        if (updateResponse.ok) {
+            const updateResult = await updateResponse.json();
+            if (updateResult.basarili) {
+                showNotification('Başvuru başarıyla onaylandı!', 'success');
+                loadApplicationsData();
+                return;
+            }
+        }
+    } catch (error) {
+        console.log('API update failed, falling back to localStorage:', error);
+    }
+    
     // Fallback to localStorage
     const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
     const updatedRegistrations = registrations.map(app => {

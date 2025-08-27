@@ -17,7 +17,7 @@ app.use(cors({
     'http://localhost:3000',
     'https://www.kaptaze.com',
     'https://kaptaze.com',
-    'https://kaptaze.netlify.app',
+    'https://https://kaptaze.com/',
     'https://kaptaze-customer.netlify.app',
     'https://kaptaze-restaurant.netlify.app',
     'https://kaptaze.render.com',

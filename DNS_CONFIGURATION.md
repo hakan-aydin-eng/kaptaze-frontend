@@ -19,7 +19,7 @@ TTL: 3600
 
 Type: CNAME  
 Name: www
-Value: kaptaze.netlify.app
+Value: https://kaptaze.com/
 TTL: 3600
 ```
 
@@ -61,7 +61,7 @@ TTL: 3600
 API_BASE_URL=https://api.kaptaze.com
 
 # CORS Configuration
-FRONTEND_URLS=https://kaptaze.com,https://www.kaptaze.com,https://kaptaze.netlify.app
+FRONTEND_URLS=https://kaptaze.com,https://www.kaptaze.com,https://https://kaptaze.com/
 ```
 
 ### Frontend (api-config.js)

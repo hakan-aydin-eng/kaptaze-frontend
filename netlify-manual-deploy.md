@@ -30,7 +30,7 @@
 ## 🎯 Hedef URL'ler:
 - **Admin Panel:** https://kaptaze-admin.netlify.app
 - **Restoran Panel:** https://kaptaze-restaurant.netlify.app
-- **Ana Portal:** https://kaptaze.netlify.app (mevcut)
+- **Ana Portal:** https://https://kaptaze.com/ (mevcut)
 
 ## 🔐 Admin Panel Test:
 - **Login URL:** https://kaptaze-admin.netlify.app/login.html

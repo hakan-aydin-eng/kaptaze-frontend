@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(C:\\Users\\hakan\\KapTazeApp\\frontend\\main-portal\\js/**)",
+      "Read(C:\\Users\\hakan\\KapTazeApp\\frontend\\admin-panel\\js/**)",
+      "Read(C:\\Users\\hakan\\KapTazeApp\\frontend\\restaurant-panel\\js/**)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

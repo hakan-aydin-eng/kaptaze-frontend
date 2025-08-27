@@ -18,7 +18,7 @@ https://console.cloud.google.com/
 
 **Allowed referrers:**
 ```
-kaptaze.netlify.app/*
+https://kaptaze.com//*
 *.netlify.app/*
 localhost:*/*
 127.0.0.1:*/*
@@ -34,7 +34,7 @@ localhost:*/*
 ## 🧪 Test After Setup
 
 ### Production Test:
-https://kaptaze.netlify.app/customer-registration.html
+https://https://kaptaze.com//customer-registration.html
 
 **Expected Console Output:**
 ```javascript
@@ -49,7 +49,7 @@ https://kaptaze.netlify.app/customer-registration.html
 ```
 
 ### Domain Test:
-- ✅ kaptaze.netlify.app → ✅ Works
+- ✅ https://kaptaze.com/ → ✅ Works
 - ❌ other-site.com → ❌ Blocked (expected)
 
 ## 🚨 Security Benefits

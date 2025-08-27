@@ -19,7 +19,7 @@ Bu rehber, Google Maps API key'ini güvenli şekilde Netlify environment variabl
 **Eklenecek değişkenler:**
 ```bash
 GOOGLE_MAPS_API_KEY = AIzaSyBTPj8fON_ie4OjJUFi1FCDCRD6V6d4xWk
-API_BASE_URL = https://kaptaze.netlify.app/.netlify/functions  
+API_BASE_URL = https://https://kaptaze.com//.netlify/functions  
 NODE_ENV = production
 ENVIRONMENT = production
 ```
@@ -105,7 +105,7 @@ netlify deploy --prod
 ```
 
 ### 3️⃣ Verify
-- https://kaptaze.netlify.app/customer-registration.html
+- https://https://kaptaze.com//customer-registration.html
 - Browser Console → Config kontrol
 - Harita yükleme test
 
@@ -119,7 +119,7 @@ netlify deploy --prod
 
 ### Domain Restrictions (Google Console):
 ```
-kaptaze.netlify.app/*
+https://kaptaze.com//*
 *.netlify.app/*
 localhost:*/*
 127.0.0.1:*/*

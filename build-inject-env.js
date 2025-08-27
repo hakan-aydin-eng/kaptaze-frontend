@@ -16,7 +16,7 @@ let envContent = fs.readFileSync(envInjectPath, 'utf8');
 // Environment variables to inject
 const envVars = {
     'GOOGLE_MAPS_API_KEY': process.env.GOOGLE_MAPS_API_KEY || null,
-    'API_BASE_URL': process.env.API_BASE_URL || 'https://kaptaze.netlify.app/.netlify/functions',
+    'API_BASE_URL': process.env.API_BASE_URL || 'https://https://kaptaze.com//.netlify/functions',
     'ENVIRONMENT': process.env.NODE_ENV || 'production'
 };
 

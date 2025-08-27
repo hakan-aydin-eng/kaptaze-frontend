@@ -4,7 +4,7 @@
 
 [build.environment]
   NODE_ENV = "production"
-  KAPTAZE_DOMAIN = "kaptaze.netlify.app"
+  KAPTAZE_DOMAIN = "https://kaptaze.com/"
 
 [[redirects]]
   from = "/*"

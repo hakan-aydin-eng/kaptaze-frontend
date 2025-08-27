@@ -1,0 +1,68 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+  
+[build.environment]
+  NODE_VERSION = "18"
+  NODE_ENV = "production"
+
+# Clean URLs and redirects
+[[redirects]]
+  from = "/admin"
+  to = "/admin-login-v2.html"
+  status = 301
+
+[[redirects]]
+  from = "/admin-panel"
+  to = "/admin-dashboard-professional.html"
+  status = 301
+
+[[redirects]]
+  from = "/restaurant"
+  to = "/restaurant-login-v2.html"
+  status = 301
+
+[[redirects]]
+  from = "/restaurant-panel"
+  to = "/restaurant-panel.html"
+  status = 301
+
+[[redirects]]
+  from = "/customer-registration"
+  to = "/customer-registration-v2.html"
+  status = 301
+
+[[redirects]]
+  from = "/register"
+  to = "/customer-registration-v2.html"
+  status = 301
+
+[[redirects]]
+  from = "/kayit"
+  to = "/customer-registration-v2.html"
+  status = 301
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+
+# Cache static assets
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"

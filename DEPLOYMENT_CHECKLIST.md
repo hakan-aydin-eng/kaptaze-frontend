@@ -46,7 +46,7 @@ git push origin master
 - `NODE_ENV=production`
 - `MONGODB_URI=mongodb+srv://...` (MongoDB Atlas)
 - `JWT_SECRET=kaptaze-super-secret-jwt-key-production-2025-secure`
-- `FRONTEND_URLS=https://kaptaze.com,https://www.kaptaze.com,https://kaptaze.netlify.app`
+- `FRONTEND_URLS=https://kaptaze.com,https://www.kaptaze.com,https://https://kaptaze.com/`
 
 ### 2. DNS Configuration
 

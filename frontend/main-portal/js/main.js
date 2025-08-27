@@ -1,19 +1,19 @@
 // KapTaze Main Portal JavaScript
 
-// Single domain configuration - All under kaptaze.netlify.app
+// Single domain configuration - All under https://kaptaze.com/
 const SINGLE_DOMAIN = {
-    customer: 'https://kaptaze.netlify.app/mobile',
-    restaurant: 'https://kaptaze.netlify.app/restaurant-panel', 
-    admin: 'https://kaptaze.netlify.app/admin-login.html',
-    api: 'https://kaptaze.netlify.app/api'
+    customer: 'https://kaptaze.com/mobile',
+    restaurant: 'https://kaptaze.com/restaurant-panel', 
+    admin: 'https://kaptaze.com/admin-login.html',
+    api: 'https://kaptaze-backend-api.onrender.com'
 };
 
 // Free hosting domain configuration - Netlify + Render  
 const FREE_DOMAINS = {
     customer: 'https://kaptaze-customer.netlify.app',
     restaurant: 'https://kaptaze-restaurant.netlify.app', 
-    admin: 'https://kaptaze.netlify.app/admin-login.html',
-    api: 'https://kaptaze-api.onrender.com'
+    admin: 'https://kaptaze.com/admin-login.html',
+    api: 'https://kaptaze-backend-api.onrender.com'
 };
 
 // Paid domain configuration  
@@ -21,7 +21,7 @@ const PAID_DOMAINS = {
     customer: 'https://app.kaptazeapp.com.tr',
     restaurant: 'https://restoran.kaptazeapp.com.tr', 
     admin: 'https://admin.kaptazeapp.com.tr',
-    api: 'https://api.kaptazeapp.com.tr'
+    api: 'https://kaptaze-backend-api.onrender.com'
 };
 
 // Auto-detect environment and set domains

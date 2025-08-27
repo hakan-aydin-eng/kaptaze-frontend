@@ -39,7 +39,7 @@
    MONGODB_URI=mongodb+srv://kaptaze-admin:kaptaze1121@kaptaze-cluster.ra9padd.mongodb.net/kaptazedb?retryWrites=true&w=majority&appName=kaptaze-cluster
    JWT_SECRET=kaptaze-super-secret-jwt-key-production-2025-secure
    JWT_EXPIRES_IN=24h
-   FRONTEND_URLS=https://kaptaze.com,https://www.kaptaze.com,https://kaptaze.netlify.app
+   FRONTEND_URLS=https://kaptaze.com,https://www.kaptaze.com,https://https://kaptaze.com/
    FROM_EMAIL=noreply@kaptaze.com
    ```
 

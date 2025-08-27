@@ -3,7 +3,7 @@
 ## ⚡ Netlify Alternatifi - 10 Dakikada Canlı!
 
 ### 🎯 Hedef URLs:
-- **Ana Portal:** https://kaptaze.netlify.app
+- **Ana Portal:** https://https://kaptaze.com/
 - **Backend API:** https://kaptaze-api.onrender.com  
 - **Admin Panel:** https://kaptaze-admin.netlify.app
 - **Restoran Panel:** https://kaptaze-restaurant.netlify.app
@@ -36,12 +36,12 @@ git push -u origin main
 ### Site Name Değiştir:
 1. **Site settings** → **Change site name**
 2. **Site name:** `kaptaze` 
-3. **Save** → URL: `https://kaptaze.netlify.app`
+3. **Save** → URL: `https://https://kaptaze.com/`
 
 ### Environment Variables:
 **Site settings → Environment variables:**
 ```
-KAPTAZE_DOMAIN = kaptaze.netlify.app
+KAPTAZE_DOMAIN = https://kaptaze.com/
 KAPTAZE_ENVIRONMENT = production
 NODE_ENV = production
 ```
@@ -74,7 +74,7 @@ JWT_REFRESH_SECRET=kaptaze_refresh_secret_key_super_secure_2024
 SESSION_SECRET=kaptaze_session_secret_key_super_secure_2024
 
 # CORS - Netlify domain'leri
-CORS_ORIGIN=https://kaptaze.netlify.app,https://kaptaze-admin.netlify.app,https://kaptaze-restaurant.netlify.app
+CORS_ORIGIN=https://https://kaptaze.com/,https://kaptaze-admin.netlify.app,https://kaptaze-restaurant.netlify.app
 
 # Database
 MONGODB_URI=mongodb+srv://kaptaze-admin:21651121@kaptaze-cluster.ra9padd.mongodb.net/kaptazeappv5?retryWrites=true&w=majority
@@ -118,7 +118,7 @@ echo '<!DOCTYPE html>
         </div>
         
         <h3>🚀 Hızlı Erişim</h3>
-        <a href="https://kaptaze.netlify.app" class="btn">🏠 Ana Portal</a>
+        <a href="https://https://kaptaze.com/" class="btn">🏠 Ana Portal</a>
         <a href="https://kaptaze-restaurant.netlify.app" class="btn">🏪 Restoran Panel</a>
         <a href="https://cloud.mongodb.com" class="btn">💾 MongoDB Atlas</a>
         <a href="https://render.com/dashboard" class="btn">🖥️ Render Dashboard</a>
@@ -218,7 +218,7 @@ echo '<!DOCTYPE html>
         </div>
         
         <div style="text-align: center; margin-top: 30px;">
-            <a href="https://kaptaze.netlify.app" class="btn">🏠 Ana Portal</a>
+            <a href="https://https://kaptaze.com/" class="btn">🏠 Ana Portal</a>
             <a href="https://kaptaze-admin.netlify.app" class="btn">⚙️ Admin Panel</a>
             <a href="mailto:restoran@kaptazeapp.com.tr" class="btn">📞 Destek</a>
         </div>
@@ -253,7 +253,7 @@ echo '[build]
 ### Backend CORS Güncellemesi:
 Render'da environment variables'a ekle:
 ```env
-CORS_ORIGIN=https://kaptaze.netlify.app,https://kaptaze-admin.netlify.app,https://kaptaze-restaurant.netlify.app,http://localhost:8080
+CORS_ORIGIN=https://https://kaptaze.com/,https://kaptaze-admin.netlify.app,https://kaptaze-restaurant.netlify.app,http://localhost:8080
 ```
 
 ### SSL Sertifikaları:
@@ -272,7 +272,7 @@ curl https://kaptaze-api.onrender.com/health
 ### Frontend Test:
 ```bash
 # Browser'da aç:
-https://kaptaze.netlify.app
+https://https://kaptaze.com/
 https://kaptaze-admin.netlify.app  
 https://kaptaze-restaurant.netlify.app
 ```
@@ -286,7 +286,7 @@ Ana portal'dan API'ye erişim testi
 
 | Servis | Platform | URL | Status |
 |--------|----------|-----|--------|
-| Ana Portal | Netlify | kaptaze.netlify.app | ✅ |
+| Ana Portal | Netlify | https://kaptaze.com/ | ✅ |
 | Backend API | Render | kaptaze-api.onrender.com | ✅ |
 | Admin Panel | Netlify | kaptaze-admin.netlify.app | ✅ |
 | Restoran Panel | Netlify | kaptaze-restaurant.netlify.app | ✅ |

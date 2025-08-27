@@ -6,7 +6,7 @@ Bu rehber, KapTaze uygulamasında Google Maps'i etkinleştirmek için gerekli ad
 
 - Google hesabı
 - Kredi kartı bilgileri (Google Cloud için)
-- Domain erişimi (kaptaze.netlify.app)
+- Domain erişimi (https://kaptaze.com/)
 
 ## 🚀 Adım Adım Setup
 
@@ -51,7 +51,7 @@ Bu rehber, KapTaze uygulamasında Google Maps'i etkinleştirmek için gerekli ad
 
 **HTTP Referrer Restrictions:**
 ```
-kaptaze.netlify.app/*
+https://kaptaze.com//*
 *.netlify.app/*  
 localhost:*/*
 127.0.0.1:*/*
@@ -102,7 +102,7 @@ python -m http.server 8000
 ```
 
 ### 2. Production Test
-- https://kaptaze.netlify.app/customer-registration.html
+- https://https://kaptaze.com//customer-registration.html
 - Developer Console'da hata kontrolü
 - Harita yüklenme kontrolü
 
