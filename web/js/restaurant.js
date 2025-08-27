@@ -56,7 +56,7 @@ function logout() {
 }
 
 // API Configuration
-const API_BASE_URL = 'https://kaptaze-api.onrender.com';
+const API_BASE_URL = 'https://kaptaze-backend-api.onrender.com';
 const API_ENDPOINTS = {
     health: '/health',
     stats: '/api/restoran/istatistikler',

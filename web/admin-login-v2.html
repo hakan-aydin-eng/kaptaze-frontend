@@ -247,7 +247,7 @@
                 try {
                     const userData = JSON.parse(adminUser);
                     console.log('✅ Admin already logged in, redirecting to dashboard');
-                    window.location.href = '/admin-panel/index.html';
+                    window.location.href = './admin-dashboard-professional.html';
                     return;
                 } catch (e) {
                     // Clear invalid data
@@ -347,7 +347,7 @@
                     loginBtn.innerHTML = '<i class="fas fa-check-circle"></i> Giriş Başarılı!';
                     
                     setTimeout(() => {
-                        window.location.href = '/admin-panel/index.html';
+                        window.location.href = './admin-dashboard-professional.html';
                     }, 1000);
                     
                     return;
@@ -371,7 +371,7 @@
                             
                             loginBtn.innerHTML = '<i class="fas fa-check-circle"></i> Giriş Başarılı!';
                             setTimeout(() => {
-                                window.location.href = '/admin-panel/index.html';
+                                window.location.href = './admin-dashboard-professional.html';
                             }, 1000);
                             return;
                         }
