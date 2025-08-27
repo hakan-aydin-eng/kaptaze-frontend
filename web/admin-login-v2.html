@@ -260,22 +260,41 @@
     <script>
         // Check if already logged in
         document.addEventListener('DOMContentLoaded', async function() {
-            const token = window.KapTazeAPI.getAuthToken();
-            const userRole = localStorage.getItem(window.KapTazeAPI.storage.userRole);
+            console.log('🔍 Login page: Checking if already authenticated...');
             
-            if (token && userRole === 'admin') {
+            const token = localStorage.getItem('adminToken');
+            
+            if (token) {
                 try {
-                    // Verify token is still valid
-                    await window.KapTazeAPIService.auth.getMe();
-                    // If successful, redirect to dashboard
-                    window.location.href = '/admin-dashboard-professional.html';
-                    return;
+                    console.log('🔑 Found existing token, verifying...');
+                    
+                    // Use the same verification endpoint as dashboard
+                    const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/admin/verify', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        console.log('✅ Token valid, redirecting to dashboard...');
+                        window.location.href = '/admin-dashboard-professional.html';
+                        return;
+                    } else {
+                        console.log('❌ Token invalid, clearing auth data...');
+                        localStorage.removeItem('adminToken');
+                        localStorage.removeItem('adminUser');
+                        window.KapTazeAPI?.clearAuth();
+                    }
                 } catch (error) {
-                    // Token invalid, clear auth data
-                    window.KapTazeAPI.clearAuth();
+                    console.log('❌ Token verification failed:', error.message);
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminUser');
+                    window.KapTazeAPI?.clearAuth();
                 }
             }
             
+            console.log('📋 No valid authentication, showing login form...');
             // Check API status
             await checkAPIStatus();
         });

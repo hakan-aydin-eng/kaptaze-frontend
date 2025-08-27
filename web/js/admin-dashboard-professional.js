@@ -42,24 +42,18 @@ class KapTazeAdminDashboard {
     }
 
     async checkAuthentication() {
-        console.log('🔐 Checking admin authentication...');
+        console.log('🔐 Dashboard: Checking admin authentication...');
         
-        // Check localStorage first (fallback)
-        let token = localStorage.getItem('adminToken');
+        const token = localStorage.getItem('adminToken');
         if (!token) {
-            console.log('❌ No admin token found, attempting auto-login...');
-            // Try auto-login first
-            const autoLoginSuccess = await this.attemptAutoLogin();
-            if (!autoLoginSuccess) {
-                console.log('❌ Auto-login failed, redirecting to login');
-                window.location.href = '/admin-login-v2.html';
-                return false;
-            }
-            token = localStorage.getItem('adminToken');
+            console.log('❌ No admin token found, redirecting to login...');
+            window.location.href = '/admin-login-v2.html';
+            return false;
         }
 
         // Validate token with backend
         try {
+            console.log('🔑 Validating token with backend...');
             const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/admin/verify', {
                 method: 'GET',
                 headers: {
@@ -71,44 +65,17 @@ class KapTazeAdminDashboard {
                 console.log('✅ Admin token validated successfully');
                 return true;
             } else {
-                console.log('❌ Token validation failed, attempting auto-login...');
-                const autoLoginSuccess = await this.attemptAutoLogin();
-                return autoLoginSuccess;
+                console.log('❌ Token validation failed, clearing auth and redirecting...');
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.href = '/admin-login-v2.html';
+                return false;
             }
         } catch (error) {
-            console.log('❌ Token validation error, attempting auto-login...', error.message);
-            const autoLoginSuccess = await this.attemptAutoLogin();
-            return autoLoginSuccess;
-        }
-    }
-
-    async attemptAutoLogin() {
-        try {
-            console.log('🔄 Attempting admin auto-login...');
-            const loginResponse = await fetch('https://kaptaze-backend-api.onrender.com/auth/admin/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: 'admin',
-                    password: 'admin123'
-                })
-            });
-            
-            if (loginResponse.ok) {
-                const loginData = await loginResponse.json();
-                if (loginData.success && loginData.data.token) {
-                    localStorage.setItem('adminToken', loginData.data.token);
-                    console.log('✅ Auto-login successful, token stored');
-                    return true;
-                }
-            }
-            
-            console.log('❌ Auto-login failed - invalid response');
-            return false;
-        } catch (loginError) {
-            console.error('❌ Auto-login failed with error:', loginError.message);
+            console.log('❌ Token validation error, clearing auth and redirecting...', error.message);
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            window.location.href = '/admin-login-v2.html';
             return false;
         }
     }
