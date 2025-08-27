@@ -37,6 +37,15 @@ class AdminDashboard {
         console.log('✅ Professional Admin Dashboard ready');
     }
 
+    // Get authentication headers for API requests
+    getAuthHeaders() {
+        const token = localStorage.getItem('kaptaze_token');
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        };
+    }
+
     async loadDashboardData() {
         console.log('� Loading dashboard data...');
         
@@ -470,14 +479,9 @@ class AdminDashboard {
                 </tr>
             `;
 
-            // Fetch applications from backend API
-            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/applications', {
-                method: 'GET',
-                headers: this.getAuthHeaders()
-            });
-            
-            if (response.ok) {
-                const apiData = await response.json();
+            // Fetch applications from backend API using BackendService
+            try {
+                const apiData = await this.backendService.makeRequest('/admin/applications');
                 console.log('📋 Applications API Response:', apiData);
                 if (apiData.success && apiData.data && apiData.data.applications) {
                     this.data.applications = apiData.data.applications;
@@ -486,10 +490,9 @@ class AdminDashboard {
                     console.log('⚠️ No applications data in API response, structure:', apiData);
                     this.data.applications = [];
                 }
-            } else {
-                console.log(`⚠️ Applications API call failed with status: ${response.status}`);
-                const errorText = await response.text();
-                console.log('Error details:', errorText);
+            } catch (error) {
+                console.log('⚠️ Applications not available, using demo data');
+                console.error('API Error:', error);
                 this.data.applications = [];
             }
 
@@ -1256,15 +1259,10 @@ class AdminDashboard {
                 </tr>
             `;
 
-            // Fetch restaurants from backend API
-            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/restaurants', {
-                method: 'GET',
-                headers: this.getAuthHeaders()
-            });
-            
+            // Fetch restaurants from backend API using BackendService
             let allRestaurants = [];
-            if (response.ok) {
-                const apiData = await response.json();
+            try {
+                const apiData = await this.backendService.makeRequest('/admin/restaurants');
                 console.log('🏪 Restaurants API Response:', apiData);
                 if (apiData.success && apiData.data && apiData.data.restaurants) {
                     allRestaurants = apiData.data.restaurants;
@@ -1272,10 +1270,9 @@ class AdminDashboard {
                 } else {
                     console.log('⚠️ No restaurants data in API response, structure:', apiData);
                 }
-            } else {
-                console.log(`⚠️ Restaurants API call failed with status: ${response.status}`);
-                const errorText = await response.text();
-                console.log('Error details:', errorText);
+            } catch (error) {
+                console.log('⚠️ Restaurants not available, using demo data');
+                console.error('API Error:', error);
             }
 
             if (allRestaurants.length === 0) {
@@ -1366,14 +1363,9 @@ class AdminDashboard {
                 </tr>
             `;
 
-            // Fetch packages from backend API
-            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/packages', {
-                method: 'GET',
-                headers: this.getAuthHeaders()
-            });
-            
-            if (response.ok) {
-                const apiData = await response.json();
+            // Fetch packages from backend API using BackendService
+            try {
+                const apiData = await this.backendService.makeRequest('/admin/packages');
                 console.log('📦 Packages API Response:', apiData);
                 if (apiData.success && apiData.data && apiData.data.packages) {
                     this.data.packages = apiData.data.packages;
@@ -1382,10 +1374,9 @@ class AdminDashboard {
                     console.log('⚠️ No packages data in API response, structure:', apiData);
                     this.data.packages = [];
                 }
-            } else {
-                console.log(`⚠️ Packages API call failed with status: ${response.status}`);
-                const errorText = await response.text();
-                console.log('Error details:', errorText);
+            } catch (error) {
+                console.log('⚠️ Packages not available, using demo data');
+                console.error('API Error:', error);
                 this.data.packages = [];
             }
 
@@ -1890,17 +1881,8 @@ class AdminDashboard {
             let apiStatus = 'pending';
             
             try {
-                const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/consumers', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const apiData = await response.json();
-                    if (apiData.success && apiData.data && apiData.data.consumers) {
+                const apiData = await this.backendService.makeRequest('/admin/consumers');
+                if (apiData.success && apiData.data && apiData.data.consumers) {
                         apiConsumers = apiData.data.consumers.map(consumer => ({
                             _id: consumer._id,
                             name: consumer.name,
