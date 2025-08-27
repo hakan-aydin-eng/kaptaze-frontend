@@ -1,0 +1,12 @@
+# Netlify Deploy Configuration
+# This file forces clean deployment without functions
+
+[build]
+  publish = "dist"
+  command = "npm run build"
+  functions = ""
+
+# Force disable all legacy settings
+[build.environment]
+  DISABLE_NETLIFY_FUNCTIONS = "true"
+  NODE_VERSION = "18"

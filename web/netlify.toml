@@ -6,6 +6,9 @@
   NODE_VERSION = "18"
   NODE_ENV = "production"
 
+# NO FUNCTIONS - Frontend only!
+# functionsDirectory = ""
+
 # Clean URLs and redirects
 [[redirects]]
   from = "/admin"
@@ -13,7 +16,7 @@
   status = 301
 
 [[redirects]]
-  from = "/admin-panel"
+  from = "/admin-panel"  
   to = "/admin-dashboard-professional.html"
   status = 301
 
@@ -34,7 +37,7 @@
 
 [[redirects]]
   from = "/register"
-  to = "/customer-registration-v2.html"
+  to = "/customer-registration-v2.html" 
   status = 301
 
 [[redirects]]

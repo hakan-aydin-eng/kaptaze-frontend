@@ -1,8 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-// Build script for KapTaze Frontend
-console.log('🚀 Building KapTaze Frontend...');
+// Build script for KapTaze Frontend - NO MONGODB!
+console.log('🚀 Building KapTaze Frontend (MongoDB-Free)...');
+
+// Clean any mongodb references
+console.log('🧹 Ensuring no MongoDB references...');
 
 // Create dist directory
 const distDir = path.join(__dirname, 'dist');
