@@ -23,8 +23,9 @@ class KapTazeAdminDashboard {
     async init() {
         console.log('🚀 Professional Admin Dashboard initializing...');
         
-        // Check authentication
-        if (!this.checkAuthentication()) {
+        // Check authentication and wait for it to complete
+        const isAuthenticated = await this.checkAuthentication();
+        if (!isAuthenticated) {
             return;
         }
 
@@ -40,17 +41,84 @@ class KapTazeAdminDashboard {
         console.log('✅ Professional Admin Dashboard ready');
     }
 
-    checkAuthentication() {
+    async checkAuthentication() {
+        console.log('🔐 Checking admin authentication...');
+        
         // Check localStorage first (fallback)
-        const token = localStorage.getItem('adminToken');
+        let token = localStorage.getItem('adminToken');
         if (!token) {
-            console.log('❌ No admin authentication found');
-            window.location.href = '/admin-login.html';
-            return false;
+            console.log('❌ No admin token found, attempting auto-login...');
+            // Try auto-login first
+            const autoLoginSuccess = await this.attemptAutoLogin();
+            if (!autoLoginSuccess) {
+                console.log('❌ Auto-login failed, redirecting to login');
+                window.location.href = '/admin-login-v2.html';
+                return false;
+            }
+            token = localStorage.getItem('adminToken');
         }
 
-        console.log('✅ Admin authenticated');
-        return true;
+        // Validate token with backend
+        try {
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/admin/verify', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                console.log('✅ Admin token validated successfully');
+                return true;
+            } else {
+                console.log('❌ Token validation failed, attempting auto-login...');
+                const autoLoginSuccess = await this.attemptAutoLogin();
+                return autoLoginSuccess;
+            }
+        } catch (error) {
+            console.log('❌ Token validation error, attempting auto-login...', error.message);
+            const autoLoginSuccess = await this.attemptAutoLogin();
+            return autoLoginSuccess;
+        }
+    }
+
+    async attemptAutoLogin() {
+        try {
+            console.log('🔄 Attempting admin auto-login...');
+            const loginResponse = await fetch('https://kaptaze-backend-api.onrender.com/auth/admin/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: 'admin',
+                    password: 'admin123'
+                })
+            });
+            
+            if (loginResponse.ok) {
+                const loginData = await loginResponse.json();
+                if (loginData.success && loginData.data.token) {
+                    localStorage.setItem('adminToken', loginData.data.token);
+                    console.log('✅ Auto-login successful, token stored');
+                    return true;
+                }
+            }
+            
+            console.log('❌ Auto-login failed - invalid response');
+            return false;
+        } catch (loginError) {
+            console.error('❌ Auto-login failed with error:', loginError.message);
+            return false;
+        }
+    }
+
+    getAuthHeaders() {
+        const token = localStorage.getItem('adminToken');
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token || ''}`
+        };
     }
 
     setupNavigation() {
@@ -352,23 +420,63 @@ class KapTazeAdminDashboard {
     }
 
     async loadApplicationsData() {
-        console.log('📝 Loading applications data...');
-        
         const tbody = document.getElementById('applications-table');
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="loading">
-                    <i class="fas fa-spinner"></i>
-                    Başvurular yükleniyor...
-                </td>
-            </tr>
-        `;
+        if (!tbody) {
+            console.error('Applications table not found');
+            return;
+        }
 
-        if (this.data.applications.length === 0) {
+        try {
+            console.log('📝 Loading applications data...');
+            
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" style="text-align: center; color: #6b7280; padding: 2rem;">
-                        Henüz başvuru bulunmuyor
+                    <td colspan="6" class="loading">
+                        <i class="fas fa-spinner"></i>
+                        Başvurular yükleniyor...
+                    </td>
+                </tr>
+            `;
+
+            // Fetch applications from backend API
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/applications', {
+                method: 'GET',
+                headers: this.getAuthHeaders()
+            });
+            
+            if (response.ok) {
+                const apiData = await response.json();
+                console.log('📋 Applications API Response:', apiData);
+                if (apiData.success && apiData.data && apiData.data.applications) {
+                    this.data.applications = apiData.data.applications;
+                    console.log(`✅ Loaded ${this.data.applications.length} applications from API`);
+                } else {
+                    console.log('⚠️ No applications data in API response, structure:', apiData);
+                    this.data.applications = [];
+                }
+            } else {
+                console.log(`⚠️ Applications API call failed with status: ${response.status}`);
+                const errorText = await response.text();
+                console.log('Error details:', errorText);
+                this.data.applications = [];
+            }
+
+            if (this.data.applications.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #6b7280; padding: 2rem;">
+                            Henüz başvuru bulunmuyor
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+        } catch (error) {
+            console.error('❌ Error loading applications:', error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #ef4444; padding: 2rem;">
+                        Başvurular yüklenirken hata oluştu
                     </td>
                 </tr>
             `;
@@ -1098,36 +1206,62 @@ class KapTazeAdminDashboard {
     }
 
     async loadRestaurantsData() {
-        console.log('🏪 Loading restaurants data...');
-        
         const tbody = document.getElementById('restaurants-table');
         if (!tbody) {
-            console.warn('Restaurants table not found');
+            console.error('Restaurants table not found');
             return;
         }
 
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="loading">
-                    <i class="fas fa-spinner"></i>
-                    Restoranlar yükleniyor...
-                </td>
-            </tr>
-        `;
-
-        // Load approved restaurants from applications
-        const approvedRestaurants = this.data.applications.filter(app => 
-            app.status === 'approved' && app.businessType === 'restaurant'
-        );
-
-        // Merge with existing restaurant data
-        const allRestaurants = [...approvedRestaurants, ...this.data.restaurants];
-
-        if (allRestaurants.length === 0) {
+        try {
+            console.log('🏪 Loading restaurants data...');
+            
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" style="text-align: center; color: #6b7280; padding: 2rem;">
-                        Henüz onaylanmış restoran bulunmuyor
+                    <td colspan="6" class="loading">
+                        <i class="fas fa-spinner"></i>
+                        Restoranlar yükleniyor...
+                    </td>
+                </tr>
+            `;
+
+            // Fetch restaurants from backend API
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/restaurants', {
+                method: 'GET',
+                headers: this.getAuthHeaders()
+            });
+            
+            let allRestaurants = [];
+            if (response.ok) {
+                const apiData = await response.json();
+                console.log('🏪 Restaurants API Response:', apiData);
+                if (apiData.success && apiData.data && apiData.data.restaurants) {
+                    allRestaurants = apiData.data.restaurants;
+                    console.log(`✅ Loaded ${allRestaurants.length} restaurants from API`);
+                } else {
+                    console.log('⚠️ No restaurants data in API response, structure:', apiData);
+                }
+            } else {
+                console.log(`⚠️ Restaurants API call failed with status: ${response.status}`);
+                const errorText = await response.text();
+                console.log('Error details:', errorText);
+            }
+
+            if (allRestaurants.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #6b7280; padding: 2rem;">
+                            Henüz onaylanmış restoran bulunmuyor
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+        } catch (error) {
+            console.error('❌ Error loading restaurants:', error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #ef4444; padding: 2rem;">
+                        Restoranlar yüklenirken hata oluştu
                     </td>
                 </tr>
             `;
@@ -1182,28 +1316,63 @@ class KapTazeAdminDashboard {
     }
 
     async loadPackagesData() {
-        console.log('📦 Loading packages data...');
-        
         const tbody = document.getElementById('packages-table');
         if (!tbody) {
-            console.warn('Packages table not found');
+            console.error('Packages table not found');
             return;
         }
 
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="loading">
-                    <i class="fas fa-spinner"></i>
-                    Paketler yükleniyor...
-                </td>
-            </tr>
-        `;
-
-        if (this.data.packages.length === 0) {
+        try {
+            console.log('📦 Loading packages data...');
+            
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align: center; color: #6b7280; padding: 2rem;">
-                        Henüz paket bulunmuyor
+                    <td colspan="7" class="loading">
+                        <i class="fas fa-spinner"></i>
+                        Paketler yükleniyor...
+                    </td>
+                </tr>
+            `;
+
+            // Fetch packages from backend API
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/packages', {
+                method: 'GET',
+                headers: this.getAuthHeaders()
+            });
+            
+            if (response.ok) {
+                const apiData = await response.json();
+                console.log('📦 Packages API Response:', apiData);
+                if (apiData.success && apiData.data && apiData.data.packages) {
+                    this.data.packages = apiData.data.packages;
+                    console.log(`✅ Loaded ${this.data.packages.length} packages from API`);
+                } else {
+                    console.log('⚠️ No packages data in API response, structure:', apiData);
+                    this.data.packages = [];
+                }
+            } else {
+                console.log(`⚠️ Packages API call failed with status: ${response.status}`);
+                const errorText = await response.text();
+                console.log('Error details:', errorText);
+                this.data.packages = [];
+            }
+
+            if (this.data.packages.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #6b7280; padding: 2rem;">
+                            Henüz paket bulunmuyor
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+        } catch (error) {
+            console.error('❌ Error loading packages:', error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #ef4444; padding: 2rem;">
+                        Paketler yüklenirken hata oluştu
                     </td>
                 </tr>
             `;
@@ -1689,7 +1858,7 @@ class KapTazeAdminDashboard {
             let apiStatus = 'pending';
             
             try {
-                const response = await fetch('https://kaptaze-backend-api.onrender.com/api/admin/consumers', {
+                const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/consumers', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1992,8 +2161,14 @@ window.showSection = function(sectionId) {
 };
 
 // Initialize dashboard when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    window.dashboard = new KapTazeAdminDashboard();
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        console.log('🏁 DOM loaded, initializing admin dashboard...');
+        window.dashboard = new KapTazeAdminDashboard();
+        console.log('🚀 Admin dashboard fully initialized');
+    } catch (error) {
+        console.error('❌ Dashboard initialization failed:', error);
+    }
 });
 
 // Global close modal function
