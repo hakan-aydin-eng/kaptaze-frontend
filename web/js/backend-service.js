@@ -3,12 +3,12 @@ class BackendService {
     constructor() {
         this.baseURL = this.getBackendURL();
         this.endpoints = {
-            auth: '/api/auth',
-            restaurants: '/api/restaurants',
-            customers: '/api/customers',
-            orders: '/api/orders',
-            admin: '/api/admin',
-            packages: '/api/packages'
+            auth: '/auth',
+            restaurants: '/restaurant',
+            customers: '/restaurant/customers',
+            orders: '/orders',
+            admin: '/admin',
+            packages: '/restaurant/packages'
         };
     }
 
@@ -18,10 +18,8 @@ class BackendService {
         
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
             return 'http://localhost:3001'; // Local development
-        } else if (hostname.includes('netlify') || hostname.includes('kaptaze')) {
-            return 'https://kaptaze-backend.onrender.com'; // Production
         } else {
-            return 'https://kaptaze-backend.onrender.com'; // Fallback
+            return 'https://kaptaze-backend-api.onrender.com'; // Production
         }
     }
 
