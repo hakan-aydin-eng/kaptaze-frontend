@@ -4,7 +4,7 @@
 const SINGLE_DOMAIN = {
     customer: 'https://kaptaze.com/customer-registration-v2.html',
     restaurant: 'https://kaptaze.com/restaurant-panel.html', 
-    admin: 'https://kaptaze.com/admin-login-v2.html',
+    admin: 'https://kaptaze.com/admin-login-v3.html',
     api: 'https://kaptaze-backend-api.onrender.com'
 };
 
@@ -12,7 +12,7 @@ const SINGLE_DOMAIN = {
 const FREE_DOMAINS = {
     customer: 'https://kaptaze-customer.netlify.app',
     restaurant: 'https://kaptaze-restaurant.netlify.app', 
-    admin: 'https://kaptaze.com/admin-login-v2.html',
+    admin: 'https://kaptaze.com/admin-login-v3.html',
     api: 'https://kaptaze-backend-api.onrender.com'
 };
 
@@ -20,7 +20,7 @@ const FREE_DOMAINS = {
 const PAID_DOMAINS = {
     customer: 'https://app.kaptazeapp.com.tr',
     restaurant: 'https://restoran.kaptazeapp.com.tr', 
-    admin: 'https://admin.kaptazeapp.com.tr',
+    admin: 'https://admin.kaptazeapp.com.tr/admin-login-v3.html',
     api: 'https://kaptaze-backend-api.onrender.com'
 };
 
