@@ -4,7 +4,7 @@
 const SINGLE_DOMAIN = {
     customer: 'https://kaptaze.com/mobile',
     restaurant: 'https://kaptaze.com/restaurant-panel', 
-    admin: 'https://kaptaze.com/admin-login.html',
+    admin: 'https://kaptaze.com/admin-login-v2.html',
     api: 'https://kaptaze-backend-api.onrender.com'
 };
 
@@ -12,7 +12,7 @@ const SINGLE_DOMAIN = {
 const FREE_DOMAINS = {
     customer: 'https://kaptaze-customer.netlify.app',
     restaurant: 'https://kaptaze-restaurant.netlify.app', 
-    admin: 'https://kaptaze.com/admin-login.html',
+    admin: 'https://kaptaze.com/admin-login-v2.html',
     api: 'https://kaptaze-backend-api.onrender.com'
 };
 
@@ -121,6 +121,13 @@ function openPanel(panelType) {
     const loadingOverlay = showLoadingOverlay(`${getPanelDisplayName(panelType)} açılıyor...`);
     
     let targetUrl = currentDomains[panelType];
+    
+    // For admin panel, use direct URL without health check
+    if (panelType === 'admin') {
+        hideLoadingOverlay(loadingOverlay);
+        window.open(targetUrl, '_self');
+        return;
+    }
     
     // For restaurant panel, redirect to login page
     if (panelType === 'restaurant') {
