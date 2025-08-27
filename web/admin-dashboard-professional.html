@@ -7,6 +7,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Backend Integration -->
+    <script src="./js/backend-service.js?v=2025.08.27"></script>
+    
     <!-- Professional Dashboard doesn't need these legacy API services -->
     
     <style>
@@ -1281,9 +1284,35 @@
 
     <!-- Global Functions -->
     <script>
+        // Initialize backend service
+        let backendService;
+        let dashboard;
+
+        // Authentication check
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize backend service
+            backendService = new BackendService();
+            
+            // Check authentication
+            const currentUser = backendService.getCurrentUser();
+            if (!currentUser || currentUser.userType !== 'admin') {
+                console.log('❌ Admin authentication required');
+                alert('Bu sayfaya erişmek için admin girişi gereklidir.');
+                window.location.href = './admin-login-v2.html';
+                return;
+            }
+            
+            console.log('✅ Admin authenticated:', currentUser.name);
+            
+            // Initialize dashboard with backend service
+            if (window.AdminDashboard) {
+                dashboard = new AdminDashboard(backendService);
+            }
+        });
+
         function refreshApplications() {
-            if (window.dashboard) {
-                window.dashboard.refreshApplications();
+            if (dashboard) {
+                dashboard.refreshApplications();
             }
         }
         
@@ -1351,6 +1380,6 @@
         });
     </script>
 
-    <script src="./js/admin-dashboard-professional.js?v=2025.08.27.FIXED"></script>
+    <script src="./js/admin-dashboard-enhanced.js?v=2025.08.27.FIXED"></script>
 </body>
 </html>

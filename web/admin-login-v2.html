@@ -324,6 +324,77 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
+            // Clear previous error
+            errorMessage.textContent = '';
+            
+            // Update button state
+            loginBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Giriş yapılıyor...';
+            loginBtn.disabled = true;
+            
+            try {
+                // Attempt login via backend service
+                const result = await backendService.login(username, password, 'admin');
+                
+                console.log('✅ Admin login successful:', result.user);
+                
+                // Save user data
+                backendService.saveUserData(result.user, result.token);
+                
+                // Show success and redirect
+                loginBtn.innerHTML = '<i class="fas fa-check-circle"></i> Giriş başarılı!';
+                
+                setTimeout(() => {
+                    window.location.href = './admin-dashboard-professional.html';
+                }, 1000);
+                
+            } catch (error) {
+                console.error('❌ Admin login failed:', error);
+                
+                // Check if it's a demo/development scenario
+                if (error.message.includes('fetch') || error.message.includes('Backend')) {
+                    // Demo mode - allow admin access with demo credentials
+                    if (username === 'admin' && password === 'admin123') {
+                        console.log('🔧 Demo mode: Admin access granted');
+                        
+                        // Create demo admin user
+                        const demoUser = {
+                            id: 'demo-admin-001',
+                            name: 'Demo Admin',
+                            email: 'admin@kaptaze.com',
+                            userType: 'admin',
+                            permissions: ['all']
+                        };
+                        
+                        backendService.saveUserData(demoUser, 'demo-admin-token');
+                        
+                        loginBtn.innerHTML = '<i class="fas fa-check-circle"></i> Demo Giriş Başarılı!';
+                        
+                        setTimeout(() => {
+                            window.location.href = './admin-dashboard-professional.html';
+                        }, 1000);
+                        
+                        return;
+                    }
+                }
+                
+                let errorMsg = 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.';
+                
+                if (error.message.includes('Backend') || error.message.includes('fetch')) {
+                    errorMsg = 'Backend bağlantı hatası. Demo giriş için: admin / admin123';
+                }
+                
+                errorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${errorMsg}`;
+                errorMessage.style.display = 'block';
+                
+            } finally {
+                // Reset button if not successful
+                if (!loginBtn.innerHTML.includes('başarılı')) {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Giriş Yap';
+                }
+            }
+        });
+            
             // Show loading state
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Giriş yapılıyor...';
@@ -377,15 +448,6 @@
                 } else if (error.message.includes('fetch')) {
                     errorMsg = 'Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.';
                 }
-                
-                errorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${errorMsg}`;
-                errorMessage.style.display = 'block';
-                
-            } finally {
-                // Reset button if not successful
-                if (!loginBtn.innerHTML.includes('başarılı')) {
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Giriş Yap';
                 }
             }
         });

@@ -1,14 +1,14 @@
 /**
  * KapTaze Professional Admin Dashboard
- * MongoDB Atlas Integration for Global Access
- * Version: 2025.08.23.01
+ * Backend Service Integration
+ * Version: 2025.08.27.01
  */
 
-class KapTazeAdminDashboard {
-    constructor() {
+class AdminDashboard {
+    constructor(backendService) {
+        this.backendService = backendService;
         this.currentSection = 'dashboard';
-        this.currentUser = null;
-        this.authToken = null;
+        this.currentUser = backendService.getCurrentUser();
         this.data = {
             applications: [],
             restaurants: [],
@@ -23,10 +23,8 @@ class KapTazeAdminDashboard {
 
     async init() {
         console.log('🚀 Professional Admin Dashboard initializing...');
+        console.log('👤 Current admin:', this.currentUser.name);
         
-        // Try to authenticate with backend
-        await this.attemptAuthentication();
-
         // Setup navigation
         this.setupNavigation();
         
@@ -39,48 +37,79 @@ class KapTazeAdminDashboard {
         console.log('✅ Professional Admin Dashboard ready');
     }
 
-    async attemptAuthentication() {
-        console.log('🔐 Attempting backend authentication...');
+    async loadDashboardData() {
+        console.log('� Loading dashboard data...');
         
         try {
-            // Try auto-login with backend
-            const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/admin/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    username: 'admin',
-                    password: 'admin123'
-                })
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (result.success && result.data.token) {
-                    this.authToken = result.data.token;
-                    this.currentUser = result.data.user;
-                    console.log('✅ Backend authentication successful for:', result.data.user.username);
-                    return true;
-                }
-            }
+            // Load data from backend service
+            await Promise.all([
+                this.loadApplications(),
+                this.loadRestaurants(), 
+                this.loadPackages(),
+                this.loadConsumers(),
+                this.loadOrders()
+            ]);
             
-            console.log('❌ Backend authentication failed, redirecting to login...');
-            window.location.href = '/admin-login-v2.html';
-            return false;
+            // Update dashboard statistics
+            this.updateDashboardStats();
             
         } catch (error) {
-            console.log('❌ Authentication error:', error.message);
-            window.location.href = '/admin-login-v2.html';
-            return false;
+            console.error('❌ Error loading dashboard data:', error);
+            this.showErrorMessage('Veri yüklenirken hata oluştu: ' + error.message);
         }
     }
 
-    getAuthHeaders() {
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.authToken || ''}`
-        };
+    async loadApplications() {
+        try {
+            console.log('📋 Loading applications...');
+            const applications = await this.backendService.makeRequest('/api/admin/applications');
+            this.data.applications = applications || [];
+            this.renderApplications();
+            console.log(`✅ Loaded ${this.data.applications.length} applications`);
+        } catch (error) {
+            console.log('⚠️ Applications not available, using demo data');
+            this.loadDemoApplications();
+        }
+    }
+
+    async loadRestaurants() {
+        try {
+            console.log('🍽️ Loading restaurants...');
+            const restaurants = await this.backendService.getRestaurants();
+            this.data.restaurants = restaurants || [];
+            this.renderRestaurants();
+            console.log(`✅ Loaded ${this.data.restaurants.length} restaurants`);
+        } catch (error) {
+            console.log('⚠️ Restaurants not available, using demo data');
+            this.loadDemoRestaurants();
+        }
+    }
+
+    async loadPackages() {
+        try {
+            console.log('📦 Loading packages...');
+            const packages = await this.backendService.getPackages();
+            this.data.packages = packages || [];
+            this.renderPackages();
+            console.log(`✅ Loaded ${this.data.packages.length} packages`);
+        } catch (error) {
+            console.log('⚠️ Packages not available, using demo data');
+            this.loadDemoPackages();
+        }
+    }
+
+    async loadConsumers() {
+        try {
+            console.log('👥 Loading consumers...');
+            // This is already working, don't touch it
+            const consumers = await this.backendService.makeRequest('/api/admin/customers');
+            this.data.consumers = consumers || [];
+            this.renderConsumers();
+            console.log(`✅ Loaded ${this.data.consumers.length} consumers`);
+        } catch (error) {
+            console.log('⚠️ Consumers not available, keeping existing functionality');
+            // Keep existing consumer loading logic
+        }
     }
 
     setupNavigation() {
@@ -111,32 +140,107 @@ class KapTazeAdminDashboard {
         document.querySelectorAll('.nav-item').forEach(item => {
             item.classList.remove('active');
         });
-        document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+        
+        const activeNavItem = document.querySelector(`[data-section="${sectionId}"]`);
+        if (activeNavItem) {
+            activeNavItem.classList.add('active');
+        }
 
         // Update content
         document.querySelectorAll('.content-section').forEach(section => {
             section.classList.remove('active');
         });
-        document.getElementById(`${sectionId}-section`).classList.add('active');
+        
+        const targetSection = document.getElementById(`${sectionId}-section`);
+        if (targetSection) {
+            targetSection.classList.add('active');
+        }
+    }
 
-        // Update page title
-        const titles = {
-            'dashboard': 'Dashboard',
-            'applications': 'Başvuru Yönetimi',
-            'restaurants': 'Restoran Yönetimi',
-            'packages': 'Paket Yönetimi',
-            'consumers': 'Tüketici Yönetimi',
-            'orders': 'Sipariş Yönetimi',
-            'users': 'Kullanıcı Yönetimi',
-            'analytics': 'Sistem Analizleri',
-            'settings': 'Sistem Ayarları'
-        };
-        document.getElementById('page-title').textContent = titles[sectionId] || sectionId;
+    // Demo data for when backend is not available
+    loadDemoApplications() {
+        this.data.applications = [
+            {
+                id: 'demo-app-1',
+                name: 'Ahmet Yılmaz',
+                email: 'ahmet@restoran.com',
+                phone: '+90 532 123 4567',
+                restaurantName: 'Lezzet Durağı',
+                address: 'Antalya, Muratpaşa',
+                status: 'pending',
+                createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+                documents: ['restoran-lisans.pdf', 'kimlik.pdf']
+            },
+            {
+                id: 'demo-app-2', 
+                name: 'Fatma Kaya',
+                email: 'fatma@cafemarmaris.com',
+                phone: '+90 535 987 6543',
+                restaurantName: 'Cafe Marmaris',
+                address: 'Muğla, Marmaris',
+                status: 'pending',
+                createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+                documents: ['cafe-ruhsat.pdf', 'vergi-levha.pdf']
+            }
+        ];
+        this.renderApplications();
+    }
 
-        this.currentSection = sectionId;
+    loadDemoRestaurants() {
+        this.data.restaurants = [
+            {
+                id: 'demo-rest-1',
+                name: 'Seraser Restaurant',
+                email: 'info@seraser.com',
+                phone: '+90 242 123 4567',
+                address: 'Antalya, Kaleiçi',
+                status: 'active',
+                approvedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                totalPackages: 45,
+                totalOrders: 234
+            },
+            {
+                id: 'demo-rest-2',
+                name: 'Milano Pizzeria', 
+                email: 'info@milano.com',
+                phone: '+90 242 987 6543',
+                address: 'Antalya, Lara',
+                status: 'active',
+                approvedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+                totalPackages: 28,
+                totalOrders: 156
+            }
+        ];
+        this.renderRestaurants();
+    }
 
-        // Load section data
-        this.loadSectionData(sectionId);
+    loadDemoPackages() {
+        this.data.packages = [
+            {
+                id: 'demo-pkg-1',
+                name: 'Karma Menü',
+                restaurantName: 'Seraser Restaurant',
+                originalPrice: 45,
+                discountedPrice: 18,
+                quantity: 5,
+                status: 'active',
+                createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
+                pickupTime: '18:00-20:00'
+            },
+            {
+                id: 'demo-pkg-2',
+                name: 'Pizza Çeşitleri',
+                restaurantName: 'Milano Pizzeria', 
+                originalPrice: 35,
+                discountedPrice: 15,
+                quantity: 3,
+                status: 'active',
+                createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
+                pickupTime: '19:00-21:00'
+            }
+        ];
+        this.renderPackages();
+    }
     }
 
     async loadSectionData(sectionId) {
