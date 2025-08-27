@@ -39,9 +39,7 @@ directories.forEach(dir => {
 
 // Copy additional files
 const additionalFiles = [
-    'netlify.toml',
-    'mongodb.js',
-    '_redirects'
+    'netlify.toml'
 ];
 
 additionalFiles.forEach(file => {
