@@ -7,7 +7,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- API Configuration -->
+    <!-- Backend Integration -->
+    <script src="./js/backend-service.js?v=2025.08.27"></script>
     <script src="./js/api-config.js?v=2025.08.23"></script>
     <script src="./js/api-service.js?v=2025.08.23"></script>
     
@@ -258,9 +259,24 @@
     </div>
 
     <script>
+        // Initialize backend service
+        let backendService;
+        
         // Check if already logged in
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🔍 Login page loaded, checking API status...');
+            console.log('🔍 Admin login page loaded...');
+            
+            // Initialize backend service
+            backendService = new BackendService();
+            
+            // Check if user is already logged in as admin
+            const currentUser = backendService.getCurrentUser();
+            if (currentUser && currentUser.userType === 'admin') {
+                console.log('✅ Admin already logged in, redirecting to dashboard');
+                window.location.href = './admin-dashboard-professional.html';
+                return;
+            }
+            
             await checkAPIStatus();
         });
 
@@ -269,26 +285,37 @@
             
             try {
                 statusElement.className = 'api-status connecting';
-                statusElement.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> API Bağlantısı kontrol ediliyor...';
+                statusElement.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Backend bağlantısı kontrol ediliyor...';
                 
-                const response = await window.KapTazeAPIService.public.healthCheck();
+                // Test backend connection
+                const isConnected = await testBackendConnection();
                 
-                statusElement.className = 'api-status connected';
-                statusElement.innerHTML = '<i class="fas fa-check-circle"></i> API Hazır';
+                if (isConnected) {
+                    statusElement.className = 'api-status connected';
+                    statusElement.innerHTML = '<i class="fas fa-check-circle"></i> Backend Hazır';
+                } else {
+                    statusElement.className = 'api-status disconnected';
+                    statusElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Backend Bekleniyor (Demo Mode)';
+                }
                 
                 // Hide status after 3 seconds
-                setTimeout(() => {
-                    statusElement.style.display = 'none';
-                }, 3000);
-                
+        async function testBackendConnection() {
+            try {
+                // Try to make a simple request to backend
+                const response = await fetch(backendService.baseURL + '/api/auth/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                return response.ok;
             } catch (error) {
-                console.error('API Health Check Failed:', error);
-                statusElement.className = 'api-status error';
-                statusElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> API Bağlantı Hatası';
+                console.log('Backend not available:', error);
+                return false;
             }
         }
 
-        // Form submission handler
+        // Form submission handler with backend integration
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
