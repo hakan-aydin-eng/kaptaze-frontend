@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KapTaze Admin - Professional Dashboard V2</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- API Configuration -->
+    <script src="./js/api-config.js?v=2025.08.28"></script>
+    <script src="./js/api-service.js?v=2025.08.28"></script>
+    
+    <!-- SendGrid Email Service -->
+    <script src="./js/sendgrid-service.js?v=2025.08.28"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #16a34a;
+            --primary-light: #22c55e;
+            --primary-dark: #15803d;
+            --secondary: #f8fafc;
+            --accent: #3b82f6;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --info: #06b6d4;
+            --dark: #1e293b;
+            --light: #f1f5f9;
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            min-height: 100vh;
+        }
+
+        /* Layout Structure */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--white);
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            position: sticky;
+            top: 0;
+            background: var(--white);
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .brand-text {
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .brand-text {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+
+        .brand-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Navigation */
+        .nav-menu {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            padding: 0 1.5rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .nav-section-title {
+            opacity: 0;
+            height: 0;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin: 0.25rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            color: var(--gray-700);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-link.active:hover {
+            transform: none;
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .nav-text {
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .nav-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .nav-badge {
+            background: var(--danger);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 10px;
+            margin-left: auto;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+            background: var(--gray-50);
+        }
+
+        .sidebar.collapsed + .main-content {
+            margin-left: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--white);
+            box-shadow: var(--shadow-sm);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            gap: 2rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-left: 1rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--success);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-indicator.disconnected {
+            background: var(--danger);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: var(--gray-100);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background: var(--gray-200);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            line-height: 1;
+        }
+
+        .user-info p {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            line-height: 1;
+        }
+
+        /* Content Area */
+        .content {
+            padding: 2rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--danger);
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-200);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .data-table th {
+            background: var(--gray-50);
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tr:hover {
+            background: var(--gray-50);
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-approved {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .badge-active {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 0.125rem;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .action-approve {
+            background: var(--success);
+            color: white;
+        }
+
+        .action-reject {
+            background: var(--danger);
+            color: white;
+        }
+
+        .action-view {
+            background: var(--info);
+            color: white;
+        }
+
+        .action-edit {
+            background: var(--warning);
+            color: white;
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--gray-500);
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--gray-200);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar .nav-text,
+            .sidebar .brand-text,
+            .sidebar .nav-section-title {
+                opacity: 0;
+                width: 0;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                z-index: 1000;
+            }
+            
+            .sidebar.mobile-open {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .content {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .quick-action {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .quick-action:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .quick-action-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .quick-action-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        .quick-action-desc {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-logo">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="brand-text">
+                        <div class="brand-title">KapTaze</div>
+                        <div class="brand-subtitle">Admin Pro V2</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-menu">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <div class="nav-item">
+                        <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                            <i class="fas fa-chart-line nav-icon"></i>
+                            <span class="nav-text">Ana Dashboard</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Yönetim</div>
+                    <div class="nav-item">
+                        <a href="#applications" class="nav-link" data-section="applications">
+                            <i class="fas fa-file-alt nav-icon"></i>
+                            <span class="nav-text">Başvurular</span>
+                            <span class="nav-badge" id="pendingCount">0</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="#restaurants" class="nav-link" data-section="restaurants">
+                            <i class="fas fa-store nav-icon"></i>
+                            <span class="nav-text">Restoranlar</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="#packages" class="nav-link" data-section="packages">
+                            <i class="fas fa-box nav-icon"></i>
+                            <span class="nav-text">Paketler</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="#consumers" class="nav-link" data-section="consumers">
+                            <i class="fas fa-users nav-icon"></i>
+                            <span class="nav-text">Tüketiciler</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Sistem</div>
+                    <div class="nav-item">
+                        <a href="#settings" class="nav-link" data-section="settings">
+                            <i class="fas fa-cog nav-icon"></i>
+                            <span class="nav-text">Ayarlar</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="#logout" class="nav-link" onclick="adminDashboard.logout()">
+                            <i class="fas fa-sign-out-alt nav-icon"></i>
+                            <span class="nav-text">Çıkış Yap</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <button class="sidebar-toggle" onclick="adminDashboard.toggleSidebar()">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h1 class="page-title" id="pageTitle">Ana Dashboard</h1>
+                    </div>
+                    
+                    <div class="header-right">
+                        <div class="status-indicator" id="apiStatus">
+                            <i class="fas fa-circle"></i>
+                            <span>API Bağlı</span>
+                        </div>
+                        
+                        <div class="user-menu" onclick="adminDashboard.showUserMenu()">
+                            <div class="user-avatar">
+                                <i class="fas fa-user-crown"></i>
+                            </div>
+                            <div class="user-info">
+                                <h4 id="userName">Admin User</h4>
+                                <p>Super Admin</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="content-section active">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">Toplam Başvurular</div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="totalApplications">0</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +12% bu ay
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">Onaylanmış Restoranlar</div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-store"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="approvedRestaurants">0</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +8% bu ay
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">Aktif Paketler</div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="activePackages">0</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +25% bu ay
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">Kayıtlı Tüketiciler</div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="totalConsumers">0</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +18% bu ay
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <div class="quick-action" onclick="adminDashboard.showSection('applications')">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div class="quick-action-title">Yeni Başvuru</div>
+                            <div class="quick-action-desc">Bekleyen başvuruları incele</div>
+                        </div>
+                        
+                        <div class="quick-action" onclick="adminDashboard.showSection('restaurants')">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <div class="quick-action-title">Restoran Yönet</div>
+                            <div class="quick-action-desc">Restoran bilgilerini düzenle</div>
+                        </div>
+                        
+                        <div class="quick-action" onclick="adminDashboard.showSection('packages')">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="quick-action-title">Paket Kontrolü</div>
+                            <div class="quick-action-desc">Paketleri onayla/reddet</div>
+                        </div>
+                        
+                        <div class="quick-action" onclick="adminDashboard.refreshAllData()">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-sync"></i>
+                            </div>
+                            <div class="quick-action-title">Verileri Yenile</div>
+                            <div class="quick-action-desc">Tüm verileri güncelle</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activities -->
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3 class="table-title">Son Başvurular</h3>
+                            <div class="table-actions">
+                                <button class="btn btn-secondary" onclick="adminDashboard.refreshApplications()">
+                                    <i class="fas fa-sync"></i>
+                                    Yenile
+                                </button>
+                                <button class="btn btn-primary" onclick="adminDashboard.showSection('applications')">
+                                    <i class="fas fa-eye"></i>
+                                    Tümünü Gör
+                                </button>
+                            </div>
+                        </div>
+                        <div id="recentApplications" class="loading">
+                            <div class="spinner"></div>
+                            <span>Son başvurular yükleniyor...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Applications Section -->
+                <section id="applications" class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Restoran Başvuruları</h2>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary" onclick="adminDashboard.refreshApplications()">
+                                <i class="fas fa-sync"></i>
+                                Yenile
+                            </button>
+                            <button class="btn btn-primary" onclick="adminDashboard.exportApplications()">
+                                <i class="fas fa-download"></i>
+                                Dışa Aktar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3 class="table-title">Tüm Başvurular</h3>
+                            <div class="table-actions">
+                                <select id="applicationFilter" class="btn btn-secondary" onchange="adminDashboard.filterApplications()">
+                                    <option value="all">Tümü</option>
+                                    <option value="pending">Bekleyenler</option>
+                                    <option value="approved">Onaylananlar</option>
+                                    <option value="rejected">Reddedilenler</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="applicationsTable" class="loading">
+                            <div class="spinner"></div>
+                            <span>Başvurular yükleniyor...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Restaurants Section -->
+                <section id="restaurants" class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Kayıtlı Restoranlar</h2>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary" onclick="adminDashboard.refreshRestaurants()">
+                                <i class="fas fa-sync"></i>
+                                Yenile
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3 class="table-title">Aktif Restoranlar</h3>
+                        </div>
+                        <div id="restaurantsTable" class="loading">
+                            <div class="spinner"></div>
+                            <span>Restoranlar yükleniyor...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Packages Section -->
+                <section id="packages" class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Paket Yönetimi</h2>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary" onclick="adminDashboard.refreshPackages()">
+                                <i class="fas fa-sync"></i>
+                                Yenile
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3 class="table-title">Tüm Paketler</h3>
+                        </div>
+                        <div id="packagesTable" class="loading">
+                            <div class="spinner"></div>
+                            <span>Paketler yükleniyor...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Consumers Section -->
+                <section id="consumers" class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Tüketici Yönetimi</h2>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary" onclick="adminDashboard.refreshConsumers()">
+                                <i class="fas fa-sync"></i>
+                                Yenile
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3 class="table-title">Kayıtlı Tüketiciler</h3>
+                        </div>
+                        <div id="consumersTable" class="loading">
+                            <div class="spinner"></div>
+                            <span>Tüketiciler yükleniyor...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settings" class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Sistem Ayarları</h2>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3 class="table-title">Admin Panel Ayarları</h3>
+                        </div>
+                        <div style="padding: 2rem;">
+                            <p>Sistem ayarları burada yer alacak...</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Load Admin Dashboard JavaScript -->
+    <script src="./js/admin-pro-dash-v2.js?v=2025.08.28"></script>
+</body>
+</html>
