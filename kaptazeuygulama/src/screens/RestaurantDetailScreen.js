@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,12 +12,86 @@ import {
   TextInput,
 } from 'react-native';
 import { useUserData } from '../context/UserDataContext';
+import apiService from '../services/apiService';
 
 const RestaurantDetailScreen = ({ route, navigation }) => {
-  const { restaurant } = route.params;
+  const { restaurant: initialRestaurant } = route.params;
   const { toggleFavorite, isFavorite } = useUserData();
-  const [selectedPackage, setSelectedPackage] = useState(restaurant.packages?.[0] || null);
+  const [restaurant, setRestaurant] = useState(initialRestaurant);
+  const [selectedPackage, setSelectedPackage] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [mapError, setMapError] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
+
+  // Google Maps API key
+  const GOOGLE_MAPS_API_KEY = 'AIzaSyDvDmS8ZuRvrG4gKVII4wz65Krdidfl-tg';
+  
+  const getMapUrl = (coordinates, fallback = false) => {
+    if (!coordinates || coordinates.length < 2) return '';
+    
+    const [lng, lat] = coordinates;
+    console.log('🗺️ Map coordinates:', { lat, lng, fallback });
+    
+    if (fallback || mapError) {
+      // Multiple fallback options for reliability
+      const fallbackOptions = [
+        // Option 1: ArcGIS World Street Map
+        `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/export?bbox=${lng-0.005},${lat-0.005},${lng+0.005},${lat+0.005}&bboxSR=4326&imageSR=4326&size=400,200&format=png&f=image`,
+        // Option 2: OpenStreetMap tile-based
+        `https://static-maps.yandex.ru/1.x/?lang=en_US&ll=${lng},${lat}&z=16&size=400,200&l=map&pt=${lng},${lat},pm2rdm`
+      ];
+      
+      const fallbackUrl = fallbackOptions[0];
+      console.log('🔄 Using reliable fallback map:', fallbackUrl);
+      return fallbackUrl;
+    }
+    
+    // Primary: Google Static Maps API
+    const googleMapsUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=16&size=400x200&maptype=roadmap&markers=color:red%7Clabel:R%7C${lat},${lng}&style=feature:poi%7Cvisibility:simplified&key=${GOOGLE_MAPS_API_KEY}`;
+    
+    console.log('🗺️ Using Google Maps URL:', googleMapsUrl);
+    return googleMapsUrl;
+  };
+
+  useEffect(() => {
+    loadRestaurantDetails();
+  }, []);
+
+  const loadRestaurantDetails = async () => {
+    if (!initialRestaurant._id) return;
+    
+    try {
+      setLoading(true);
+      const response = await apiService.getRestaurantById(initialRestaurant._id);
+      
+      if (response.success && response.data) {
+        const apiRestaurant = {
+          ...response.data,
+          // Format packages to match expected structure
+          packages: response.data.packages?.map(pkg => ({
+            ...pkg,
+            _id: pkg.id,
+            originalPrice: pkg.originalPrice || pkg.price * 2,
+            salePrice: pkg.discountedPrice || pkg.price,
+            discount: pkg.originalPrice ? Math.round((1 - pkg.discountedPrice / pkg.originalPrice) * 100) : 50
+          })) || [],
+          // Ensure rating is a number
+          rating: typeof response.data.rating === 'object' ? response.data.rating.average || 0 : response.data.rating || 0
+        };
+        
+        setRestaurant(apiRestaurant);
+        setSelectedPackage(apiRestaurant.packages?.[0] || null);
+        
+        console.log('📍 Restaurant details loaded:', apiRestaurant.name);
+        console.log('📦 Packages found:', apiRestaurant.packages?.length || 0);
+      }
+    } catch (error) {
+      console.error('Restaurant details loading error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getRestaurantIcon = (category) => {
     const icons = {
@@ -47,7 +121,11 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
   };
 
   const getDirections = () => {
-    if (restaurant.location) {
+    if (restaurant.location?.coordinates) {
+      const [lng, lat] = restaurant.location.coordinates;
+      const url = `https://maps.google.com/maps?daddr=${lat},${lng}`;
+      Linking.openURL(url);
+    } else if (restaurant.location?.lat && restaurant.location?.lng) {
       const { lat, lng } = restaurant.location;
       const url = `https://maps.google.com/maps?daddr=${lat},${lng}`;
       Linking.openURL(url);
@@ -57,7 +135,11 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
   };
 
   const openMap = () => {
-    if (restaurant.location) {
+    if (restaurant.location?.coordinates) {
+      const [lng, lat] = restaurant.location.coordinates;
+      const url = `https://maps.google.com/maps?q=${lat},${lng}&zoom=15`;
+      Linking.openURL(url);
+    } else if (restaurant.location?.lat && restaurant.location?.lng) {
       const { lat, lng } = restaurant.location;
       const url = `https://maps.google.com/maps?q=${lat},${lng}&zoom=15`;
       Linking.openURL(url);
@@ -133,15 +215,6 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           {/* Overlay Gradient */}
           <View style={styles.imageOverlay} />
           
-          {/* Heart Button */}
-          <TouchableOpacity 
-            style={styles.restaurantHeart}
-            onPress={() => toggleFavorite(restaurant)}
-          >
-            <Text style={styles.heartIcon}>
-              {isFavorite(restaurant._id) ? '♥' : '♡'}
-            </Text>
-          </TouchableOpacity>
           
           {/* Package Count Badge */}
           <View style={styles.restaurantPackageBadge}>
@@ -179,7 +252,9 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           <View style={styles.metaInfo}>
             <View style={styles.ratingContainer}>
               <Text style={styles.starIcon}>⭐</Text>
-              <Text style={styles.ratingText}>{restaurant.rating}</Text>
+              <Text style={styles.ratingText}>
+                {typeof restaurant.rating === 'object' ? restaurant.rating.average || 0 : restaurant.rating || 0}
+              </Text>
             </View>
             <View style={styles.pickupTimeContainer}>
               <Text style={styles.pickupTimeIcon}>⏰</Text>
@@ -193,9 +268,9 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           </Text>
         </View>
 
-        {/* Neyi Kurtarıyorsun? - Admin Alanı */}
+        {/* Ne alacaksınız? - Admin Alanı */}
         <View style={styles.adminSection}>
-          <Text style={styles.adminTitle}>🍽️ Neyi Kurtarıyorsun?</Text>
+          <Text style={styles.adminTitle}>🍽️ Ne alacaksınız?</Text>
           <View style={styles.adminNoteContainer}>
             <Text style={styles.adminNote}>
               {restaurant.adminNote || 'Restoran sahibi henüz ürün açıklaması eklememiş.'}
@@ -214,32 +289,75 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Yol Tarifi */}
-        <View style={styles.directionsSection}>
-          <TouchableOpacity style={styles.directionsButton} onPress={getDirections}>
-            <Text style={styles.directionsIcon}>🧭</Text>
-            <Text style={styles.directionsText}>Yol Tarifi Al</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Harita Konumu */}
         <View style={styles.mapSection}>
           <Text style={styles.sectionTitle}>📍 Konum</Text>
-          <TouchableOpacity style={styles.mapContainer} onPress={openMap}>
-            <View style={styles.mapPlaceholder}>
-              <Text style={styles.mapIcon}>🗺️</Text>
-              <Text style={styles.mapText}>Haritada Görüntüle</Text>
+          <View style={styles.mapContainer}>
+            {restaurant.location?.coordinates ? (
+              <View style={styles.mapViewContainer}>
+                <View style={styles.staticMap}>
+                  <Image
+                    source={{
+                      uri: getMapUrl(restaurant.location.coordinates)
+                    }}
+                    style={styles.mapImage}
+                    onLoad={() => {
+                      console.log('✅ Google Maps loaded successfully');
+                      setMapError(false);
+                      setMapLoaded(true);
+                    }}
+                    onError={(error) => {
+                      console.log('❌ Google Maps failed - API key not authorized for Static Maps API');
+                      console.log('💡 Solution: Go to Google Cloud Console → APIs & Services → Credentials');
+                      console.log('💡 Edit API key → API restrictions → Add "Maps Static API"');
+                      setMapError(true);
+                    }}
+                  />
+                  {mapError && (
+                    <Image
+                      source={{
+                        uri: getMapUrl(restaurant.location.coordinates, true)
+                      }}
+                      style={styles.mapImage}
+                      onLoad={() => {
+                        console.log('✅ Fallback map loaded');
+                        setMapLoaded(true);
+                      }}
+                      onError={() => console.log('❌ All maps failed')}
+                    />
+                  )}
+                  
+                  {/* Loading overlay - only show if no map loaded yet */}
+                  {!mapLoaded && (
+                    <View style={styles.mapFallbackOverlay}>
+                      <Text style={styles.mapFallbackText}>🗺️</Text>
+                      <Text style={styles.mapFallbackSubtext}>Harita Yükleniyor...</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.mapPlaceholder} onPress={openMap}>
+                <Text style={styles.mapIcon}>🗺️</Text>
+                <Text style={styles.mapText}>Haritada Görüntüle</Text>
+              </TouchableOpacity>
+            )}
+            <View style={styles.addressContainer}>
+              <Text style={styles.addressText}>
+                {restaurant.address?.street || restaurant.location?.address || 'Adres bilgisi yok'}
+              </Text>
+              <TouchableOpacity style={styles.directionsSmallButton} onPress={getDirections}>
+                <Text style={styles.directionsIcon}>🧭</Text>
+                <Text style={styles.directionsSmallText}>Yol Tarifi Al</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.addressText}>
-              {restaurant.location?.address || 'Adres bilgisi yok'}
-            </Text>
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Ürün Envanteri */}
         {restaurant.packages && restaurant.packages.length > 0 && (
           <View style={styles.inventorySection}>
-            <Text style={styles.sectionTitle}>📦 Ürün Envanteri</Text>
             
             {restaurant.packages.map((pkg, index) => (
               <View key={pkg._id || index} style={[
@@ -303,6 +421,16 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             </Text>
           </View>
         )}
+
+        {/* Satış ve Sorumluluk */}
+        <View style={styles.legalSection}>
+          <Text style={styles.legalTitle}>📜 Satış ve Sorumluluk</Text>
+          <View style={styles.legalContainer}>
+            <Text style={styles.legalText}>
+              Paketler satıcılar tarafından satılmaktadır. 6502 no'lu Tüketicinin Korunması Hakkında Kanun kapmasında korunmaktasınız.
+            </Text>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -600,8 +728,54 @@ const styles = StyleSheet.create({
   mapContainer: {
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: 'hidden',
+    backgroundColor: '#ffffff',
+  },
+  mapViewContainer: {
+    height: 200,
+  },
+  staticMap: {
+    height: 200,
+    position: 'relative',
+  },
+  mapImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  mapFallbackOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(243, 244, 246, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mapFallbackText: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  mapFallbackSubtext: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  mapOverlay: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(22, 163, 74, 0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  mapOverlayText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   mapPlaceholder: {
     height: 120,
@@ -618,11 +792,38 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     fontWeight: '500',
   },
-  addressText: {
+  addressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 12,
+    backgroundColor: '#f9fafb',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  addressText: {
+    flex: 1,
     fontSize: 14,
     color: '#374151',
-    backgroundColor: '#ffffff',
+    marginRight: 12,
+  },
+  directionsSmallButton: {
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  directionsIcon: {
+    fontSize: 14,
+    color: '#ffffff',
+  },
+  directionsSmallText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '600',
   },
   inventorySection: {
     backgroundColor: '#ffffff',
@@ -737,6 +938,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6b7280',
     textAlign: 'center',
+  },
+  legalSection: {
+    backgroundColor: '#ffffff',
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  legalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  legalContainer: {
+    backgroundColor: '#fef3c7',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#fbbf24',
+  },
+  legalText: {
+    fontSize: 13,
+    color: '#92400e',
+    lineHeight: 18,
+    textAlign: 'justify',
   },
 });
 

@@ -102,12 +102,18 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:api.github.com)",
       "Bash(start http://localhost:8083)",
-      "Bash(start http://localhost:8084)"
+      "Bash(start http://localhost:8084)",
+      "Bash(start http://localhost:8085)",
+      "WebFetch(domain:kaptaze-backend-api.onrender.com)",
+      "Bash(timeout:*)",
+      "Bash(start https://kaptaze.netlify.app/admin-dashboard-professional.html)",
+      "Bash(start https://kaptaze.com)"
     ],
     "deny": [],
     "ask": [],
     "additionalDirectories": [
-      "C:\\Users\\hakan"
+      "C:\\Users\\hakan",
+      "C:\\c\\Users\\hakan\\KapTazeApp"
     ]
   }
 }

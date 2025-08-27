@@ -59,8 +59,8 @@ const RegisterScreen = ({ navigation }) => {
       setIsSubmitting(true);
       
       try {
-        // Gerçek API call
-        const response = await fetch('https://operated-sip-animal-cassette.trycloudflare.com/api/auth/register', {
+        // KapTaze Backend API call
+        const response = await fetch('https://kaptaze-backend-api.onrender.com/auth/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

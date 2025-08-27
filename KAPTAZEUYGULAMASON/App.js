@@ -15,7 +15,6 @@ import FavoritesScreen from './src/screens/FavoritesScreen';
 import OrdersScreen from './src/screens/OrdersScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import PurchaseScreen from './src/screens/PurchaseScreen';
-import MapScreen from './src/screens/MapScreen';
 import UserDataProvider from './src/context/UserDataContext';
 import AuthProvider from './src/context/AuthContext';
 
@@ -53,12 +52,22 @@ class ErrorBoundary extends React.Component {
 }
 
 export default function App() {
+  const [debugInfo, setDebugInfo] = useState('App başlatılıyor...');
+  
+  React.useEffect(() => {
+    console.log('App component mounted');
+    setDebugInfo('App component hazır');
+  }, []);
+
   return (
     <ErrorBoundary>
       <UserDataProvider>
         <AuthProvider>
           <SafeAreaView style={styles.container}>
             <StatusBar style="dark" />
+            <View style={styles.debugContainer}>
+              <Text style={styles.debugText}>🌱 KapTaze - {debugInfo}</Text>
+            </View>
             <NavigationContainer>
               <Stack.Navigator 
                 initialRouteName="Welcome"
@@ -77,7 +86,6 @@ export default function App() {
                 <Stack.Screen name="Orders" component={OrdersScreen} />
                 <Stack.Screen name="Profile" component={ProfileScreen} />
                 <Stack.Screen name="Purchase" component={PurchaseScreen} />
-                <Stack.Screen name="Map" component={MapScreen} />
               </Stack.Navigator>
             </NavigationContainer>
           </SafeAreaView>

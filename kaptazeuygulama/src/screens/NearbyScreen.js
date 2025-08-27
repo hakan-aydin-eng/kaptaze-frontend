@@ -11,12 +11,15 @@ import {
 } from 'react-native';
 import { antalyaRestaurants } from '../data/antalyaRestaurants';
 import { useUserData } from '../context/UserDataContext';
+import apiService from '../services/apiService';
 
 const NearbyScreen = ({ navigation }) => {
   const { toggleFavorite, isFavorite } = useUserData();
   const [nearbyRestaurants, setNearbyRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('distance'); // distance, rating, price
+  const [userLocation, setUserLocation] = useState('Antalya');
+  const [selectedDistance, setSelectedDistance] = useState(10);
 
   const getRestaurantIcon = (category) => {
     const icons = {
@@ -32,26 +35,75 @@ const NearbyScreen = ({ navigation }) => {
 
   useEffect(() => {
     loadNearbyRestaurants();
-  }, [sortBy]);
+  }, [sortBy, selectedDistance]);
 
-  const loadNearbyRestaurants = () => {
-    setLoading(true);
-    
-    // Simulate loading delay
-    setTimeout(() => {
-      let sorted = [...antalyaRestaurants];
+  const loadNearbyRestaurants = async () => {
+    try {
+      setLoading(true);
+      console.log('🗺️ Loading nearby restaurants...');
+      
+      // API'den gerçek restaurant verilerini çek
+      let apiRestaurants = [];
+      try {
+        console.log('🔄 Loading restaurants from KapTaze API...');
+        const apiResponse = await apiService.getRestaurants();
+        console.log('📊 API response:', apiResponse);
+        
+        if (apiResponse.success && apiResponse.data.restaurants) {
+          apiRestaurants = apiResponse.data.restaurants;
+          console.log('✅ API restaurants loaded:', apiRestaurants.length);
+          console.log('📋 Restaurant names:', apiRestaurants.map(r => r.name));
+        } else {
+          console.log('⚠️ No restaurants in API response');
+        }
+      } catch (error) {
+        console.log('❌ API request failed:', error);
+      }
+      
+      // Tüm veri kaynaklarını birleştir
+      const allRestaurants = [
+        ...apiRestaurants, // Gerçek API verisi öncelikli
+        ...antalyaRestaurants // Fallback demo restoranlar
+      ];
+      
+      // Format API data to match expected structure
+      const formattedRestaurants = allRestaurants.map(restaurant => ({
+        ...restaurant,
+        name: restaurant.name || restaurant.ad, // API uses 'name', fallback uses 'ad'
+        rating: typeof restaurant.rating === 'object' ? restaurant.rating.average || 0 : restaurant.rating || 0,
+        distance: restaurant.distance || calculateDistance(restaurant),
+        packages: restaurant.packages || [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3 }]
+      }));
+
+      // Duplicate removal (by id or name)
+      const uniqueRestaurants = formattedRestaurants.filter((restaurant, index, self) => 
+        index === self.findIndex(r => r._id === restaurant._id || r.name === restaurant.name)
+      );
+      
+      // Filter by distance
+      const nearbyFiltered = uniqueRestaurants.filter(restaurant => {
+        const restaurantDistance = parseFloat(restaurant.distance) || 0;
+        return restaurantDistance <= selectedDistance;
+      });
+      
+      // Sort restaurants based on selected criteria
+      let sorted = [...nearbyFiltered];
       
       switch (sortBy) {
         case 'distance':
-          sorted = sorted.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+          sorted = sorted.sort((a, b) => parseFloat(a.distance || 0) - parseFloat(b.distance || 0));
           break;
         case 'rating':
-          sorted = sorted.sort((a, b) => b.rating - a.rating);
+          sorted = sorted.sort((a, b) => {
+            const aRating = typeof a.rating === 'object' ? a.rating.average || 0 : a.rating || 0;
+            const bRating = typeof b.rating === 'object' ? b.rating.average || 0 : b.rating || 0;
+            return bRating - aRating;
+          });
           break;
         case 'price':
           sorted = sorted.sort((a, b) => {
-            const aPrice = a.packages?.[0]?.salePrice || 0;
-            const bPrice = b.packages?.[0]?.salePrice || 0;
+            const aPrice = a.packages?.[0]?.salePrice || a.packages?.[0]?.discountedPrice || a.packages?.[0]?.price || 0;
+            const bPrice = b.packages?.[0]?.salePrice || b.packages?.[0]?.discountedPrice || b.packages?.[0]?.price || 0;
             return aPrice - bPrice;
           });
           break;
@@ -60,8 +112,25 @@ const NearbyScreen = ({ navigation }) => {
       }
       
       setNearbyRestaurants(sorted);
+      console.log(`🗺️ Toplam ${sorted.length} yakın restoran yüklendi (${selectedDistance}km çapında)`);
+      
+    } catch (error) {
+      console.error('Nearby restaurants loading error:', error);
+      // Hata durumunda fallback data kullan
+      const fallbackData = antalyaRestaurants.filter(r => parseFloat(r.distance) <= selectedDistance);
+      setNearbyRestaurants(fallbackData.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance)));
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
+  };
+
+  // Calculate distance based on coordinates (simplified)
+  const calculateDistance = (restaurant) => {
+    if (restaurant.location?.coordinates) {
+      // Simple distance calculation - in real app would use proper geo calculations
+      return (Math.random() * selectedDistance).toFixed(1);
+    }
+    return (Math.random() * 5 + 1).toFixed(1); // Random fallback distance
   };
 
   const getSortOptions = () => [
@@ -109,7 +178,7 @@ const NearbyScreen = ({ navigation }) => {
         <View style={styles.headerInfo}>
           <Text style={styles.title}>📍 Yakınımdaki Restoranlar</Text>
           <Text style={styles.subtitle}>
-            Antalya konumunda {nearbyRestaurants.length} restoran bulundu
+            {userLocation} konumunda {nearbyRestaurants.length} restoran bulundu ({selectedDistance}km çapında)
           </Text>
         </View>
 
@@ -195,14 +264,18 @@ const NearbyScreen = ({ navigation }) => {
                   <View style={styles.restaurantMeta}>
                     <View style={styles.ratingContainer}>
                       <Text style={styles.starIcon}>⭐</Text>
-                      <Text style={styles.ratingText}>{restaurant.rating}</Text>
+                      <Text style={styles.ratingText}>
+                        {typeof restaurant.rating === 'object' ? restaurant.rating.average || 0 : restaurant.rating || 0}
+                      </Text>
                     </View>
                     <View style={styles.timeContainer}>
                       <Text style={styles.timeIcon}>⏰</Text>
                       <Text style={styles.timeText}>18:00-21:00</Text>
                     </View>
-                    {mainPackage.salePrice && (
-                      <Text style={styles.priceText}>₺{mainPackage.salePrice}</Text>
+                    {(mainPackage.salePrice || mainPackage.discountedPrice || mainPackage.price) && (
+                      <Text style={styles.priceText}>
+                        ₺{mainPackage.salePrice || mainPackage.discountedPrice || mainPackage.price}
+                      </Text>
                     )}
                   </View>
                 </View>

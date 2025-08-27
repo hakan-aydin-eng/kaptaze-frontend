@@ -12,8 +12,9 @@ import {
   Alert,
   Platform,
   Image,
+  Modal,
 } from 'react-native';
-// import * as Location from 'expo-location';
+import * as Location from 'expo-location';
 import apiService from '../services/apiService';
 import { antalyaRestaurants, categoryFilters } from '../data/antalyaRestaurants';
 import { useUserData } from '../context/UserDataContext';
@@ -37,8 +38,13 @@ const MainScreen = ({ navigation }) => {
   const [featuredRestaurants, setFeaturedRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
-  const [userLocation, setUserLocation] = useState('Antalya');
+  const [userLocation, setUserLocation] = useState('Konum alınıyor...');
   const [locationPermissionStatus, setLocationPermissionStatus] = useState(null);
+  const [userCoordinates, setUserCoordinates] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDistance, setSelectedDistance] = useState(10);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [categories, setCategories] = useState([]);
   
   // Infinite scroll states
   const [displayedRestaurants, setDisplayedRestaurants] = useState([]);
@@ -49,15 +55,61 @@ const MainScreen = ({ navigation }) => {
 
   useEffect(() => {
     loadRestaurants();
-    loadFeaturedRestaurants();
+    loadFeaturedRestaurants(); 
+    loadCategories();
+    loadUserLocation();
   }, []);
 
-  const handleLocationChange = async () => {
-    Alert.alert(
-      'Konum Seçimi',
-      'Şu anda Antalya konumundasınız.',
-      [{ text: 'Tamam' }]
-    );
+  const loadUserLocation = async () => {
+    try {
+      console.log('📍 Requesting location permission...');
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermissionStatus(status);
+      
+      if (status !== 'granted') {
+        console.log('❌ Location permission denied');
+        setUserLocation('Antalya'); // Fallback to default
+        return;
+      }
+
+      console.log('✅ Location permission granted, getting position...');
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+        maximumAge: 30000, // Cache for 30 seconds
+      });
+      
+      const { latitude, longitude } = location.coords;
+      setUserCoordinates({ latitude, longitude });
+      console.log('📍 User coordinates:', { latitude, longitude });
+      
+      // Reverse geocoding to get city name
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+      
+      if (reverseGeocode.length > 0) {
+        const address = reverseGeocode[0];
+        const cityName = address.city || address.district || address.subregion || 'Konum Tespit Edildi';
+        setUserLocation(cityName);
+        console.log('🏙️ User city:', cityName);
+      } else {
+        setUserLocation('Konum Tespit Edildi');
+      }
+      
+    } catch (error) {
+      console.error('📍 Location error:', error);
+      setUserLocation('Antalya'); // Fallback to default
+    }
+  };
+
+  const handleLocationChange = () => {
+    // Pass user location data to map
+    navigation.navigate('Map', { 
+      userLocation,
+      userCoordinates,
+      selectedDistance
+    });
   };
 
   const loadRestaurants = async () => {
@@ -65,84 +117,51 @@ const MainScreen = ({ navigation }) => {
       setLoading(true);
       console.log('📱 Loading restaurants for mobile app...');
       
-      // Yeni mobil API metodunu kullan
-      let webRestaurants = [];
-      try {
-        console.log('🔄 Attempting mobile restaurants load...');
-        const mobileData = await apiService.getMobileRestaurants();
-        console.log('📊 Mobile data response:', mobileData);
-        
-        if (mobileData.success && mobileData.data.restaurants) {
-          webRestaurants = mobileData.data.restaurants;
-          console.log('✅ Mobile restaurants loaded:', webRestaurants.length);
-          console.log('📋 Restaurant names:', webRestaurants.map(r => r.name || r.ad));
-          
-          if (mobileData.data.meta) {
-            console.log('📊 Meta info:', mobileData.data.meta);
-          }
-        } else {
-          console.log('⚠️ No mobile restaurants in response');
-        }
-      } catch (error) {
-        console.log('❌ Mobile data failed:', error);
-      }
-      
-      // Fallback: Web storage direct access dene
-      if (webRestaurants.length === 0) {
-        try {
-          const webData = await apiService.getWebStorageData();
-          if (webData.success && webData.data.restaurants) {
-            webRestaurants = webData.data.restaurants;
-            console.log('🔄 Fallback web storage loaded:', webRestaurants.length);
-          }
-        } catch (error) {
-          console.log('Web storage okunamadı:', error);
-        }
-      }
-      
-      // API'den veri çekmeye çalış
+      // API'den gerçek restaurant verilerini çek
       let apiRestaurants = [];
       try {
-        const response = await apiService.getRestaurants();
-        if (response.success && response.data.restaurants) {
-          apiRestaurants = response.data.restaurants;
-          console.log('API restaurants loaded:', apiRestaurants.length);
+        console.log('🔄 Loading restaurants from KapTaze API...');
+        const apiResponse = await apiService.getRestaurants();
+        console.log('📊 API response:', apiResponse);
+        
+        if (apiResponse.success && apiResponse.data.restaurants) {
+          apiRestaurants = apiResponse.data.restaurants;
+          console.log('✅ API restaurants loaded:', apiRestaurants.length);
+          console.log('📋 Restaurant names:', apiRestaurants.map(r => r.name));
+        } else {
+          console.log('⚠️ No restaurants in API response');
         }
       } catch (error) {
-        console.log('API failed, using fallback data');
+        console.log('❌ API request failed:', error);
       }
       
-      // Mock data'dan web test restoranları al
-      let mockRestaurants = [];
-      try {
-        const mockData = await apiService.getMockRestaurants();
-        if (mockData.success && mockData.data.restaurants) {
-          mockRestaurants = mockData.data.restaurants;
-          console.log('🎭 Mock restaurants loaded:', mockRestaurants.length);
-          console.log('📋 Mock restaurant names:', mockRestaurants.map(r => r.name));
-        }
-      } catch (error) {
-        console.log('Mock data failed:', error);
-      }
+      
       
       // Tüm veri kaynaklarını birleştir
       const allRestaurants = [
-        ...webRestaurants, // Web'den onaylanan restoranlar öncelikli
-        ...apiRestaurants,
-        ...mockRestaurants, // Web test simülasyonu
-        ...antalyaRestaurants // Varsayılan demo restoranlar
+        ...apiRestaurants, // Gerçek API verisi öncelikli
+        ...antalyaRestaurants // Fallback demo restoranlar
       ];
       
+      // Format API data to match expected structure
+      const formattedRestaurants = allRestaurants.map(restaurant => ({
+        ...restaurant,
+        name: restaurant.name || restaurant.ad, // API uses 'name', fallback uses 'ad'
+        rating: typeof restaurant.rating === 'object' ? restaurant.rating.average || 0 : restaurant.rating || 0,
+        distance: restaurant.distance || '2.5km',
+        packages: restaurant.packages || [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3 }]
+      }));
+
       // Duplicate removal (by id or name)
-      const uniqueRestaurants = allRestaurants.filter((restaurant, index, self) => 
-        index === self.findIndex(r => r._id === restaurant._id || r.ad === restaurant.ad)
+      const uniqueRestaurants = formattedRestaurants.filter((restaurant, index, self) => 
+        index === self.findIndex(r => r._id === restaurant._id || r.name === restaurant.name)
       );
       
       setRestaurants(uniqueRestaurants);
       setDisplayedRestaurants(uniqueRestaurants.slice(0, ITEMS_PER_PAGE));
       setHasMore(uniqueRestaurants.length > ITEMS_PER_PAGE);
       
-      console.log(`📱 Toplam ${uniqueRestaurants.length} restoran yüklendi (${webRestaurants.length} web + ${apiRestaurants.length} API + ${mockRestaurants.length} mock + ${antalyaRestaurants.length} yerel)`);
+      console.log(`📱 Toplam ${uniqueRestaurants.length} restoran yüklendi (${apiRestaurants.length} API + ${antalyaRestaurants.length} fallback)`);
       
     } catch (error) {
       console.error('Restaurant loading error:', error);
@@ -160,7 +179,7 @@ const MainScreen = ({ navigation }) => {
       console.log('Loading featured restaurants from API...');
       
       // Gerçek API'den restoranları yükle
-      const response = await apiService.get('/restaurants');
+      const response = await apiService.getRestaurants();
       
       if (response.success && response.data.restaurants) {
         const apiRestaurants = response.data.restaurants;
@@ -179,12 +198,62 @@ const MainScreen = ({ navigation }) => {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      console.log('🏷️ Loading categories from API...');
+      const response = await apiService.getCategories();
+      
+      if (response.success && response.data) {
+        // Convert API categories to filter format
+        const apiCategories = response.data.map(cat => ({
+          id: cat._id || cat.name.toLowerCase().replace(/\s+/g, ''),
+          name: cat.name,
+          emoji: cat.emoji || '🍽️'
+        }));
+        
+        // Add "All" option at the beginning
+        const allCategories = [
+          { id: 'all', name: 'Hepsi', emoji: '🍽️' },
+          ...apiCategories
+        ];
+        
+        setCategories(allCategories);
+        console.log('✅ Categories loaded:', allCategories);
+      } else {
+        // Fallback to default categories
+        setCategories([
+          { id: 'all', name: 'Hepsi', emoji: '🍽️' },
+          { id: 'turkish', name: 'Türk Mutfağı', emoji: '🇹🇷' },
+          { id: 'fastfood', name: 'Fast Food', emoji: '🍔' },
+          { id: 'coffee', name: 'Kahve', emoji: '☕' },
+        ]);
+      }
+    } catch (error) {
+      console.log('❌ Categories failed, using fallback');
+      setCategories([
+        { id: 'all', name: 'Hepsi', emoji: '🍽️' },
+        { id: 'turkish', name: 'Türk Mutfağı', emoji: '🇹🇷' },
+        { id: 'fastfood', name: 'Fast Food', emoji: '🍔' },
+        { id: 'coffee', name: 'Kahve', emoji: '☕' },
+      ]);
+    }
+  };
+
   const filteredRestaurants = restaurants.filter(restaurant => {
+    // Search filter
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      const matchesName = restaurant.name?.toLowerCase().includes(searchLower);
+      const matchesCategory = restaurant.category?.toLowerCase().includes(searchLower);
+      if (!matchesName && !matchesCategory) return false;
+    }
+    
+    // Category filter
     if (activeFilter === 'all') return true;
     const categoryMap = {
       'coffee': ['Kahve & Atıştırmalık', 'Özel Kahve'],
       'fastfood': ['Pizza & Fast Food', 'Fast Food'],
-      'turkish': ['Türk Mutfağı'],
+      'turkish': ['Türk Mutfağı', 'Turkish Cuisine'],
       'vegan': ['Vegan & Sağlıklı']
     };
     return categoryMap[activeFilter]?.includes(restaurant.category);
@@ -302,7 +371,9 @@ const MainScreen = ({ navigation }) => {
           <View style={styles.featuredMeta}>
             <View style={styles.ratingContainer}>
               <Text style={styles.starIcon}>⭐</Text>
-              <Text style={styles.ratingText}>{item.rating}</Text>
+              <Text style={styles.ratingText}>
+                {typeof item.rating === 'object' ? item.rating.average || item.rating : item.rating}
+              </Text>
             </View>
             <View style={styles.pickupTimeContainer}>
               <Text style={styles.pickupTimeIcon}>⏰</Text>
@@ -359,6 +430,8 @@ const MainScreen = ({ navigation }) => {
               style={styles.searchInput}
               placeholder="Restoran ara..."
               placeholderTextColor="#9ca3af"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
             />
           </View>
 
@@ -374,11 +447,11 @@ const MainScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* High Rated Restaurants Section */}
+        {/* Featured Restaurants Section */}
         <View style={styles.featuredSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Yüksek Puanlı Restoranlar</Text>
-            <Text style={styles.sectionSubtitle}>3km çevrendeki en iyi restoranlar</Text>
+            <Text style={styles.sectionTitle}>Keşfettin mi?</Text>
+            <Text style={styles.sectionSubtitle}>{selectedDistance}km çevrendeki en iyi restoranlar</Text>
           </View>
           
           <FlatList
@@ -395,7 +468,7 @@ const MainScreen = ({ navigation }) => {
         <View style={styles.filterSection}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.filterContainer}>
-              {categoryFilters.map((category) => (
+              {categories.map((category) => (
                 <TouchableOpacity
                   key={category.id}
                   onPress={() => setActiveFilter(category.id)}
@@ -518,7 +591,9 @@ const MainScreen = ({ navigation }) => {
                     <View style={styles.restaurantMeta}>
                       <View style={styles.ratingContainer}>
                         <Text style={styles.starIcon}>⭐</Text>
-                        <Text style={styles.ratingText}>{restaurant.rating}</Text>
+                        <Text style={styles.ratingText}>
+                          {typeof restaurant.rating === 'object' ? restaurant.rating.average || restaurant.rating : restaurant.rating}
+                        </Text>
                       </View>
                       <View style={styles.pickupTimeContainer}>
                         <Text style={styles.pickupTimeIcon}>⏰</Text>
@@ -548,6 +623,87 @@ const MainScreen = ({ navigation }) => {
           )}
         </View>
       </ScrollView>
+
+      {/* Location Selection Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showLocationModal}
+        onRequestClose={() => setShowLocationModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Konum Seç</Text>
+            <Text style={styles.modalSubtitle}>
+              {userLocation} konumundaki teklifleri görüyorsunuz.
+            </Text>
+            
+            <Text style={styles.distanceLabel}>
+              Kaç km mesafedeki teklifleri görmek istersin?
+            </Text>
+            
+            <View style={styles.sliderContainer}>
+              <Text style={styles.sliderValue}>{selectedDistance} km</Text>
+              
+              {/* Distance Options */}
+              <View style={styles.distanceOptions}>
+                {[0, 5, 10, 15, 20].map((distance) => (
+                  <TouchableOpacity
+                    key={distance}
+                    style={[
+                      styles.distanceOption,
+                      selectedDistance === distance && styles.distanceOptionActive
+                    ]}
+                    onPress={() => setSelectedDistance(distance)}
+                  >
+                    <Text style={[
+                      styles.distanceOptionText,
+                      selectedDistance === distance && styles.distanceOptionTextActive
+                    ]}>
+                      {distance}km
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              
+              {/* Manual Adjustment */}
+              <View style={styles.manualAdjustment}>
+                <TouchableOpacity
+                  style={styles.adjustButton}
+                  onPress={() => setSelectedDistance(Math.max(0, selectedDistance - 1))}
+                >
+                  <Text style={styles.adjustButtonText}>-</Text>
+                </TouchableOpacity>
+                <Text style={styles.currentDistance}>{selectedDistance} km</Text>
+                <TouchableOpacity
+                  style={styles.adjustButton}
+                  onPress={() => setSelectedDistance(Math.min(20, selectedDistance + 1))}
+                >
+                  <Text style={styles.adjustButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={styles.modalButtonCancel}
+                onPress={() => setShowLocationModal(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>İptal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.modalButtonConfirm}
+                onPress={() => {
+                  setShowLocationModal(false);
+                  // Refresh restaurants with new distance
+                }}
+              >
+                <Text style={styles.modalButtonConfirmText}>Uygula</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
@@ -1095,6 +1251,127 @@ const styles = StyleSheet.create({
   pickupTimeText: {
     fontSize: 12,
     color: '#6b7280',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 24,
+    margin: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  distanceLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  sliderContainer: {
+    marginBottom: 24,
+  },
+  sliderValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#16a34a',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  distanceOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 8,
+  },
+  distanceOption: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  distanceOptionActive: {
+    backgroundColor: '#16a34a',
+  },
+  distanceOptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  distanceOptionTextActive: {
+    color: '#ffffff',
+  },
+  manualAdjustment: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  adjustButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  adjustButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#16a34a',
+  },
+  currentDistance: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    minWidth: 60,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButtonCancel: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalButtonCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  modalButtonConfirm: {
+    flex: 1,
+    backgroundColor: '#16a34a',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalButtonConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
   },
 });
 
