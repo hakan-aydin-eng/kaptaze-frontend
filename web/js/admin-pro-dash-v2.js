@@ -805,6 +805,10 @@ class AdminProDashboardV2 {
                 // Email already sent by backend, no need to send again
                 // await this.sendApprovalEmail(app); // REMOVED: Duplicate email sending
                 
+                // Auto-sync approved restaurant with mobile app
+                console.log('🔄 Auto-syncing approved restaurant with mobile app...');
+                await this.syncRestaurantWithMobileApp(app);
+                
                 // Refresh display
                 await this.loadApplicationsData();
                 this.updateStatsCards();
@@ -2010,6 +2014,77 @@ class AdminProDashboardV2 {
             console.error('❌ Geçersiz API Key. SG. ile başlamalı.');
             this.showNotification('error', 'Geçersiz API Key format!');
             return false;
+        }
+    }
+
+    // Sync Restaurant with Mobile App
+    async syncRestaurantWithMobileApp(application) {
+        try {
+            console.log('🔄 Syncing restaurant with mobile app:', application.applicationId);
+            
+            // Prepare restaurant data for mobile app
+            const restaurantData = {
+                name: application.restaurantName,
+                category: application.businessType || 'Restaurant',
+                address: {
+                    street: application.address,
+                    district: application.district || 'Unknown',
+                    city: application.city || 'Unknown'
+                },
+                location: {
+                    type: 'Point',
+                    coordinates: application.coordinates || [30.7133, 36.8969] // Default Antalya coordinates
+                },
+                serviceOptions: {
+                    delivery: true,
+                    pickup: true,
+                    dineIn: false
+                },
+                deliveryInfo: {
+                    radius: 5,
+                    fee: 0,
+                    minimumOrder: 0,
+                    estimatedTime: 30
+                },
+                images: {
+                    gallery: []
+                },
+                rating: {
+                    average: 0,
+                    count: 0
+                },
+                stats: {
+                    totalOrders: 0,
+                    totalRevenue: 0,
+                    activeMenuItems: 0
+                },
+                // Additional fields for mobile app
+                description: `${application.restaurantName} - Taze yemekler kurtarıyor!`,
+                workingHours: {
+                    weekday: { open: '09:00', close: '22:00' },
+                    weekend: { open: '10:00', close: '23:00' }
+                },
+                packages: []
+            };
+
+            // Sync with mobile app endpoint
+            const response = await window.KapTazeAPIService.request('/api/public/restaurants/sync', {
+                method: 'POST',
+                body: JSON.stringify({
+                    restaurantId: application.applicationId,
+                    restaurantData: restaurantData
+                })
+            });
+
+            if (response.success) {
+                console.log('✅ Restaurant synced with mobile app successfully');
+            } else {
+                console.warn('⚠️ Mobile app sync failed:', response.message);
+            }
+
+        } catch (error) {
+            console.error('❌ Restaurant mobile app sync error:', error);
+            // Don't throw error, this is not critical for approval process
         }
     }
 }

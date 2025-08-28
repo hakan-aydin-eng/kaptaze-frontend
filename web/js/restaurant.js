@@ -1434,6 +1434,12 @@ async function loadProfileFromBackend() {
                 updateProfileDisplayMode(result.data.profileData);
             }
             
+            // Auto-sync with mobile app when restaurant loads their profile
+            console.log('🔄 Auto-syncing restaurant data with mobile app...');
+            if (result.data.profileData) {
+                await syncProfileWithMobileApp(result.data.profileData);
+            }
+            
             return result.data;
         }
         
@@ -1497,7 +1503,17 @@ async function syncProfileWithMobileApp(profileData) {
 // Initialize Backend Integration
 document.addEventListener('DOMContentLoaded', function() {
     // Load profile data from backend on page load
-    setTimeout(() => {
-        loadProfileFromBackend();
+    setTimeout(async () => {
+        console.log('🔄 Initializing restaurant profile and mobile app sync...');
+        await loadProfileFromBackend();
+        
+        // Force sync with mobile app on every login
+        const user = JSON.parse(localStorage.getItem('restaurantUser') || '{}');
+        const profileData = JSON.parse(localStorage.getItem('restaurantProfileData') || '{}');
+        
+        if (user.id && Object.keys(profileData).length > 0) {
+            console.log('🔄 Force syncing restaurant with mobile app on login...');
+            await syncProfileWithMobileApp(profileData);
+        }
     }, 1000); // Delay to allow other init functions to complete
 });
