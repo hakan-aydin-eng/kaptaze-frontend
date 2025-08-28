@@ -230,38 +230,37 @@ class BackendService {
 
     getDemoPackages() {
         return [
-                {
-                    id: 'demo-1',
-                    title: 'Karma Menü',
-                    restaurant: 'Seraser Restaurant',
-                    originalPrice: 45,
-                    discountedPrice: 18,
-                    image: './assets/food-1.jpg',
-                    category: 'Ana Yemek',
-                    location: 'Kaleici, Antalya'
-                },
-                {
-                    id: 'demo-2',
-                    title: 'Pizza Margarita',
-                    restaurant: 'İtalyan Mutfağı',
-                    originalPrice: 35,
-                    discountedPrice: 15,
-                    image: './assets/food-2.jpg',
-                    category: 'Pizza',
-                    location: 'Lara, Antalya'
-                },
-                {
-                    id: 'demo-3',
-                    title: 'Sushi Set',
-                    restaurant: 'Tokyo Sushi',
-                    originalPrice: 65,
-                    discountedPrice: 25,
-                    image: './assets/food-3.jpg',
-                    category: 'Japon',
-                    location: 'Muratpaşa, Antalya'
-                }
-            ];
-        }
+            {
+                id: 'demo-1',
+                title: 'Karma Menü',
+                restaurant: 'Seraser Restaurant',
+                originalPrice: 45,
+                discountedPrice: 18,
+                image: './assets/food-1.jpg',
+                category: 'Ana Yemek',
+                location: 'Kaleici, Antalya'
+            },
+            {
+                id: 'demo-2',
+                title: 'Pizza Margarita',
+                restaurant: 'İtalyan Mutfağı',
+                originalPrice: 35,
+                discountedPrice: 15,
+                image: './assets/food-2.jpg',
+                category: 'Pizza',
+                location: 'Lara, Antalya'
+            },
+            {
+                id: 'demo-3',
+                title: 'Sushi Set',
+                restaurant: 'Tokyo Sushi',
+                originalPrice: 65,
+                discountedPrice: 25,
+                image: './assets/food-3.jpg',
+                category: 'Japon',
+                location: 'Muratpaşa, Antalya'
+            }
+        ];
     }
 
     // Admin Methods
