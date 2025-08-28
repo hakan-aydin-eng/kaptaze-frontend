@@ -1196,9 +1196,12 @@ class AdminProDashboardV2 {
         const owner = restaurant.owner || {};
         const ownerName = `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || 'Sahip Bilgisi Yok';
         
-        // Safe address access
+        // Safe address access with full address
         const address = restaurant.address || {};
-        const location = `${address.district || 'Bilinmeyen'}, ${address.city || 'Bilinmeyen'}`;
+        const fullAddress = address.street ? 
+            `${address.street}, ${address.district || 'Bilinmeyen'}, ${address.city || 'Bilinmeyen'}` :
+            `${address.district || 'Bilinmeyen'}, ${address.city || 'Bilinmeyen'}`;
+        const location = fullAddress;
         
         // Safe date handling
         const date = restaurant.createdAt ? 
@@ -1358,8 +1361,9 @@ class AdminProDashboardV2 {
                 </td>
                 <td>
                     <div>
-                        <strong>${pkg.restaurant.name}</strong>
+                        <strong style="color: var(--primary); font-size: 0.9rem;">${pkg.restaurant.name}</strong>
                         <br><small style="color: var(--gray-600);">${pkg.restaurant.category}</small>
+                        ${pkg.restaurant.phone ? `<br><small style="color: var(--gray-500); font-size: 0.75rem;">${pkg.restaurant.phone}</small>` : ''}
                     </div>
                 </td>
                 <td>
