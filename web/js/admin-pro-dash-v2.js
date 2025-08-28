@@ -1234,6 +1234,141 @@ class AdminProDashboardV2 {
         }
     }
 
+    // Package management functions
+    displayPackages(packages) {
+        const container = document.getElementById('dataContainer');
+        if (!container) return;
+
+        const html = `
+            <div class="section-header">
+                <h2 class="section-title">Tüm Paketler (${packages.length})</h2>
+                <div class="section-actions">
+                    <button class="btn btn-secondary" onclick="adminDashboard.refreshPackages()">
+                        <i class="fas fa-sync-alt"></i> Yenile
+                    </button>
+                    <button class="btn btn-primary" onclick="adminDashboard.exportPackages()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Paket ara..." 
+                           onkeyup="adminDashboard.filterPackages(this.value)">
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-status="all">Tümü</button>
+                    <button class="filter-btn" data-status="active">Aktif</button>
+                    <button class="filter-btn" data-status="sold_out">Tükendi</button>
+                    <button class="filter-btn" data-status="expired">Süresi Doldu</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Paket Adı</th>
+                            <th>Restoran</th>
+                            <th>Kategori</th>
+                            <th>Fiyat</th>
+                            <th>Miktar</th>
+                            <th>Durum</th>
+                            <th>Son Teslim</th>
+                            <th>Oluşturulma</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${packages.map(pkg => this.renderPackageRow(pkg)).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.innerHTML = html;
+        this.setupFilterHandlers('packages');
+    }
+
+    renderPackageRow(pkg) {
+        const statusBadge = this.getPackageStatusBadge(pkg.status);
+        const createdDate = new Date(pkg.createdAt).toLocaleDateString('tr-TR');
+        const availableUntil = new Date(pkg.availableUntil).toLocaleDateString('tr-TR');
+        
+        return `
+            <tr>
+                <td>
+                    <div>
+                        <strong style="color: var(--gray-900);">${pkg.name}</strong>
+                        ${pkg.description ? `<br><small style="color: var(--gray-600);">${pkg.description}</small>` : ''}
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        <strong>${pkg.restaurant.name}</strong>
+                        <br><small style="color: var(--gray-600);">${pkg.restaurant.category}</small>
+                    </div>
+                </td>
+                <td>
+                    <span class="category-badge">${pkg.category}</span>
+                </td>
+                <td>
+                    <div style="font-size: 0.875rem;">
+                        ${pkg.originalPrice ? `<span style="text-decoration: line-through; color: var(--gray-500);">₺${pkg.originalPrice}</span><br>` : ''}
+                        <strong style="color: var(--success);">₺${pkg.discountedPrice || pkg.price}</strong>
+                    </div>
+                </td>
+                <td>
+                    <div style="font-size: 0.875rem;">
+                        <span style="color: ${pkg.quantity > 0 ? 'var(--success)' : 'var(--danger)'};">
+                            ${pkg.quantity} adet
+                        </span>
+                    </div>
+                </td>
+                <td>${statusBadge}</td>
+                <td style="font-size: 0.875rem;">${availableUntil}</td>
+                <td style="font-size: 0.875rem;">${createdDate}</td>
+                <td>
+                    <div style="display: flex; gap: 0.25rem;">
+                        <button class="action-btn action-view" onclick="adminDashboard.viewPackage('${pkg._id || pkg.id}')" title="Detay">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${pkg.status === 'active' ? `
+                            <button class="action-btn action-suspend" onclick="adminDashboard.suspendPackage('${pkg._id || pkg.id}')" title="Askıya Al">
+                                <i class="fas fa-pause"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    getPackageStatusBadge(status) {
+        const statusConfig = {
+            'active': { class: 'status-approved', text: 'Aktif', icon: 'check' },
+            'sold_out': { class: 'status-rejected', text: 'Tükendi', icon: 'times' },
+            'expired': { class: 'status-pending', text: 'Süresi Doldu', icon: 'clock' },
+            'inactive': { class: 'status-pending', text: 'Pasif', icon: 'pause' }
+        };
+
+        const config = statusConfig[status] || statusConfig['inactive'];
+        return `<span class="status-badge ${config.class}">
+            <i class="fas fa-${config.icon}"></i>
+            ${config.text}
+        </span>`;
+    }
+
+    viewPackage(packageId) {
+        console.log('👁️ Viewing package:', packageId);
+        const pkg = this.data.packages.find(p => (p._id || p.id) === packageId);
+        if (pkg) {
+            alert(`Paket Detayları:\n\nAdı: ${pkg.name}\nRestoran: ${pkg.restaurant.name}\nFiyat: ₺${pkg.discountedPrice || pkg.price}\nMiktar: ${pkg.quantity} adet\nDurum: ${pkg.status}`);
+        }
+    }
+
     showLoadingStates() {
         // Implementation for showing loading states
     }
@@ -1283,8 +1418,34 @@ class AdminProDashboardV2 {
     }
 
     async loadPackagesData() {
-        // Implementation for packages data loading
-        console.log('Loading packages data...');
+        console.log('📦 Loading packages data...');
+        
+        try {
+            // Load packages from backend  
+            const response = await window.KapTazeAPIService.request('/admin/packages', {
+                method: 'GET'
+            });
+
+            if (response.success && response.data) {
+                this.data.packages = response.data.packages;
+                console.log(`✅ Loaded ${this.data.packages.length} packages`);
+                
+                // Display packages
+                this.displayPackages(this.data.packages);
+                
+            } else {
+                throw new Error('Failed to load packages data');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading packages:', error);
+            
+            // Load demo packages as fallback
+            this.data.packages = this.generateDemoPackages();
+            this.displayPackages(this.data.packages);
+            
+            this.showNotification('warning', 'Demo paket verileri yüklendi - Backend bağlantısı yok');
+        }
     }
 
     async loadConsumersData() {
