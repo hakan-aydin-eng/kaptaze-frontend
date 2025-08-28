@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useUserData } from '../context/UserDataContext';
 import apiService from '../services/apiService';
+import config from '../config/env';
 
 const RestaurantDetailScreen = ({ route, navigation }) => {
   const { restaurant: initialRestaurant } = route.params;
@@ -24,8 +25,8 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
   const [mapError, setMapError] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Google Maps API key
-  const GOOGLE_MAPS_API_KEY = 'AIzaSyDvDmS8ZuRvrG4gKVII4wz65Krdidfl-tg';
+  // Google Maps API key from environment config
+  const GOOGLE_MAPS_API_KEY = config.GOOGLE_MAPS_API_KEY;
   
   const getMapUrl = (coordinates, fallback = false) => {
     if (!coordinates || coordinates.length < 2) return '';

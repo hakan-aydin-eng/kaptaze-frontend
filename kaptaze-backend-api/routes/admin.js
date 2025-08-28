@@ -200,6 +200,15 @@ router.post('/applications/:applicationId/approve', [
             });
         }
 
+        // Handle createdBy field for demo admin
+        const mongoose = require('mongoose');
+        let createdByValue = req.user._id;
+        
+        // If demo admin (string ID), convert to ObjectId or use null
+        if (typeof req.user._id === 'string' && req.user._id.startsWith('admin-')) {
+            createdByValue = null; // Or create a default admin ObjectId
+        }
+
         // Create restaurant user
         const restaurantUser = new User({
             firstName: application.firstName,
@@ -210,7 +219,7 @@ router.post('/applications/:applicationId/approve', [
             password: finalPassword,
             role: 'restaurant',
             status: 'active',
-            createdBy: req.user._id
+            createdBy: createdByValue
         });
 
         await restaurantUser.save();
@@ -240,7 +249,7 @@ router.post('/applications/:applicationId/approve', [
             },
             applicationId: application._id,
             ownerId: restaurantUser._id,
-            createdBy: req.user._id,
+            createdBy: createdByValue,
             status: 'active'
         });
 
@@ -252,7 +261,7 @@ router.post('/applications/:applicationId/approve', [
 
         // Update application
         application.status = 'approved';
-        application.reviewedBy = req.user._id;
+        application.reviewedBy = createdByValue;
         application.reviewedAt = new Date();
         application.restaurantId = restaurant._id;
         application.userId = restaurantUser._id;
@@ -364,9 +373,18 @@ router.post('/applications/:applicationId/reject', [
             });
         }
 
+        // Handle createdBy field for demo admin (same as approve endpoint)
+        const mongoose = require('mongoose');
+        let createdByValue = req.user._id;
+        
+        // If demo admin (string ID), convert to ObjectId or use null
+        if (typeof req.user._id === 'string' && req.user._id.startsWith('admin-')) {
+            createdByValue = null;
+        }
+
         // Update application
         application.status = 'rejected';
-        application.reviewedBy = req.user._id;
+        application.reviewedBy = createdByValue;
         application.reviewedAt = new Date();
         application.rejectionReason = reason;
 
@@ -1251,5 +1269,155 @@ function generatePassword() {
     }
     return password;
 }
+
+// @route   GET /admin/restaurants
+// @desc    Get all restaurants (from approved applications)
+// @access  Private (Admin)
+router.get('/restaurants', [
+    query('status').optional().isIn(['active', 'inactive', 'suspended', 'all']),
+    query('search').optional().trim(),
+    query('page').optional().isInt({ min: 1 }).toInt(),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt()
+], async (req, res, next) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                error: 'Validation failed',
+                details: errors.array()
+            });
+        }
+
+        const {
+            status = 'all',
+            search = '',
+            page = 1,
+            limit = 20
+        } = req.query;
+
+        // Build query
+        let query = {};
+
+        // Status filter
+        if (status !== 'all') {
+            query.status = status;
+        }
+
+        // Search filter
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { category: { $regex: search, $options: 'i' } },
+                { 'owner.firstName': { $regex: search, $options: 'i' } },
+                { 'owner.lastName': { $regex: search, $options: 'i' } },
+                { 'owner.email': { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Get restaurants with pagination
+        const skip = (page - 1) * limit;
+        const restaurants = await Restaurant.find(query)
+            .populate('applicationId', 'applicationId businessName firstName lastName email phone businessCategory city district createdAt')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        // Get total count for pagination
+        const total = await Restaurant.countDocuments(query);
+
+        const result = restaurants.map(restaurant => ({
+            _id: restaurant._id,
+            name: restaurant.name,
+            category: restaurant.category,
+            email: restaurant.email,
+            phone: restaurant.phone,
+            address: restaurant.address,
+            owner: restaurant.owner,
+            status: restaurant.status,
+            isVerified: restaurant.isVerified,
+            createdAt: restaurant.createdAt,
+            updatedAt: restaurant.updatedAt,
+            application: restaurant.applicationId ? {
+                applicationId: restaurant.applicationId.applicationId,
+                businessName: restaurant.applicationId.businessName,
+                submittedAt: restaurant.applicationId.createdAt
+            } : null,
+            stats: {
+                totalPackages: restaurant.packages?.length || 0,
+                activePackages: restaurant.packages?.filter(pkg => pkg.status === 'active').length || 0
+            }
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                restaurants: result,
+                pagination: {
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    total,
+                    pages: Math.ceil(total / limit)
+                },
+                filters: { status, search }
+            }
+        });
+
+    } catch (error) {
+        next(error);
+    }
+});
+
+// @route   POST /admin/send-email  
+// @desc    Send email via SendGrid (CORS proxy)
+// @access  Private (Admin only)
+router.post('/send-email', async (req, res, next) => {
+    try {
+        const { emailData } = req.body;
+        
+        if (!emailData) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email data is required'
+            });
+        }
+
+        // SendGrid API call from backend (no CORS issues)
+        const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(emailData)
+        });
+
+        if (response.ok) {
+            const messageId = response.headers.get('X-Message-Id');
+            res.json({
+                success: true,
+                messageId: messageId || 'sent-' + Date.now(),
+                status: response.status
+            });
+        } else {
+            const errorText = await response.text();
+            console.error('SendGrid API error:', errorText);
+            
+            res.status(response.status).json({
+                success: false,
+                error: `SendGrid API error: ${response.status}`,
+                details: errorText
+            });
+        }
+
+    } catch (error) {
+        console.error('Email proxy error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Email sending failed',
+            details: error.message
+        });
+    }
+});
 
 module.exports = router;

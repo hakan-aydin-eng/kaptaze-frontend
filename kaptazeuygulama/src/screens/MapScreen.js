@@ -90,7 +90,6 @@ const MapScreen = ({ navigation, route }) => {
     <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDvDmS8ZuRvrG4gKVII4wz65Krdidfl-tg&libraries=places"></script>
         <style>
             body { margin: 0; padding: 0; }
             #map { height: 100vh; width: 100%; }
@@ -127,119 +126,86 @@ const MapScreen = ({ navigation, route }) => {
                 width: 100%;
             }
         </style>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     </head>
     <body>
         <div id="map"></div>
         <div id="error-container" style="position: absolute; top: 10px; left: 10px; right: 10px; background: red; color: white; padding: 10px; border-radius: 8px; display: none; z-index: 1000;"></div>
-        <script>
-            // Error handling
-            window.onerror = function(msg, url, lineNo, columnNo, error) {
-                const errorContainer = document.getElementById('error-container');
-                errorContainer.style.display = 'block';
-                errorContainer.innerHTML = 'Error: ' + msg;
-                console.error('Map Error:', msg);
-                return true;
-            };
-        </script>
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBBP_yNJ5v_wQmZGlkrGxCxgGsIIqR0H_E&callback=initMap" async defer></script>
         <script>
             let map;
             let markers = [];
             const restaurants = ${JSON.stringify(markersData)};
             
             function initMap() {
-                console.log('initMap called');
-                console.log('Google Maps loaded:', typeof google !== 'undefined');
+                console.log('initMap called with Leaflet');
                 
-                if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
-                    console.error('Google Maps API not loaded');
-                    const errorContainer = document.getElementById('error-container');
-                    errorContainer.style.display = 'block';
-                    errorContainer.innerHTML = 'Google Maps API yüklenemedi. Lütfen internet bağlantınızı kontrol edin.';
-                    return;
-                }
-                
-                map = new google.maps.Map(document.getElementById('map'), {
-                    center: { lat: ${mapCenter.lat}, lng: ${mapCenter.lng} },
-                    zoom: 12,
-                    styles: [
-                        {
-                            featureType: 'poi',
-                            elementType: 'labels',
-                            stylers: [{ visibility: 'off' }]
-                        }
-                    ]
-                });
+                try {
+                    // Initialize Leaflet map
+                    map = L.map('map').setView([${mapCenter.lat}, ${mapCenter.lng}], 12);
+                    
+                    // Add OpenStreetMap tiles
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors',
+                        maxZoom: 19
+                    }).addTo(map);
+                    
+                    console.log('Leaflet map initialized successfully');
                 
                 restaurants.forEach(restaurant => {
                     if (restaurant.coordinates && restaurant.coordinates.length >= 2) {
-                        const position = {
-                            lat: parseFloat(restaurant.coordinates[1]),
-                            lng: parseFloat(restaurant.coordinates[0])
-                        };
+                        const position = [
+                            parseFloat(restaurant.coordinates[1]),
+                            parseFloat(restaurant.coordinates[0])
+                        ];
                         
-                        const marker = new google.maps.Marker({
-                            position: position,
-                            map: map,
-                            title: restaurant.name,
-                            icon: {
-                                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
-                                    '<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">' +
-                                    '<circle cx="20" cy="20" r="18" fill="#16a34a" stroke="#ffffff" stroke-width="2"/>' +
-                                    '<text x="20" y="26" text-anchor="middle" fill="white" font-size="16" font-weight="bold">🍽️</text>' +
-                                    '</svg>'
-                                ),
-                                scaledSize: new google.maps.Size(40, 40),
-                                anchor: new google.maps.Point(20, 20)
-                            }
+                        // Create custom icon for restaurant markers
+                        const restaurantIcon = L.divIcon({
+                            className: 'restaurant-marker',
+                            html: '<div style="background: #16a34a; border: 2px solid white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">🍽️</div>',
+                            iconSize: [40, 40],
+                            iconAnchor: [20, 20],
+                            popupAnchor: [0, -20]
                         });
                         
-                        const infoWindow = new google.maps.InfoWindow({
-                            content: createInfoWindowContent(restaurant)
-                        });
+                        const marker = L.marker(position, { icon: restaurantIcon })
+                            .addTo(map)
+                            .bindPopup(createInfoWindowContent(restaurant))
+                            .on('click', () => {
+                                marker.openPopup();
+                            });
                         
-                        marker.addListener('click', () => {
-                            markers.forEach(m => m.infoWindow.close());
-                            infoWindow.open(map, marker);
-                        });
-                        
-                        markers.push({ marker, infoWindow });
+                        markers.push({ marker });
                     }
                 });
 
                 // Add user location marker
-                const userLocationMarker = new google.maps.Marker({
-                    position: { lat: ${mapCenter.lat}, lng: ${mapCenter.lng} },
-                    map: map,
-                    title: 'Konumunuz',
-                    icon: {
-                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
-                            '<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">' +
-                            '<circle cx="25" cy="25" r="23" fill="#3b82f6" stroke="#ffffff" stroke-width="3"/>' +
-                            '<circle cx="25" cy="25" r="15" fill="#ffffff" opacity="0.8"/>' +
-                            '<circle cx="25" cy="25" r="8" fill="#3b82f6"/>' +
-                            '<text x="25" y="17" text-anchor="middle" fill="white" font-size="12" font-weight="bold">📍</text>' +
-                            '</svg>'
-                        ),
-                        scaledSize: new google.maps.Size(50, 50),
-                        anchor: new google.maps.Point(25, 25)
-                    },
-                    zIndex: 1000
+                const userIcon = L.divIcon({
+                    className: 'user-marker',
+                    html: '<div style="background: #3b82f6; border: 3px solid white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"><div style="background: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; opacity: 0.8;"><div style="background: #3b82f6; border-radius: 50%; width: 16px; height: 16px;"></div></div><div style="position: absolute; top: 8px; font-size: 12px;">📍</div></div>',
+                    iconSize: [50, 50],
+                    iconAnchor: [25, 25],
+                    popupAnchor: [0, -25]
                 });
 
-                const userInfoWindow = new google.maps.InfoWindow({
-                    content: \`
-                        <div class="info-window">
-                            <div class="restaurant-name">📍 Konumunuz</div>
-                            <div class="restaurant-info">${userLocation || 'Mevcut Konum'}</div>
-                            <div class="restaurant-info">Çevresindeki restoranları görüntülüyorsunuz</div>
-                        </div>
-                    \`
-                });
-
-                userLocationMarker.addListener('click', () => {
-                    userInfoWindow.open(map, userLocationMarker);
-                });
+                const userLocationMarker = L.marker([${mapCenter.lat}, ${mapCenter.lng}], { 
+                    icon: userIcon,
+                    zIndexOffset: 1000
+                })
+                .addTo(map)
+                .bindPopup(\`
+                    <div class="info-window">
+                        <div class="restaurant-name">📍 Konumunuz</div>
+                        <div class="restaurant-info">${userLocation || 'Mevcut Konum'}</div>
+                        <div class="restaurant-info">Çevresindeki restoranları görüntülüyorsunuz</div>
+                    </div>
+                \`);
+                
+                } catch (error) {
+                    console.error('Map initialization error:', error);
+                    document.getElementById('error-container').style.display = 'block';
+                    document.getElementById('error-container').innerHTML = 'Harita yüklenirken bir hata oluştu: ' + error.message;
+                }
             }
             
             function createInfoWindowContent(restaurant) {

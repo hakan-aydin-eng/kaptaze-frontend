@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.production
+src/config/env.js
+
+# React Native
+.expo/
+.expo-shared/
+expo-env.d.ts
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul
+coverage
+
+# Mac
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Temporary folders
+tmp/
+temp/
+
+# API Keys and sensitive data
+config/api-keys.js
+**/api-keys.*
+**/*api*key*

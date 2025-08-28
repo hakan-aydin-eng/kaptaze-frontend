@@ -35,6 +35,14 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+.env.production
+
+# API Keys and sensitive configuration
+**/src/config/env.js
+web/js/env-inject.js
+**/api-keys.*
+**/*api*key*
 
 # typescript
 *.tsbuildinfo

@@ -18,7 +18,7 @@ Bu rehber, Google Maps API key'ini güvenli şekilde Netlify environment variabl
 
 **Eklenecek değişkenler:**
 ```bash
-GOOGLE_MAPS_API_KEY = AIzaSyBTPj8fON_ie4OjJUFi1FCDCRD6V6d4xWk
+GOOGLE_MAPS_API_KEY = AIzaSyDpkdGOZ5jJWVtFbevWBxIA8Z9zmH3mqjU
 API_BASE_URL = https://https://kaptaze.com//.netlify/functions  
 NODE_ENV = production
 ENVIRONMENT = production
@@ -45,7 +45,7 @@ ENVIRONMENT = production
 ### Code Flow:
 ```javascript
 // 1. env-inject.js (build sırasında güncellenir)
-window.GOOGLE_MAPS_API_KEY = 'AIzaSyBTPj8fON_ie4OjJUFi1FCDCRD6V6d4xWk';
+window.GOOGLE_MAPS_API_KEY = 'AIzaSyDpkdGOZ5jJWVtFbevWBxIA8Z9zmH3mqjU';
 
 // 2. config.js (environment variable'ı kullanır)
 apiKey: window.GOOGLE_MAPS_API_KEY || null,

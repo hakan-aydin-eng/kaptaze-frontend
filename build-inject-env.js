@@ -10,12 +10,15 @@ const path = require('path');
 
 console.log('🔧 Building environment variables injection...');
 
+const envInjectTemplatePath = path.join(__dirname, 'web', 'js', 'env-inject.template.js');
 const envInjectPath = path.join(__dirname, 'web', 'js', 'env-inject.js');
-let envContent = fs.readFileSync(envInjectPath, 'utf8');
+
+// Read template file
+let envContent = fs.readFileSync(envInjectTemplatePath, 'utf8');
 
 // Environment variables to inject
 const envVars = {
-    'GOOGLE_MAPS_API_KEY': process.env.GOOGLE_MAPS_API_KEY || null,
+    'GOOGLE_MAPS_API_KEY': process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyDpkdGOZ5jJWVtFbevWBxIA8Z9zmH3mqjU',
     'API_BASE_URL': process.env.API_BASE_URL || 'https://https://kaptaze.com//.netlify/functions',
     'ENVIRONMENT': process.env.NODE_ENV || 'production'
 };
