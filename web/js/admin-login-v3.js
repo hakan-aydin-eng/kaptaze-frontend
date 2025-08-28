@@ -159,7 +159,7 @@ class AdminLoginV3 {
             // Try real API login first
             if (this.apiConnected) {
                 try {
-                    const response = await fetch(`${window.KapTazeAPI.config.baseUrl}/auth/login`, {
+                    const response = await fetch(`${window.KapTazeAPI.config.baseUrl}/auth/admin/login`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
