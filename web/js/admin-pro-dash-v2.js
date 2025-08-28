@@ -1129,6 +1129,111 @@ class AdminProDashboardV2 {
         this.loadConsumersData();
     }
 
+    // Restaurant management functions
+    displayRestaurants(restaurants) {
+        const container = document.getElementById('dataContainer');
+        if (!container) return;
+
+        const html = `
+            <div class="section-header">
+                <h2 class="section-title">Kayıtlı Restoranlar (${restaurants.length})</h2>
+                <div class="section-actions">
+                    <button class="btn btn-secondary" onclick="adminDashboard.refreshRestaurants()">
+                        <i class="fas fa-sync-alt"></i> Yenile
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Restoran Adı</th>
+                            <th>Kategori</th>
+                            <th>Sahip</th>
+                            <th>İletişim</th>
+                            <th>Lokasyon</th>
+                            <th>Durum</th>
+                            <th>Kayıt Tarihi</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${restaurants.map(restaurant => this.renderRestaurantRow(restaurant)).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
+    renderRestaurantRow(restaurant) {
+        const statusBadge = this.getRestaurantStatusBadge(restaurant.status);
+        const date = new Date(restaurant.createdAt).toLocaleDateString('tr-TR');
+        
+        return `
+            <tr>
+                <td>
+                    <div>
+                        <strong style="color: var(--gray-900);">${restaurant.name}</strong>
+                        ${restaurant.application ? `<br><small style="color: var(--gray-600);">Başvuru: ${restaurant.application.applicationId}</small>` : ''}
+                    </div>
+                </td>
+                <td>
+                    <span class="category-badge">${restaurant.category}</span>
+                </td>
+                <td>
+                    <div>
+                        <strong>${restaurant.owner.firstName} ${restaurant.owner.lastName}</strong>
+                    </div>
+                </td>
+                <td>
+                    <div style="font-size: 0.875rem;">
+                        <div><i class="fas fa-envelope" style="width: 12px;"></i> ${restaurant.email}</div>
+                        <div><i class="fas fa-phone" style="width: 12px;"></i> ${restaurant.phone}</div>
+                    </div>
+                </td>
+                <td>
+                    <div style="font-size: 0.875rem; color: var(--gray-600);">
+                        ${restaurant.address.district}, ${restaurant.address.city}
+                    </div>
+                </td>
+                <td>${statusBadge}</td>
+                <td style="font-size: 0.875rem;">${date}</td>
+                <td>
+                    <div style="display: flex; gap: 0.25rem;">
+                        <button class="action-btn action-view" onclick="adminDashboard.viewRestaurant('${restaurant._id}')" title="Detay">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    getRestaurantStatusBadge(status) {
+        const statusConfig = {
+            'active': { class: 'status-approved', text: 'Aktif', icon: 'check' },
+            'inactive': { class: 'status-pending', text: 'Pasif', icon: 'clock' },
+            'suspended': { class: 'status-rejected', text: 'Askıya Alınmış', icon: 'pause' }
+        };
+
+        const config = statusConfig[status] || statusConfig['inactive'];
+        return `<span class="status-badge ${config.class}">
+            <i class="fas fa-${config.icon}"></i>
+            ${config.text}
+        </span>`;
+    }
+
+    viewRestaurant(restaurantId) {
+        console.log('👁️ Viewing restaurant:', restaurantId);
+        const restaurant = this.data.restaurants.find(r => r._id === restaurantId);
+        if (restaurant) {
+            alert(`Restoran Detayları:\n\nAdı: ${restaurant.name}\nKategori: ${restaurant.category}\nSahip: ${restaurant.owner.firstName} ${restaurant.owner.lastName}\nDurum: ${restaurant.status}`);
+        }
+    }
+
     showLoadingStates() {
         // Implementation for showing loading states
     }
@@ -1147,8 +1252,34 @@ class AdminProDashboardV2 {
     }
 
     async loadRestaurantsData() {
-        // Implementation for restaurants data loading
-        console.log('Loading restaurants data...');
+        console.log('📊 Loading restaurants data...');
+        
+        try {
+            // Load restaurants from backend
+            const response = await window.KapTazeAPIService.request('/admin/restaurants', {
+                method: 'GET'
+            });
+
+            if (response.success && response.data) {
+                this.data.restaurants = response.data.restaurants;
+                console.log(`✅ Loaded ${this.data.restaurants.length} restaurants`);
+                
+                // Display restaurants
+                this.displayRestaurants(this.data.restaurants);
+                
+            } else {
+                throw new Error('Failed to load restaurants data');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading restaurants:', error);
+            
+            // Load demo restaurants as fallback
+            this.data.restaurants = this.generateDemoRestaurants();
+            this.displayRestaurants(this.data.restaurants);
+            
+            this.showNotification('warning', 'Demo restoran verileri yüklendi - Backend bağlantısı yok');
+        }
     }
 
     async loadPackagesData() {
