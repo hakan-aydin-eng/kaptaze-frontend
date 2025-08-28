@@ -162,6 +162,87 @@ class BackendService {
         });
     }
 
+    // Public Methods (Ana sayfa için - token gerektirmeyen)
+    async getPublicStats() {
+        try {
+            // Public stats endpoint'i yok ise demo data kullan
+            const response = await fetch(`${this.baseURL}/public/stats`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                return await response.json();
+            } else {
+                throw new Error('Public stats not available');
+            }
+        } catch (error) {
+            console.log('⚠️ Using demo stats for homepage');
+            // Demo stats for homepage
+            return {
+                totalPackagesSaved: 2847,
+                co2Saving: '1.2T',
+                partnerRestaurants: 156
+            };
+        }
+    }
+
+    async getPublicPackages() {
+        try {
+            // Public packages endpoint'i yok ise demo data kullan
+            const response = await fetch(`${this.baseURL}/public/packages`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                return data.packages || data;
+            } else {
+                throw new Error('Public packages not available');
+            }
+        } catch (error) {
+            console.log('⚠️ Using demo packages for homepage');
+            // Demo packages for homepage
+            return [
+                {
+                    id: 'demo-1',
+                    title: 'Karma Menü',
+                    restaurant: 'Seraser Restaurant',
+                    originalPrice: 45,
+                    discountedPrice: 18,
+                    image: './assets/food-1.jpg',
+                    category: 'Ana Yemek',
+                    location: 'Kaleici, Antalya'
+                },
+                {
+                    id: 'demo-2',
+                    title: 'Pizza Margarita',
+                    restaurant: 'İtalyan Mutfağı',
+                    originalPrice: 35,
+                    discountedPrice: 15,
+                    image: './assets/food-2.jpg',
+                    category: 'Pizza',
+                    location: 'Lara, Antalya'
+                },
+                {
+                    id: 'demo-3',
+                    title: 'Sushi Set',
+                    restaurant: 'Tokyo Sushi',
+                    originalPrice: 65,
+                    discountedPrice: 25,
+                    image: './assets/food-3.jpg',
+                    category: 'Japon',
+                    location: 'Muratpaşa, Antalya'
+                }
+            ];
+        }
+    }
+
     // Admin Methods
     async getAdminStats() {
         return this.makeRequest(`${this.endpoints.admin}/stats`);

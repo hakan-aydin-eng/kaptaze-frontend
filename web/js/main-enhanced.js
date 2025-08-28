@@ -50,8 +50,8 @@ async function loadDashboardData() {
     try {
         console.log('📊 Loading dashboard data...');
         
-        // Load packages for homepage display
-        const packages = await window.backendService.getPackages();
+        // Load packages for homepage display (public - no auth required)
+        const packages = await window.backendService.getPublicPackages();
         displayPackages(packages.slice(0, 6)); // Show first 6 packages
         
         // Load restaurants
@@ -126,7 +126,8 @@ async function reservePackage(packageId) {
 
 async function updateStatistics() {
     try {
-        const stats = await window.backendService.getAdminStats();
+        // Ana sayfa için public stats - token gerektirmeyen
+        const stats = await window.backendService.getPublicStats();
         
         // Update statistics display
         const savedPackagesEl = document.querySelector('.stat-number[data-stat="packages"]');
@@ -253,7 +254,7 @@ async function openAdminPanel(currentUser) {
         
         setTimeout(() => {
             hideLoadingOverlay(loadingOverlay);
-            window.location.href = '/admin-dashboard-professional.html';
+            window.location.href = './admin-pro-dash-v2.html';
         }, 800);
         return;
     }
@@ -264,7 +265,7 @@ async function openAdminPanel(currentUser) {
     
     setTimeout(() => {
         hideLoadingOverlay(loadingOverlay);
-        window.location.href = '/admin-login-v2.html';
+        window.location.href = './admin-login-v3.html';
     }, 800);
 }
 
