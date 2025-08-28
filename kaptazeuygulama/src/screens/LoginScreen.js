@@ -100,6 +100,13 @@ const LoginScreen = ({ navigation }) => {
           <Text style={styles.brandName}>KapTaze</Text>
         </View>
 
+        {/* Demo Account Info */}
+        <View style={styles.demoInfo}>
+          <Text style={styles.demoTitle}>🎯 Demo Hesap Bilgileri</Text>
+          <Text style={styles.demoText}>Email: demo@kaptaze.com</Text>
+          <Text style={styles.demoText}>Şifre: 123456</Text>
+        </View>
+
         {/* Form */}
         <View style={styles.form}>
           <View style={styles.inputContainer}>
@@ -201,6 +208,26 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#111827',
+  },
+  demoInfo: {
+    backgroundColor: '#f0f9ff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+    borderLeftWidth: 4,
+    borderLeftColor: '#16a34a',
+  },
+  demoTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#16a34a',
+    marginBottom: 8,
+  },
+  demoText: {
+    fontSize: 13,
+    color: '#374151',
+    fontFamily: 'monospace',
+    marginBottom: 2,
   },
   form: {
     marginBottom: 40,

@@ -18,16 +18,29 @@ class ApiService {
     };
 
     try {
+      console.log(`📡 API Request: ${config.method} ${url}`);
+      console.log('📦 Request body:', config.body);
+      
       const response = await fetch(url, config);
       const data = await response.json();
       
+      console.log(`📨 Response status: ${response.status}`);
+      console.log('📥 Response data:', data);
+      
       if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        console.error(`❌ API Error ${response.status}:`, data);
+        throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
       }
 
       return data;
     } catch (error) {
-      console.error('API Request Error:', error);
+      console.error('🚨 API Request Error:', error);
+      console.error('🔍 Error details:', {
+        url,
+        method: config.method,
+        body: config.body,
+        status: error.status || 'unknown'
+      });
       throw error;
     }
   }
