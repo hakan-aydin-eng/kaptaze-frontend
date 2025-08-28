@@ -1467,6 +1467,8 @@ async function syncProfileWithMobileApp(profileData) {
             location: user.location || null,
             rating: user.rating || { average: 0, count: 0 },
             packages: [], // Will be populated by package management
+            // Map "İşletme Açıklaması - Neyi Kurtaracaksınız?" to mobile app's "Ne alacaksınız?" field
+            adminNote: profileData.description, // This will appear in mobile app RestaurantDetailScreen
             lastUpdated: new Date().toISOString()
         };
         

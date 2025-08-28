@@ -11,7 +11,10 @@
       "Bash(deploy.bat)",
       "Bash(cmd:*)",
       "Bash(git rm:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(dir:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": [],
