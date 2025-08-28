@@ -1132,9 +1132,14 @@ class AdminProDashboardV2 {
     // Restaurant management functions
     displayRestaurants(restaurants) {
         console.log('🎨 Displaying restaurants:', restaurants.length, restaurants);
-        const container = document.getElementById('dataContainer');
+        
+        // Get active section's dataContainer
+        const activeSection = document.querySelector('.content-section.active');
+        const container = activeSection ? activeSection.querySelector('#dataContainer') : null;
+        
         if (!container) {
-            console.error('❌ dataContainer not found');
+            console.error('❌ dataContainer not found in active section');
+            console.log('Active section:', activeSection);
             return;
         }
 
@@ -1260,8 +1265,16 @@ class AdminProDashboardV2 {
 
     // Package management functions
     displayPackages(packages) {
-        const container = document.getElementById('dataContainer');
-        if (!container) return;
+        console.log('📦 Displaying packages:', packages.length, packages);
+        
+        // Get active section's dataContainer
+        const activeSection = document.querySelector('.content-section.active');
+        const container = activeSection ? activeSection.querySelector('#dataContainer') : null;
+        
+        if (!container) {
+            console.error('❌ dataContainer not found in active section for packages');
+            return;
+        }
 
         const html = `
             <div class="section-header">
