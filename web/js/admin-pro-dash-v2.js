@@ -1131,8 +1131,12 @@ class AdminProDashboardV2 {
 
     // Restaurant management functions
     displayRestaurants(restaurants) {
+        console.log('🎨 Displaying restaurants:', restaurants.length, restaurants);
         const container = document.getElementById('dataContainer');
-        if (!container) return;
+        if (!container) {
+            console.error('❌ dataContainer not found');
+            return;
+        }
 
         const html = `
             <div class="section-header">
@@ -1166,44 +1170,64 @@ class AdminProDashboardV2 {
         `;
 
         container.innerHTML = html;
+        console.log('✅ Restaurant table HTML set, container:', container);
     }
 
     renderRestaurantRow(restaurant) {
-        const statusBadge = this.getRestaurantStatusBadge(restaurant.status);
-        const date = new Date(restaurant.createdAt).toLocaleDateString('tr-TR');
+        // Safe data access with fallbacks
+        const name = restaurant.name || 'Bilinmeyen Restoran';
+        const category = restaurant.category || 'Kategori Yok';
+        const status = restaurant.status || 'active';
+        const email = restaurant.email || 'Email Yok';
+        const phone = restaurant.phone || 'Telefon Yok';
+        
+        // Safe owner access
+        const owner = restaurant.owner || {};
+        const ownerName = `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || 'Sahip Bilgisi Yok';
+        
+        // Safe address access
+        const address = restaurant.address || {};
+        const location = `${address.district || 'Bilinmeyen'}, ${address.city || 'Bilinmeyen'}`;
+        
+        // Safe date handling
+        const date = restaurant.createdAt ? 
+            new Date(restaurant.createdAt).toLocaleDateString('tr-TR') : 
+            'Tarih Bilinmiyor';
+        
+        const statusBadge = this.getRestaurantStatusBadge(status);
         
         return `
             <tr>
                 <td>
                     <div>
-                        <strong style="color: var(--gray-900);">${restaurant.name}</strong>
+                        <strong style="color: var(--gray-900);">${name}</strong>
                         ${restaurant.application ? `<br><small style="color: var(--gray-600);">Başvuru: ${restaurant.application.applicationId}</small>` : ''}
                     </div>
                 </td>
                 <td>
-                    <span class="category-badge">${restaurant.category}</span>
+                    <span class="category-badge">${category}</span>
                 </td>
                 <td>
                     <div>
-                        <strong>${restaurant.owner.firstName} ${restaurant.owner.lastName}</strong>
+                        <strong>${ownerName}</strong>
                     </div>
                 </td>
                 <td>
                     <div style="font-size: 0.875rem;">
-                        <div><i class="fas fa-envelope" style="width: 12px;"></i> ${restaurant.email}</div>
-                        <div><i class="fas fa-phone" style="width: 12px;"></i> ${restaurant.phone}</div>
+                        <div><i class="fas fa-envelope" style="width: 12px;"></i> ${email}</div>
+                        <div><i class="fas fa-phone" style="width: 12px;"></i> ${phone}</div>
                     </div>
                 </td>
                 <td>
                     <div style="font-size: 0.875rem; color: var(--gray-600);">
-                        ${restaurant.address.district}, ${restaurant.address.city}
+                        ${location}
                     </div>
                 </td>
                 <td>${statusBadge}</td>
                 <td style="font-size: 0.875rem;">${date}</td>
                 <td>
                     <div style="display: flex; gap: 0.25rem;">
-                        <button class="action-btn action-view" onclick="adminDashboard.viewRestaurant('${restaurant._id}')" title="Detay">
+                        <button class="action-btn action-view" onclick="adminDashboard.viewRestaurant('${restaurant._id || restaurant.id}')" title="Detay">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
@@ -1400,6 +1424,7 @@ class AdminProDashboardV2 {
                 console.log(`✅ Loaded ${this.data.restaurants.length} restaurants`);
                 
                 // Display restaurants
+                console.log('🔍 First restaurant data:', this.data.restaurants[0]);
                 this.displayRestaurants(this.data.restaurants);
                 
             } else {
