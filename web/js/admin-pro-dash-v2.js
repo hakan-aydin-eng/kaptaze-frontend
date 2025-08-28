@@ -445,13 +445,93 @@ class AdminProDashboardV2 {
         return [
             {
                 _id: 'consumer_001',
-                firstName: 'Mehmet',
-                lastName: 'Özkan',
+                name: 'Mehmet',
+                surname: 'Özkan',
                 email: 'mehmet@gmail.com',
                 phone: '+90 555 111 2233',
-                registrationDate: new Date('2025-08-15').toISOString(),
-                totalOrders: 8,
-                status: 'active'
+                status: 'active',
+                orderCount: 8,
+                totalSpent: 245.50,
+                lastActivity: new Date('2025-08-27').toISOString(),
+                createdAt: new Date('2025-08-15').toISOString(),
+                deviceInfo: {
+                    platform: 'android',
+                    version: '1.2.0',
+                    deviceId: 'android_device_001'
+                },
+                emailVerified: true
+            },
+            {
+                _id: 'consumer_002',
+                name: 'Ayşe',
+                surname: 'Kaya',
+                email: 'ayse.kaya@hotmail.com',
+                phone: '+90 532 444 5566',
+                status: 'active',
+                orderCount: 12,
+                totalSpent: 380.75,
+                lastActivity: new Date('2025-08-28').toISOString(),
+                createdAt: new Date('2025-08-10').toISOString(),
+                deviceInfo: {
+                    platform: 'ios',
+                    version: '1.2.0',
+                    deviceId: 'ios_device_002'
+                },
+                emailVerified: true
+            },
+            {
+                _id: 'consumer_003',
+                name: 'Ali',
+                surname: 'Demir',
+                email: 'ali.demir@yahoo.com',
+                phone: '+90 544 777 8899',
+                status: 'inactive',
+                orderCount: 3,
+                totalSpent: 89.25,
+                lastActivity: new Date('2025-08-20').toISOString(),
+                createdAt: new Date('2025-08-05').toISOString(),
+                deviceInfo: {
+                    platform: 'android',
+                    version: '1.1.5',
+                    deviceId: 'android_device_003'
+                },
+                emailVerified: false
+            },
+            {
+                _id: 'consumer_004',
+                name: 'Fatma',
+                surname: 'Yılmaz',
+                email: 'fatma@gmail.com',
+                phone: '+90 505 123 4567',
+                status: 'suspended',
+                orderCount: 1,
+                totalSpent: 25.00,
+                lastActivity: new Date('2025-08-18').toISOString(),
+                createdAt: new Date('2025-08-12').toISOString(),
+                deviceInfo: {
+                    platform: 'ios',
+                    version: '1.0.8',
+                    deviceId: 'ios_device_004'
+                },
+                emailVerified: true
+            },
+            {
+                _id: 'consumer_005',
+                name: 'Burak',
+                surname: 'Şahin',
+                email: 'burak.sahin@outlook.com',
+                phone: '+90 543 987 6543',
+                status: 'active',
+                orderCount: 15,
+                totalSpent: 520.90,
+                lastActivity: new Date('2025-08-28').toISOString(),
+                createdAt: new Date('2025-07-25').toISOString(),
+                deviceInfo: {
+                    platform: 'android',
+                    version: '1.2.0',
+                    deviceId: 'android_device_005'
+                },
+                emailVerified: true
             }
         ];
     }
@@ -462,8 +542,8 @@ class AdminProDashboardV2 {
             pendingApplications: 2,
             approvedApplications: 1,
             totalRestaurants: 1,
-            activePackages: 1,
-            totalConsumers: 1
+            activePackages: 3,
+            totalConsumers: 5
         };
     }
 
@@ -1391,6 +1471,75 @@ class AdminProDashboardV2 {
         container.innerHTML = html;
     }
 
+    // Consumer management functions
+    displayConsumers(consumers) {
+        console.log('👥 Displaying consumers:', consumers.length, consumers);
+        
+        // Get consumers table container
+        let container = document.getElementById('consumersTable');
+        
+        if (!container) {
+            // Fallback to dataContainer approach
+            const activeSection = document.querySelector('.content-section.active');
+            container = activeSection ? activeSection.querySelector('#dataContainer') : null;
+        }
+        
+        if (!container) {
+            console.error('❌ Consumers table container not found!');
+            return;
+        }
+
+        const html = `
+            <div class="table-header">
+                <div class="table-title-section">
+                    <h3>📱 Mobil Uygulama Kullanıcıları</h3>
+                    <span class="record-count">${consumers.length} kullanıcı</span>
+                </div>
+                
+                <div class="table-actions">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Kullanıcı ara..." id="consumerSearch">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="consumerStatusFilter">
+                            <option value="all">Tüm Durumlar</option>
+                            <option value="active">Aktif</option>
+                            <option value="inactive">Pasif</option>
+                            <option value="suspended">Askıda</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn-refresh" onclick="adminDashboard.refreshConsumers()">
+                        <i class="fas fa-sync-alt"></i> Yenile
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Kullanıcı</th>
+                            <th>İletişim</th>
+                            <th>Durum</th>
+                            <th>İstatistikler</th>
+                            <th>Son Aktivite</th>
+                            <th>Kayıt Tarihi</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${consumers.map(consumer => this.renderConsumerRow(consumer)).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
     renderPackageRow(pkg) {
         const statusBadge = this.getPackageStatusBadge(pkg.status);
         const createdDate = new Date(pkg.createdAt).toLocaleDateString('tr-TR');
@@ -1461,11 +1610,126 @@ class AdminProDashboardV2 {
         </span>`;
     }
 
+    getConsumerStatusBadge(status) {
+        const statusConfig = {
+            'active': { class: 'status-approved', text: 'Aktif', icon: 'check' },
+            'inactive': { class: 'status-pending', text: 'Pasif', icon: 'pause' },
+            'suspended': { class: 'status-rejected', text: 'Askıda', icon: 'ban' }
+        };
+
+        const config = statusConfig[status] || statusConfig['active'];
+        return `<span class="status-badge ${config.class}">
+            <i class="fas fa-${config.icon}"></i>
+            ${config.text}
+        </span>`;
+    }
+
+    renderConsumerRow(consumer) {
+        const statusBadge = this.getConsumerStatusBadge(consumer.status);
+        const registrationDate = new Date(consumer.createdAt || consumer.registrationDate).toLocaleDateString('tr-TR');
+        const lastActivity = consumer.lastActivity ? new Date(consumer.lastActivity).toLocaleDateString('tr-TR') : 'Bilinmiyor';
+        
+        // Consumer name - handle both formats
+        const fullName = consumer.fullName || `${consumer.name || consumer.firstName || ''} ${consumer.surname || consumer.lastName || ''}`.trim() || 'İsimsiz Kullanıcı';
+        
+        // Safe access to stats
+        const orderCount = consumer.orderCount || consumer.totalOrders || 0;
+        const totalSpent = consumer.totalSpent || 0;
+        
+        // Device info
+        const devicePlatform = consumer.deviceInfo?.platform || 'Bilinmiyor';
+        const deviceIcon = devicePlatform === 'ios' ? 'fab fa-apple' : devicePlatform === 'android' ? 'fab fa-android' : 'fas fa-mobile-alt';
+        
+        return `
+            <tr>
+                <td>
+                    <div>
+                        <strong style="color: var(--gray-900);">${fullName}</strong>
+                        <br><small style="color: var(--gray-600);"><i class="${deviceIcon}"></i> ${devicePlatform}</small>
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        <strong style="font-size: 0.875rem;">${consumer.email}</strong>
+                        ${consumer.phone ? `<br><small style="color: var(--gray-600);">${consumer.phone}</small>` : ''}
+                    </div>
+                </td>
+                <td>${statusBadge}</td>
+                <td>
+                    <div style="font-size: 0.875rem;">
+                        <div><i class="fas fa-shopping-cart" style="color: var(--primary);"></i> ${orderCount} sipariş</div>
+                        <div><i class="fas fa-lira-sign" style="color: var(--success);"></i> ₺${totalSpent.toFixed(2)}</div>
+                    </div>
+                </td>
+                <td style="font-size: 0.875rem;">${lastActivity}</td>
+                <td style="font-size: 0.875rem;">${registrationDate}</td>
+                <td>
+                    <div style="display: flex; gap: 0.25rem;">
+                        <button class="action-btn action-view" onclick="adminDashboard.viewConsumer('${consumer._id || consumer.id}')" title="Detay">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${consumer.status === 'active' ? `
+                            <button class="action-btn action-suspend" onclick="adminDashboard.suspendConsumer('${consumer._id || consumer.id}')" title="Askıya Al">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        ` : consumer.status === 'suspended' ? `
+                            <button class="action-btn action-approve" onclick="adminDashboard.activateConsumer('${consumer._id || consumer.id}')" title="Aktifleştir">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
     viewPackage(packageId) {
         console.log('👁️ Viewing package:', packageId);
         const pkg = this.data.packages.find(p => (p._id || p.id) === packageId);
         if (pkg) {
             alert(`Paket Detayları:\n\nAdı: ${pkg.name}\nRestoran: ${pkg.restaurant.name}\nFiyat: ₺${pkg.discountedPrice || pkg.price}\nMiktar: ${pkg.quantity} adet\nDurum: ${pkg.status}`);
+        }
+    }
+
+    // Consumer action functions
+    viewConsumer(consumerId) {
+        console.log('👁️ Viewing consumer:', consumerId);
+        const consumer = this.data.consumers.find(c => (c._id || c.id) === consumerId);
+        if (consumer) {
+            const fullName = `${consumer.name || consumer.firstName || ''} ${consumer.surname || consumer.lastName || ''}`.trim();
+            const deviceInfo = consumer.deviceInfo?.platform || 'Bilinmiyor';
+            const lastActivity = consumer.lastActivity ? new Date(consumer.lastActivity).toLocaleDateString('tr-TR') : 'Bilinmiyor';
+            const registrationDate = new Date(consumer.createdAt || consumer.registrationDate).toLocaleDateString('tr-TR');
+            
+            alert(`Kullanıcı Detayları:\n\nAdı: ${fullName}\nEmail: ${consumer.email}\nTelefon: ${consumer.phone || 'Belirtilmemiş'}\nDurum: ${consumer.status}\nSipariş Sayısı: ${consumer.orderCount || 0}\nToplam Harcama: ₺${(consumer.totalSpent || 0).toFixed(2)}\nCihaz: ${deviceInfo}\nSon Aktivite: ${lastActivity}\nKayıt Tarihi: ${registrationDate}`);
+        }
+    }
+
+    suspendConsumer(consumerId) {
+        console.log('🚫 Suspending consumer:', consumerId);
+        const consumer = this.data.consumers.find(c => (c._id || c.id) === consumerId);
+        if (consumer) {
+            const fullName = `${consumer.name || consumer.firstName || ''} ${consumer.surname || consumer.lastName || ''}`.trim();
+            if (confirm(`${fullName} adlı kullanıcıyı askıya almak istediğinizden emin misiniz?`)) {
+                // Demo implementation - in real app, this would call backend API
+                consumer.status = 'suspended';
+                this.displayConsumers(this.data.consumers);
+                this.showNotification('success', `${fullName} başarıyla askıya alındı`);
+            }
+        }
+    }
+
+    activateConsumer(consumerId) {
+        console.log('✅ Activating consumer:', consumerId);
+        const consumer = this.data.consumers.find(c => (c._id || c.id) === consumerId);
+        if (consumer) {
+            const fullName = `${consumer.name || consumer.firstName || ''} ${consumer.surname || consumer.lastName || ''}`.trim();
+            if (confirm(`${fullName} adlı kullanıcıyı aktifleştirmek istediğinizden emin misiniz?`)) {
+                // Demo implementation - in real app, this would call backend API
+                consumer.status = 'active';
+                this.displayConsumers(this.data.consumers);
+                this.showNotification('success', `${fullName} başarıyla aktifleştirildi`);
+            }
         }
     }
 
@@ -1550,8 +1814,34 @@ class AdminProDashboardV2 {
     }
 
     async loadConsumersData() {
-        // Implementation for consumers data loading
-        console.log('Loading consumers data...');
+        console.log('👥 Loading consumers data...');
+        
+        try {
+            // Load consumers from backend  
+            const response = await window.KapTazeAPIService.request('/admin/consumers', {
+                method: 'GET'
+            });
+
+            if (response.success && response.data) {
+                this.data.consumers = response.data.consumers;
+                console.log(`✅ Loaded ${this.data.consumers.length} consumers`);
+                
+                // Display consumers
+                this.displayConsumers(this.data.consumers);
+                
+            } else {
+                throw new Error('Failed to load consumers data');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading consumers:', error);
+            
+            // Load demo consumers as fallback
+            this.data.consumers = this.generateDemoConsumers();
+            this.displayConsumers(this.data.consumers);
+            
+            this.showNotification('warning', 'Demo tüketici verileri yüklendi - Backend bağlantısı yok');
+        }
     }
 
     async loadDashboardData() {
