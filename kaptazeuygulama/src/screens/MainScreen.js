@@ -152,7 +152,9 @@ const MainScreen = ({ navigation }) => {
         packages: restaurant.packages || [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3 }],
         // Add image support for restaurant profile images
         profileImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl,
-        restaurantImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl || restaurant.image
+        restaurantImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl || restaurant.image,
+        // Ensure adminNote is available from backend data
+        adminNote: restaurant.adminNote || restaurant.description || 'Restoran sahibi henüz ürün açıklaması eklememiş.'
       }));
 
       // Duplicate removal (by id or name)
