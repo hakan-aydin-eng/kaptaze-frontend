@@ -130,12 +130,35 @@ const MapScreen = ({ navigation, route }) => {
     </head>
     <body>
         <div id="map"></div>
+        <div id="error-container" style="position: absolute; top: 10px; left: 10px; right: 10px; background: red; color: white; padding: 10px; border-radius: 8px; display: none; z-index: 1000;"></div>
+        <script>
+            // Error handling
+            window.onerror = function(msg, url, lineNo, columnNo, error) {
+                const errorContainer = document.getElementById('error-container');
+                errorContainer.style.display = 'block';
+                errorContainer.innerHTML = 'Error: ' + msg;
+                console.error('Map Error:', msg);
+                return true;
+            };
+        </script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBBP_yNJ5v_wQmZGlkrGxCxgGsIIqR0H_E&callback=initMap" async defer></script>
         <script>
             let map;
             let markers = [];
             const restaurants = ${JSON.stringify(markersData)};
             
             function initMap() {
+                console.log('initMap called');
+                console.log('Google Maps loaded:', typeof google !== 'undefined');
+                
+                if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                    console.error('Google Maps API not loaded');
+                    const errorContainer = document.getElementById('error-container');
+                    errorContainer.style.display = 'block';
+                    errorContainer.innerHTML = 'Google Maps API yüklenemedi. Lütfen internet bağlantınızı kontrol edin.';
+                    return;
+                }
+                
                 map = new google.maps.Map(document.getElementById('map'), {
                     center: { lat: ${mapCenter.lat}, lng: ${mapCenter.lng} },
                     zoom: 12,
@@ -253,7 +276,14 @@ const MapScreen = ({ navigation, route }) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       
-      if (data.type === 'RESTAURANT_SELECTED') {
+      // Handle console messages from WebView
+      if (data.type === 'console.log') {
+        console.log('📱 WebView Log:', ...data.data);
+      } else if (data.type === 'console.error') {
+        console.error('📱 WebView Error:', ...data.data);
+      } else if (data.type === 'console.warn') {
+        console.warn('📱 WebView Warning:', ...data.data);
+      } else if (data.type === 'RESTAURANT_SELECTED') {
         const selectedRestaurant = restaurants.find(r => r._id === data.restaurantId);
         if (selectedRestaurant) {
           navigation.navigate('RestaurantDetail', { restaurant: selectedRestaurant });
@@ -316,8 +346,49 @@ const MapScreen = ({ navigation, route }) => {
         startInLoadingState={true}
         scalesPageToFit={true}
         scrollEnabled={false}
-        onError={(error) => console.error('WebView error:', error)}
-        onHttpError={(error) => console.error('WebView HTTP error:', error)}
+        mixedContentMode="compatibility"
+        allowsInlineMediaPlayback={true}
+        originWhitelist={['*']}
+        onError={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
+          console.error('WebView error:', nativeEvent);
+          Alert.alert('Harita Hatası', 'Harita yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
+        }}
+        onHttpError={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
+          console.error('WebView HTTP error:', nativeEvent);
+        }}
+        onLoadEnd={() => {
+          console.log('🗺️ Map loaded successfully');
+        }}
+        injectedJavaScript={`
+          const meta = document.createElement('meta');
+          meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0');
+          meta.setAttribute('name', 'viewport');
+          document.getElementsByTagName('head')[0].appendChild(meta);
+          
+          // Forward console messages to React Native
+          const consoleLog = console.log;
+          const consoleError = console.error;
+          const consoleWarn = console.warn;
+          
+          console.log = function() {
+            window.ReactNativeWebView.postMessage(JSON.stringify({type: 'console.log', data: Array.from(arguments)}));
+            consoleLog.apply(console, arguments);
+          };
+          
+          console.error = function() {
+            window.ReactNativeWebView.postMessage(JSON.stringify({type: 'console.error', data: Array.from(arguments)}));
+            consoleError.apply(console, arguments);
+          };
+          
+          console.warn = function() {
+            window.ReactNativeWebView.postMessage(JSON.stringify({type: 'console.warn', data: Array.from(arguments)}));
+            consoleWarn.apply(console, arguments);
+          };
+          
+          true;
+        `}
       />
     </SafeAreaView>
   );
