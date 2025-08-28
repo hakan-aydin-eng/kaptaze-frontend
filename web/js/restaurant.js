@@ -343,12 +343,44 @@ async function loadPackages() {
     try {
         let packages;
         
+        // 🔄 PHASE 1: Enhanced Package Loading - Backend + LocalStorage
+        let backendPackages = [];
+        let localPackages = [];
+        
+        // Try to load from backend first
         if (apiConnected) {
-            const response = await fetch(`${API_BASE_URL}/restaurant/packages`);
-            packages = response.ok ? await response.json() : MOCK_DATA.packages;
-        } else {
-            packages = MOCK_DATA.packages;
+            try {
+                const response = await fetch(`${API_BASE_URL}/restaurant/packages`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('restaurantToken')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    backendPackages = result.packages || result.data || result || [];
+                    console.log('✅ Backend packages loaded:', backendPackages.length);
+                } else {
+                    console.warn('⚠️ Backend packages failed to load');
+                }
+            } catch (error) {
+                console.error('❌ Backend package loading error:', error);
+            }
         }
+        
+        // Always load localStorage packages as well
+        localPackages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+        console.log('📂 Local packages loaded:', localPackages.length);
+        
+        // Combine backend and local packages (backend takes priority)
+        const allPackages = [...backendPackages, ...localPackages];
+        
+        // Remove duplicates by id
+        const uniquePackages = allPackages.filter((pkg, index, self) => 
+            index === self.findIndex(p => p.id === pkg.id)
+        );
+        
+        packages = uniquePackages.length > 0 ? uniquePackages : MOCK_DATA.packages;
         
         renderPackages(packages);
         
@@ -690,7 +722,7 @@ function showAddPackageModal() {
     
     // Form submit handler
     const form = modal.querySelector('#packageForm');
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const packageData = {
@@ -709,14 +741,53 @@ function showAddPackageModal() {
             image: 'https://via.placeholder.com/300x200'
         };
         
-        // Save to localStorage
-        const packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
-        packages.push(packageData);
-        localStorage.setItem('restaurantPackages', JSON.stringify(packages));
-        
-        alert(`Paket "${packageData.name}" başarıyla eklendi!`);
-        closeModal();
-        loadPackages(); // Reload packages
+        // 🔄 PHASE 1: Backend Integration - Dikkatli Implementation
+        try {
+            console.log('📦 Creating package:', packageData);
+            
+            // Save to backend first (if API available)
+            if (apiConnected) {
+                const response = await fetch(`${API_BASE_URL}/restaurant/packages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('restaurantToken')}`
+                    },
+                    body: JSON.stringify(packageData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Package saved to backend:', result);
+                    
+                    // Auto-sync with mobile app
+                    await syncPackageWithMobileApp(packageData);
+                    
+                } else {
+                    console.warn('⚠️ Backend save failed, using localStorage fallback');
+                }
+            }
+            
+            // Always save to localStorage as fallback
+            const packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+            packages.push(packageData);
+            localStorage.setItem('restaurantPackages', JSON.stringify(packages));
+            
+            alert(`Paket "${packageData.name}" başarıyla eklendi!`);
+            closeModal();
+            loadPackages(); // Reload packages
+            
+        } catch (error) {
+            console.error('❌ Package creation error:', error);
+            // Fallback to localStorage only
+            const packages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+            packages.push(packageData);
+            localStorage.setItem('restaurantPackages', JSON.stringify(packages));
+            
+            alert(`Paket "${packageData.name}" başarıyla eklendi! (Yerel kayıt)`);
+            closeModal();
+            loadPackages();
+        }
     });
     
     window.closeModal = function() {
@@ -1049,7 +1120,7 @@ function loadProfileEditData() {
 }
 
 // Save Profile Function
-function saveProfile(event) {
+async function saveProfile(event) {
     if (event) event.preventDefault();
     
     console.log('💾 Starting profile save process...');
@@ -1517,3 +1588,50 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 1000); // Delay to allow other init functions to complete
 });
+
+// 🔄 PHASE 1: Package Mobile App Sync Function
+async function syncPackageWithMobileApp(packageData) {
+    try {
+        console.log('📱 Syncing package with mobile app:', packageData.name);
+        
+        const user = JSON.parse(localStorage.getItem('restaurantUser') || '{}');
+        const token = localStorage.getItem('restaurantToken');
+        
+        if (!user.id || !token) {
+            console.warn('⚠️ No user authentication for mobile sync');
+            return;
+        }
+        
+        // Prepare package data for mobile app
+        const mobilePackageData = {
+            restaurantId: user.id,
+            restaurantName: user.name,
+            packageData: {
+                ...packageData,
+                availableQuantity: packageData.quantity,
+                isAvailable: packageData.quantity > 0,
+                discount: Math.round(((packageData.originalPrice - packageData.discountPrice) / packageData.originalPrice) * 100)
+            }
+        };
+        
+        // Send to mobile app sync endpoint
+        const response = await fetch(`${API_BASE_URL}/api/public/restaurants/${user.id}/packages/sync`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(mobilePackageData)
+        });
+        
+        if (response.ok) {
+            console.log('✅ Package synced with mobile app successfully');
+        } else {
+            console.warn('⚠️ Mobile app package sync failed, will retry later');
+        }
+        
+    } catch (error) {
+        console.error('❌ Package mobile app sync error:', error);
+        // Don't throw error, this is not critical
+    }
+}
