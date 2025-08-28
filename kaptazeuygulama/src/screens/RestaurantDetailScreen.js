@@ -199,11 +199,11 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       <ScrollView style={styles.content}>
         {/* Restaurant Image Header - Ana sayfa kartları gibi */}
         <View style={styles.restaurantImageContainer}>
-          {restaurant.imageUrl ? (
+          {(restaurant.restaurantImage || restaurant.profileImage || restaurant.imageUrl) ? (
             <Image 
-              source={{ uri: restaurant.imageUrl }} 
+              source={{ uri: restaurant.restaurantImage || restaurant.profileImage || restaurant.imageUrl }} 
               style={styles.restaurantImage}
-              onError={() => console.log('Image failed to load')}
+              onError={() => console.log('Restaurant detail image failed to load:', restaurant.name)}
             />
           ) : (
             <View style={styles.restaurantGradient}>

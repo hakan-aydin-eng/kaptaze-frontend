@@ -149,7 +149,10 @@ const MainScreen = ({ navigation }) => {
         name: restaurant.name || restaurant.ad, // API uses 'name', fallback uses 'ad'
         rating: typeof restaurant.rating === 'object' ? restaurant.rating.average || 0 : restaurant.rating || 0,
         distance: restaurant.distance || '2.5km',
-        packages: restaurant.packages || [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3 }]
+        packages: restaurant.packages || [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3 }],
+        // Add image support for restaurant profile images
+        profileImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl,
+        restaurantImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl || restaurant.image
       }));
 
       // Duplicate removal (by id or name)
@@ -541,11 +544,11 @@ const MainScreen = ({ navigation }) => {
                 >
                   {/* Restaurant Image Header */}
                   <View style={styles.restaurantImageContainer}>
-                    {restaurant.imageUrl ? (
+                    {(restaurant.restaurantImage || restaurant.profileImage || restaurant.imageUrl) ? (
                       <Image 
-                        source={{ uri: restaurant.imageUrl }} 
+                        source={{ uri: restaurant.restaurantImage || restaurant.profileImage || restaurant.imageUrl }} 
                         style={styles.restaurantImage}
-                        onError={() => console.log('Restaurant image failed to load')}
+                        onError={() => console.log('Restaurant image failed to load:', restaurant.name)}
                       />
                     ) : (
                       <View style={styles.restaurantGradient}>

@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     initializeApp();
+    loadProfileImage(); // Load saved profile image
 });
 
 // Authentication check
@@ -780,4 +781,151 @@ function viewPaymentHistory() {
 
 function updatePaymentSettings() {
     alert('Ödeme ayarları güncelleme özelliği geliştirme aşamasında');
+}
+
+// Restaurant Image Upload Functions
+function uploadRestaurantImage() {
+    console.log('📷 Restaurant image upload initiated');
+    const fileInput = document.getElementById('restaurant-image-input');
+    if (fileInput) {
+        fileInput.click();
+    }
+}
+
+// Initialize image upload functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.getElementById('restaurant-image-input');
+    if (imageInput) {
+        imageInput.addEventListener('change', handleImageUpload);
+    }
+});
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        alert('Lütfen geçerli bir resim dosyası seçin (JPG, PNG, WEBP)');
+        return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+        alert('Resim boyutu 5MB\'dan küçük olmalıdır');
+        return;
+    }
+
+    console.log('📷 Processing image upload:', file.name, `${(file.size / 1024 / 1024).toFixed(2)}MB`);
+    
+    // Show loading state
+    showImageUploadLoading(true);
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Data = e.target.result;
+        uploadImageToServer(base64Data, file.name);
+    };
+    reader.onerror = function() {
+        alert('Resim okuma hatası oluştu');
+        showImageUploadLoading(false);
+    };
+    reader.readAsDataURL(file);
+}
+
+function uploadImageToServer(base64Data, filename) {
+    const user = JSON.parse(localStorage.getItem('restaurantUser') || '{}');
+    const token = localStorage.getItem('restaurantToken');
+    
+    if (!user.id || !token) {
+        alert('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+        showImageUploadLoading(false);
+        return;
+    }
+
+    const uploadData = {
+        image: base64Data,
+        filename: filename,
+        restaurantId: user.id
+    };
+
+    // For MVP: Store in localStorage and update UI immediately
+    // TODO: Replace with actual API call in production
+    try {
+        // Save to localStorage for demo
+        localStorage.setItem('restaurantProfileImage', base64Data);
+        
+        // Update profile image in UI
+        updateProfileImageUI(base64Data);
+        
+        // Simulate API call success
+        setTimeout(() => {
+            showImageUploadLoading(false);
+            showImageUploadSuccess();
+        }, 1000);
+        
+        console.log('📷 Image uploaded successfully (demo mode)');
+        
+    } catch (error) {
+        console.error('Image upload error:', error);
+        alert('Görsel yüklenirken hata oluştu');
+        showImageUploadLoading(false);
+    }
+}
+
+function updateProfileImageUI(imageData) {
+    const avatarImg = document.getElementById('restaurant-avatar');
+    if (avatarImg) {
+        avatarImg.src = imageData;
+        console.log('📷 Profile image updated in UI');
+    }
+}
+
+function showImageUploadLoading(loading) {
+    const avatarOverlay = document.querySelector('.avatar-overlay');
+    const changeBtn = document.querySelector('.change-avatar-btn');
+    
+    if (loading) {
+        if (changeBtn) {
+            changeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            changeBtn.disabled = true;
+        }
+    } else {
+        if (changeBtn) {
+            changeBtn.innerHTML = '<i class="fas fa-camera"></i>';
+            changeBtn.disabled = false;
+        }
+    }
+}
+
+function showImageUploadSuccess() {
+    // Create success notification
+    const notification = document.createElement('div');
+    notification.innerHTML = `
+        <div style="position: fixed; top: 20px; right: 20px; background: #10b981; color: white; 
+                    padding: 15px 20px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <i class="fas fa-check-circle"></i> Restoran görseli başarıyla güncellendi!
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
+}
+
+// Load saved profile image on page load
+function loadProfileImage() {
+    const savedImage = localStorage.getItem('restaurantProfileImage');
+    if (savedImage) {
+        updateProfileImageUI(savedImage);
+        console.log('📷 Loaded saved profile image');
+    }
 }
