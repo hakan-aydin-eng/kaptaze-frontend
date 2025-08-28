@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import apiService from '../services/apiService';
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
@@ -41,22 +42,14 @@ const LoginScreen = ({ navigation }) => {
       setIsSubmitting(true);
       
       try {
-        // Gerçek API call
-        const response = await fetch('https://operated-sip-animal-cassette.trycloudflare.com/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: formData.email.trim(),
-            password: formData.password,
-          }),
+        // API Service kullanarak login
+        const result = await apiService.login({
+          email: formData.email.trim(),
+          password: formData.password,
         });
         
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
-          await login(result.data.user);
+        if (result.success) {
+          await login(result.data.consumer);
           // Direkt ana sayfaya yönlendir
           navigation.navigate('Main');
           Alert.alert('✅ Başarılı!', 'Giriş başarılı!');
