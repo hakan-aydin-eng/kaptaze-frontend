@@ -183,6 +183,40 @@ const MapScreen = ({ navigation, route }) => {
                         markers.push({ marker, infoWindow });
                     }
                 });
+
+                // Add user location marker
+                const userLocationMarker = new google.maps.Marker({
+                    position: { lat: ${mapCenter.lat}, lng: ${mapCenter.lng} },
+                    map: map,
+                    title: 'Konumunuz',
+                    icon: {
+                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                            '<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">' +
+                            '<circle cx="25" cy="25" r="23" fill="#3b82f6" stroke="#ffffff" stroke-width="3"/>' +
+                            '<circle cx="25" cy="25" r="15" fill="#ffffff" opacity="0.8"/>' +
+                            '<circle cx="25" cy="25" r="8" fill="#3b82f6"/>' +
+                            '<text x="25" y="17" text-anchor="middle" fill="white" font-size="12" font-weight="bold">📍</text>' +
+                            '</svg>'
+                        ),
+                        scaledSize: new google.maps.Size(50, 50),
+                        anchor: new google.maps.Point(25, 25)
+                    },
+                    zIndex: 1000
+                });
+
+                const userInfoWindow = new google.maps.InfoWindow({
+                    content: \`
+                        <div class="info-window">
+                            <div class="restaurant-name">📍 Konumunuz</div>
+                            <div class="restaurant-info">${userLocation || 'Mevcut Konum'}</div>
+                            <div class="restaurant-info">Çevresindeki restoranları görüntülüyorsunuz</div>
+                        </div>
+                    \`
+                });
+
+                userLocationMarker.addListener('click', () => {
+                    userInfoWindow.open(map, userLocationMarker);
+                });
             }
             
             function createInfoWindowContent(restaurant) {

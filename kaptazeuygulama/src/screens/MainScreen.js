@@ -418,6 +418,16 @@ const MainScreen = ({ navigation }) => {
             </View>
             
             <View style={styles.headerButtons}>
+              <TouchableOpacity 
+                style={styles.headerButton}
+                onPress={() => navigation.navigate('Map', {
+                  userLocation,
+                  userCoordinates,
+                  selectedDistance
+                })}
+              >
+                <Text style={styles.headerButtonIcon}>🗺️</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={styles.headerButton}>
                 <Text style={styles.headerButtonIcon}>🔔</Text>
               </TouchableOpacity>
