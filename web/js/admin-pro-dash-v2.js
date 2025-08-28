@@ -384,13 +384,59 @@ class AdminProDashboardV2 {
                 description: 'Çorba, ana yemek, salata ve tatlı',
                 originalPrice: 45,
                 discountedPrice: 32,
-                restaurant: 'rest_001',
-                restaurantName: 'Lezzet Durağı',
+                price: 32,
+                restaurant: {
+                    _id: 'rest_001',
+                    name: 'Lezzet Durağı',
+                    category: 'Geleneksel Mutfak',
+                    phone: '+90 532 111 2233'
+                },
                 category: 'Karma Menü',
                 status: 'active',
                 quantity: 50,
                 remainingQuantity: 23,
+                availableUntil: new Date('2025-08-30').toISOString(),
                 createdAt: new Date('2025-08-27').toISOString()
+            },
+            {
+                _id: 'pkg_002',
+                name: 'Vejetaryen Tabağı',
+                description: 'Taze sebzelerle hazırlanmış özel tabak',
+                originalPrice: 35,
+                discountedPrice: 25,
+                price: 25,
+                restaurant: {
+                    _id: 'rest_002',
+                    name: 'Yeşil Bahçe Restaurant',
+                    category: 'Vejetaryen',
+                    phone: '+90 533 444 5566'
+                },
+                category: 'Vejetaryen',
+                status: 'active',
+                quantity: 30,
+                remainingQuantity: 15,
+                availableUntil: new Date('2025-08-29').toISOString(),
+                createdAt: new Date('2025-08-26').toISOString()
+            },
+            {
+                _id: 'pkg_003',
+                name: 'Pizza Margherita',
+                description: 'İtalyan tarzı klasik margerita pizza',
+                originalPrice: 65,
+                discountedPrice: 45,
+                price: 45,
+                restaurant: {
+                    _id: 'rest_003',
+                    name: 'Milano Pizzeria',
+                    category: 'İtalyan Mutfağı',
+                    phone: '+90 534 777 8899'
+                },
+                category: 'Fast Food',
+                status: 'active',
+                quantity: 25,
+                remainingQuantity: 8,
+                availableUntil: new Date('2025-08-31').toISOString(),
+                createdAt: new Date('2025-08-28').toISOString()
             }
         ];
     }
@@ -1343,7 +1389,6 @@ class AdminProDashboardV2 {
         `;
 
         container.innerHTML = html;
-        this.setupFilterHandlers('packages');
     }
 
     renderPackageRow(pkg) {
