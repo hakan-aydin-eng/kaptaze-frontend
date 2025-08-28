@@ -95,6 +95,13 @@ class BackendService {
         });
     }
 
+    async restaurantLogin(username, password) {
+        return this.makeRequest(`${this.endpoints.auth}/restaurant/login`, {
+            method: 'POST',  
+            body: JSON.stringify({ username, password, userType: 'restaurant' })
+        });
+    }
+
     async register(userData) {
         return this.makeRequest(`${this.endpoints.auth}/register`, {
             method: 'POST',

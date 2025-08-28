@@ -266,7 +266,7 @@
 
         <div class="footer-links">
             <a href="/index.html">← Ana Sayfaya Dön</a> |
-            <a href="/admin-login-v2.html">Admin Girişi</a>
+            <a href="/admin-login-v3.html">Admin Girişi</a>
         </div>
     </div>
 
@@ -349,33 +349,34 @@
             try {
                 console.log('🔐 Attempting restaurant login...');
                 
-                // Debug API availability
+                // Debug API availability  
                 console.log('🔍 API Debug:', {
-                    KapTazeAPI: !!window.KapTazeAPI,
-                    KapTazeAPIService: !!window.KapTazeAPIService,
-                    setAuthToken: !!(window.KapTazeAPI && window.KapTazeAPI.setAuthToken),
-                    storage: !!(window.KapTazeAPI && window.KapTazeAPI.storage)
+                    BackendService: !!window.backendService,
+                    KapTazeAPI: !!window.KapTazeAPI
                 });
                 
-                if (!window.KapTazeAPIService || !window.KapTazeAPI) {
-                    throw new Error('API services not loaded. Please refresh the page.');
+                if (!window.backendService) {
+                    throw new Error('Backend service not loaded. Please refresh the page.');
                 }
                 
-                // Call restaurant login API
-                const loginResult = await window.KapTazeAPIService.auth.restaurantLogin(username, password);
+                // Call restaurant login API using BackendService
+                const loginResponse = await window.backendService.restaurantLogin(username, password);
+                
+                const loginResult = {
+                    data: {
+                        token: loginResponse.token,
+                        user: loginResponse.user || { firstName: username }
+                    }
+                };
                 
                 console.log('✅ Restaurant login successful:', loginResult);
                 
                 // Store authentication data
-                if (window.KapTazeAPI && window.KapTazeAPI.setAuthToken && window.KapTazeAPI.storage) {
-                    window.KapTazeAPI.setAuthToken(loginResult.data.token);
-                    localStorage.setItem(window.KapTazeAPI.storage.userData, JSON.stringify(loginResult.data.user));
-                    localStorage.setItem(window.KapTazeAPI.storage.userRole, 'restaurant');
-                    console.log('✅ Authentication data stored successfully');
-                } else {
-                    console.error('❌ KapTazeAPI storage methods not available');
-                    throw new Error('Authentication storage failed');
-                }
+                localStorage.setItem('restaurantToken', loginResult.data.token);
+                localStorage.setItem('restaurantUser', JSON.stringify(loginResult.data.user));
+                localStorage.setItem('kaptaze_token', loginResult.data.token);
+                localStorage.setItem('kaptaze_user', JSON.stringify(loginResult.data.user));
+                console.log('✅ Authentication data stored successfully');
                 
                 // Show success message
                 successMessage.innerHTML = `
@@ -391,6 +392,45 @@
                 
             } catch (error) {
                 console.error('❌ Restaurant login failed:', error);
+                
+                // Try demo credentials as fallback
+                if ((username === 'demo' && password === 'demo123') || 
+                    (username === 'restaurant' && password === 'test123')) {
+                    
+                    console.log('🎭 Using demo restaurant login');
+                    
+                    // Demo login data
+                    const demoLoginResult = {
+                        data: {
+                            token: 'demo-restaurant-token-' + Date.now(),
+                            user: { 
+                                firstName: 'Demo Restaurant',
+                                id: 'demo-restaurant-1',
+                                role: 'restaurant'
+                            }
+                        }
+                    };
+                    
+                    // Store demo auth
+                    localStorage.setItem('restaurantToken', demoLoginResult.data.token);
+                    localStorage.setItem('restaurantUser', JSON.stringify(demoLoginResult.data.user));
+                    localStorage.setItem('kaptaze_token', demoLoginResult.data.token);
+                    localStorage.setItem('kaptaze_user', JSON.stringify(demoLoginResult.data.user));
+                    
+                    // Show demo success
+                    successMessage.innerHTML = `
+                        <i class="fas fa-check-circle"></i> 
+                        Demo modunda giriş başarılı! Panel'e yönlendiriliyorsunuz...
+                    `;
+                    successMessage.style.display = 'block';
+                    
+                    // Redirect after demo login
+                    setTimeout(() => {
+                        window.location.href = '/restaurant-panel';
+                    }, 1500);
+                    
+                    return;
+                }
                 
                 // Show error message
                 let errorText = 'Giriş başarısız oldu.';
