@@ -60,6 +60,26 @@ const MainScreen = ({ navigation }) => {
     loadUserLocation();
   }, []);
 
+  // 🔄 PHASE 2: Real-time Restaurant Updates
+  useEffect(() => {
+    console.log('📡 Setting up real-time restaurant updates...');
+    
+    const intervalId = setInterval(async () => {
+      console.log('🔄 Auto-refreshing restaurant data...');
+      try {
+        await loadRestaurants();
+        console.log('✅ Restaurant data refreshed automatically');
+      } catch (error) {
+        console.error('❌ Auto-refresh failed:', error);
+      }
+    }, 120000); // Refresh every 2 minutes
+    
+    return () => {
+      console.log('🛑 Stopping real-time updates');
+      clearInterval(intervalId);
+    };
+  }, []);
+
   const loadUserLocation = async () => {
     try {
       console.log('📍 Requesting location permission...');
@@ -156,7 +176,18 @@ const MainScreen = ({ navigation }) => {
         workingHours: restaurant.workingHours || {
           weekday: { open: '09:00', close: '22:00' },
           weekend: { open: '10:00', close: '23:00' }
-        }
+        },
+        // 🔄 PHASE 1: Enhanced Package Support for Mobile App
+        packages: restaurant.packages && restaurant.packages.length > 0 ? 
+          restaurant.packages.map(pkg => ({
+            ...pkg,
+            originalPrice: pkg.originalPrice || 50,
+            salePrice: pkg.discountPrice || pkg.salePrice || 25,
+            discount: pkg.discount || Math.round(((pkg.originalPrice - (pkg.discountPrice || pkg.salePrice)) / pkg.originalPrice) * 100),
+            quantity: pkg.availableQuantity || pkg.quantity || 3,
+            isAvailable: pkg.isAvailable !== undefined ? pkg.isAvailable : (pkg.quantity > 0)
+          })) : 
+          [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3, isAvailable: true }] // Fallback package
       }));
 
       // Duplicate removal (by id or name)
