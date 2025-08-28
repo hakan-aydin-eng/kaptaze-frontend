@@ -410,18 +410,32 @@ function renderPackages(packages) {
                 <div class="package-details">
                     <div class="detail-item">
                         <i class="fas fa-box"></i>
-                        <span>${pkg.quantity} adet</span>
+                        <span id="quantity-${pkg.id}">${pkg.quantity} adet</span>
+                        ${pkg.quantity <= 3 ? '<span class="low-stock">⚠️ Az stok</span>' : ''}
                     </div>
                     <div class="detail-item">
                         <i class="fas fa-clock"></i>
                         <span>${pkg.expiryTime}'e kadar</span>
                     </div>
+                    <div class="detail-item real-time-status">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span id="mobile-status-${pkg.id}">Mobil app'de aktif</span>
+                    </div>
                 </div>
                 <div class="package-actions">
-                    <button class="btn-secondary" onclick="editPackage(${pkg.id})">
+                    <div class="quantity-controls">
+                        <button class="btn-sm btn-outline" onclick="updateQuantity('${pkg.id}', -1)">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <span class="quantity-display">${pkg.quantity}</span>
+                        <button class="btn-sm btn-outline" onclick="updateQuantity('${pkg.id}', 1)">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <button class="btn-secondary" onclick="editPackage('${pkg.id}')">
                         <i class="fas fa-edit"></i> Düzenle
                     </button>
-                    <button class="btn-primary" onclick="togglePackageStatus(${pkg.id})">
+                    <button class="btn-primary" onclick="togglePackageStatus('${pkg.id}')">
                         <i class="fas fa-power-off"></i>
                         ${pkg.status === 'active' ? 'Devre Dışı' : 'Aktif Et'}
                     </button>
@@ -923,28 +937,74 @@ function uploadImageToServer(base64Data, filename) {
         restaurantId: user.id
     };
 
-    // For MVP: Store in localStorage and update UI immediately
-    // TODO: Replace with actual API call in production
-    try {
-        // Save to localStorage for demo
-        localStorage.setItem('restaurantProfileImage', base64Data);
-        
-        // Update profile image in UI
-        updateProfileImageUI(base64Data);
-        
-        // Simulate API call success
-        setTimeout(() => {
+    // 🔄 PHASE 2: Professional Image Upload to Backend
+    async function performUpload() {
+        try {
+            let backendUploadSuccess = false;
+            
+            // Try backend upload first
+            if (apiConnected) {
+                console.log('📡 Uploading image to backend...');
+                
+                const response = await fetch(`${API_BASE_URL}/restaurant/profile/image`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(uploadData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ Image uploaded to backend successfully:', result);
+                    backendUploadSuccess = true;
+                    
+                    // Save backend image URL if provided
+                    if (result.imageUrl) {
+                        localStorage.setItem('restaurantProfileImage', result.imageUrl);
+                        updateProfileImageUI(result.imageUrl);
+                    } else {
+                        // Use base64 as fallback
+                        localStorage.setItem('restaurantProfileImage', base64Data);
+                        updateProfileImageUI(base64Data);
+                    }
+                    
+                    // Auto-sync with mobile app
+                    const profileData = JSON.parse(localStorage.getItem('restaurantProfileData') || '{}');
+                    profileData.profileImage = result.imageUrl || base64Data;
+                    await syncProfileWithMobileApp(profileData);
+                    
+                } else {
+                    console.warn('⚠️ Backend image upload failed, using localStorage');
+                }
+            }
+            
+            if (!backendUploadSuccess) {
+                // Fallback to localStorage
+                localStorage.setItem('restaurantProfileImage', base64Data);
+                updateProfileImageUI(base64Data);
+                console.log('📂 Image saved to localStorage (fallback)');
+            }
+            
             showImageUploadLoading(false);
             showImageUploadSuccess();
-        }, 1000);
-        
-        console.log('📷 Image uploaded successfully (demo mode)');
-        
-    } catch (error) {
-        console.error('Image upload error:', error);
-        alert('Görsel yüklenirken hata oluştu');
-        showImageUploadLoading(false);
+            console.log('📷 Image upload completed successfully');
+            
+        } catch (error) {
+            console.error('❌ Image upload error:', error);
+            
+            // Always fallback to localStorage on error
+            localStorage.setItem('restaurantProfileImage', base64Data);
+            updateProfileImageUI(base64Data);
+            
+            showImageUploadLoading(false);
+            alert('Görsel backend\'e yüklenemedi, yerel olarak kaydedildi.');
+            console.log('📂 Image saved to localStorage (error fallback)');
+        }
     }
+    
+    performUpload();
 }
 
 function updateProfileImageUI(imageData) {
@@ -1490,9 +1550,31 @@ async function loadProfileFromBackend() {
         if (result.success && result.data) {
             console.log('✅ Profile data loaded from backend:', result.data);
             
-            // Update local storage with backend data
+            // 🔄 PHASE 2: Admin Data Auto-Fill Integration
+            let mergedProfileData = {};
+            
+            // Start with admin approval data (from restaurantUser)
+            const adminData = {
+                name: user.name || user.restaurantName,
+                category: user.category || user.businessType,
+                address: user.address,
+                city: user.city,
+                district: user.district,
+                phone: user.phone,
+                email: user.email,
+                description: `${user.name || user.restaurantName} - Taze yemekler kurtarıyor!`
+            };
+            
+            // Merge with existing backend profile data (backend takes priority)
             if (result.data.profileData) {
-                localStorage.setItem('restaurantProfileData', JSON.stringify(result.data.profileData));
+                mergedProfileData = { ...adminData, ...result.data.profileData };
+                localStorage.setItem('restaurantProfileData', JSON.stringify(mergedProfileData));
+                console.log('✅ Admin data merged with profile data');
+            } else {
+                // No existing profile, use admin data as base
+                mergedProfileData = adminData;
+                localStorage.setItem('restaurantProfileData', JSON.stringify(mergedProfileData));
+                console.log('✅ Profile auto-filled with admin data');
             }
             
             if (result.data.profileImage) {
@@ -1500,16 +1582,12 @@ async function loadProfileFromBackend() {
                 updateProfileImageUI(result.data.profileImage);
             }
             
-            // Update display
-            if (result.data.profileData) {
-                updateProfileDisplayMode(result.data.profileData);
-            }
+            // Update display with merged data
+            updateProfileDisplayMode(mergedProfileData);
             
             // Auto-sync with mobile app when restaurant loads their profile
             console.log('🔄 Auto-syncing restaurant data with mobile app...');
-            if (result.data.profileData) {
-                await syncProfileWithMobileApp(result.data.profileData);
-            }
+            await syncProfileWithMobileApp(mergedProfileData);
             
             return result.data;
         }
@@ -1588,6 +1666,83 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 1000); // Delay to allow other init functions to complete
 });
+
+// 🔄 PHASE 2: Real-time Package Quantity Update
+async function updateQuantity(packageId, change) {
+    try {
+        console.log(`📦 Updating quantity for package ${packageId}: ${change > 0 ? '+' : ''}${change}`);
+        
+        // Get current packages from localStorage
+        let localPackages = JSON.parse(localStorage.getItem('restaurantPackages') || '[]');
+        const packageIndex = localPackages.findIndex(pkg => pkg.id === packageId);
+        
+        if (packageIndex === -1) {
+            console.error('❌ Package not found in localStorage');
+            return;
+        }
+        
+        const currentPackage = localPackages[packageIndex];
+        const newQuantity = Math.max(0, currentPackage.quantity + change);
+        
+        // Update localStorage
+        localPackages[packageIndex].quantity = newQuantity;
+        localStorage.setItem('restaurantPackages', JSON.stringify(localPackages));
+        
+        // Update backend if API is available
+        if (apiConnected) {
+            const user = JSON.parse(localStorage.getItem('restaurantUser') || '{}');
+            const token = localStorage.getItem('restaurantToken');
+            
+            if (user.id && token) {
+                const response = await fetch(`${API_BASE_URL}/restaurant/packages/${packageId}/quantity`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ quantity: newQuantity })
+                });
+                
+                if (response.ok) {
+                    console.log('✅ Quantity updated in backend');
+                    
+                    // Auto-sync with mobile app
+                    await syncPackageWithMobileApp({
+                        ...currentPackage,
+                        quantity: newQuantity
+                    });
+                } else {
+                    console.warn('⚠️ Backend quantity update failed');
+                }
+            }
+        }
+        
+        // Update UI immediately
+        const quantityElement = document.getElementById(`quantity-${packageId}`);
+        if (quantityElement) {
+            quantityElement.innerHTML = `${newQuantity} adet ${newQuantity <= 3 ? '<span class="low-stock">⚠️ Az stok</span>' : ''}`;
+        }
+        
+        const quantityDisplay = document.querySelector(`[onclick="updateQuantity('${packageId}', -1)"]`)
+            ?.parentElement?.querySelector('.quantity-display');
+        if (quantityDisplay) {
+            quantityDisplay.textContent = newQuantity;
+        }
+        
+        // Show notification
+        if (newQuantity === 0) {
+            alert(`Paket "${currentPackage.name}" stokta kalmadı!`);
+        } else if (newQuantity <= 3) {
+            alert(`Paket "${currentPackage.name}" stoğu azaldı: ${newQuantity} adet kaldı`);
+        }
+        
+        console.log(`✅ Package quantity updated: ${currentPackage.name} → ${newQuantity} adet`);
+        
+    } catch (error) {
+        console.error('❌ Quantity update error:', error);
+        alert('Stok güncellemesi başarısız oldu.');
+    }
+}
 
 // 🔄 PHASE 1: Package Mobile App Sync Function
 async function syncPackageWithMobileApp(packageData) {
