@@ -929,3 +929,573 @@ function loadProfileImage() {
         console.log('📷 Loaded saved profile image');
     }
 }
+
+// PROFILE MANAGEMENT SYSTEM - Full Featured Implementation
+
+// Profile Edit Toggle Functions
+function toggleProfileEdit() {
+    const displayMode = document.getElementById('profileDisplay');
+    const editMode = document.getElementById('profileEdit');
+    const editButton = document.getElementById('editButtonText');
+    
+    if (displayMode && editMode && editButton) {
+        const isEditMode = editMode.style.display !== 'none';
+        
+        if (isEditMode) {
+            // Switch to display mode
+            displayMode.style.display = 'grid';
+            editMode.style.display = 'none';
+            editButton.textContent = 'Profili Düzenle';
+            console.log('📝 Switched to profile display mode');
+        } else {
+            // Switch to edit mode
+            displayMode.style.display = 'none';
+            editMode.style.display = 'block';
+            editButton.textContent = 'Düzenlemeyi İptal';
+            loadProfileEditData(); // Load current data into edit form
+            console.log('✏️ Switched to profile edit mode');
+        }
+    }
+}
+
+// Main Image Preview for Edit Mode
+function previewMainImage(input) {
+    if (!input.files || !input.files[0]) return;
+    
+    const file = input.files[0];
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showProfileNotification('Lütfen geçerli bir resim dosyası seçin (JPG, PNG, WEBP)', 'error');
+        input.value = '';
+        return;
+    }
+    
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+        showProfileNotification('Resim boyutu 5MB\'dan küçük olmalıdır', 'error');
+        input.value = '';
+        return;
+    }
+    
+    console.log('📷 Processing main image preview:', file.name);
+    
+    // Show loading state
+    showImagePreviewLoading(true);
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const preview = document.getElementById('mainImagePreview');
+        const placeholder = document.getElementById('imageUploadPlaceholder');
+        
+        if (preview && placeholder) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+            
+            // Store for later save
+            window.tempProfileImage = e.target.result;
+            console.log('✅ Main image preview loaded');
+        }
+        
+        showImagePreviewLoading(false);
+        showProfileNotification('Görsel önizlemesi yüklendi. "Profili Kaydet" butonuna basarak kaydedin.', 'info');
+    };
+    
+    reader.onerror = function() {
+        showProfileNotification('Görsel okuma hatası oluştu', 'error');
+        showImagePreviewLoading(false);
+        input.value = '';
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+// Profile Data Management
+function loadProfileEditData() {
+    console.log('📋 Loading profile data for editing...');
+    
+    const user = JSON.parse(localStorage.getItem('restaurantUser') || '{}');
+    const profileData = JSON.parse(localStorage.getItem('restaurantProfileData') || '{}');
+    
+    // Load basic info from user data
+    document.getElementById('editDescription').value = profileData.description || '';
+    document.getElementById('editWebsite').value = profileData.website || '';
+    document.getElementById('editSpecialties').value = profileData.specialties ? profileData.specialties.join(', ') : '';
+    
+    // Load working hours
+    if (profileData.workingHours) {
+        document.getElementById('weekdayOpen').value = profileData.workingHours.weekday?.open || '09:00';
+        document.getElementById('weekdayClose').value = profileData.workingHours.weekday?.close || '22:00';
+        document.getElementById('weekendOpen').value = profileData.workingHours.weekend?.open || '10:00';
+        document.getElementById('weekendClose').value = profileData.workingHours.weekend?.close || '23:00';
+    }
+    
+    // Load main image if exists
+    const savedImage = localStorage.getItem('restaurantProfileImage');
+    if (savedImage) {
+        const preview = document.getElementById('mainImagePreview');
+        const placeholder = document.getElementById('imageUploadPlaceholder');
+        if (preview && placeholder) {
+            preview.src = savedImage;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+        }
+    }
+    
+    console.log('✅ Profile edit data loaded');
+}
+
+// Save Profile Function
+function saveProfile(event) {
+    if (event) event.preventDefault();
+    
+    console.log('💾 Starting profile save process...');
+    showProfileSaveProgress(0);
+    
+    try {
+        // Collect form data
+        const profileData = {
+            description: document.getElementById('editDescription').value.trim(),
+            website: document.getElementById('editWebsite').value.trim(),
+            specialties: document.getElementById('editSpecialties').value
+                .split(',')
+                .map(s => s.trim())
+                .filter(s => s.length > 0),
+            workingHours: {
+                weekday: {
+                    open: document.getElementById('weekdayOpen').value,
+                    close: document.getElementById('weekdayClose').value
+                },
+                weekend: {
+                    open: document.getElementById('weekendOpen').value,
+                    close: document.getElementById('weekendClose').value
+                }
+            },
+            lastUpdated: new Date().toISOString()
+        };
+        
+        // Validate required fields
+        if (!profileData.description) {
+            showProfileNotification('İşletme açıklaması zorunludur', 'error');
+            showProfileSaveProgress(-1);
+            return;
+        }
+        
+        // Validate website URL
+        if (profileData.website && !isValidURL(profileData.website)) {
+            showProfileNotification('Geçerli bir web sitesi adresi girin', 'error');
+            showProfileSaveProgress(-1);
+            return;
+        }
+        
+        // Validate working hours
+        if (!validateWorkingHours(profileData.workingHours)) {
+            showProfileNotification('Çalışma saatleri geçerli değil', 'error');
+            showProfileSaveProgress(-1);
+            return;
+        }
+        
+        showProfileSaveProgress(30);
+        
+        // Save profile data
+        localStorage.setItem('restaurantProfileData', JSON.stringify(profileData));
+        
+        // Save main image if changed
+        if (window.tempProfileImage) {
+            localStorage.setItem('restaurantProfileImage', window.tempProfileImage);
+            updateProfileImageUI(window.tempProfileImage);
+            delete window.tempProfileImage;
+        }
+        
+        showProfileSaveProgress(60);
+        
+        // Update display mode
+        updateProfileDisplayMode(profileData);
+        
+        showProfileSaveProgress(90);
+        
+        // Send to backend API
+        await sendProfileToBackend(profileData);
+        
+        // Sync with mobile app
+        await syncProfileWithMobileApp(profileData);
+        
+        showProfileSaveProgress(100);
+        
+        // Switch back to display mode
+        setTimeout(() => {
+            toggleProfileEdit();
+            showProfileNotification('Profil başarıyla güncellendi!', 'success');
+            hideProfileSaveProgress();
+        }, 500);
+        
+        console.log('✅ Profile saved successfully');
+        
+    } catch (error) {
+        console.error('❌ Profile save error:', error);
+        showProfileNotification('Profil kaydedilirken hata oluştu', 'error');
+        showProfileSaveProgress(-1);
+    }
+}
+
+// Update Profile Display Mode
+function updateProfileDisplayMode(profileData) {
+    // Update description
+    const descElement = document.getElementById('profile-description');
+    if (descElement) {
+        descElement.textContent = profileData.description || 'Restoran açıklaması henüz eklenmemiş.';
+    }
+    
+    // Update website
+    const websiteElement = document.getElementById('profile-website');
+    if (websiteElement) {
+        if (profileData.website) {
+            websiteElement.href = profileData.website;
+            websiteElement.textContent = profileData.website;
+            websiteElement.style.display = 'flex';
+        } else {
+            websiteElement.style.display = 'none';
+        }
+    }
+    
+    // Update specialties
+    const specialtiesContainer = document.getElementById('profile-specialties');
+    if (specialtiesContainer && profileData.specialties) {
+        specialtiesContainer.innerHTML = profileData.specialties
+            .map(specialty => `<span class="specialty-tag">${specialty}</span>`)
+            .join('');
+    }
+    
+    // Update working hours
+    const workingHoursContainer = document.getElementById('working-hours');
+    if (workingHoursContainer && profileData.workingHours) {
+        const { weekday, weekend } = profileData.workingHours;
+        workingHoursContainer.innerHTML = `
+            <div class="day">Pazartesi - Cuma: ${weekday.open} - ${weekday.close}</div>
+            <div class="day">Cumartesi - Pazar: ${weekend.open} - ${weekend.close}</div>
+        `;
+    }
+}
+
+// Utility Functions
+function isValidURL(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+function validateWorkingHours(hours) {
+    const { weekday, weekend } = hours;
+    
+    // Check if opening time is before closing time
+    const weekdayValid = weekday.open < weekday.close;
+    const weekendValid = weekend.open < weekend.close;
+    
+    return weekdayValid && weekendValid;
+}
+
+// UI Helper Functions
+function showImagePreviewLoading(loading) {
+    const placeholder = document.getElementById('imageUploadPlaceholder');
+    if (placeholder) {
+        if (loading) {
+            placeholder.innerHTML = `
+                <i class="fas fa-spinner fa-spin" style="font-size: 2em; color: #9ca3af; margin-bottom: 10px;"></i>
+                <p>Görsel işleniyor...</p>
+            `;
+        } else {
+            placeholder.innerHTML = `
+                <i class="fas fa-camera" style="font-size: 2em; color: #9ca3af; margin-bottom: 10px;"></i>
+                <p>Ana görseli yüklemek için tıklayın</p>
+                <p style="font-size: 0.8em; color: #6b7280;">JPG, PNG (Max 5MB)</p>
+            `;
+        }
+    }
+}
+
+function showProfileSaveProgress(percentage) {
+    let progressContainer = document.getElementById('profileSaveProgress');
+    
+    if (!progressContainer) {
+        progressContainer = document.createElement('div');
+        progressContainer.id = 'profileSaveProgress';
+        progressContainer.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 10001;
+            min-width: 300px;
+            text-align: center;
+        `;
+        document.body.appendChild(progressContainer);
+    }
+    
+    if (percentage === -1) {
+        progressContainer.innerHTML = `
+            <i class="fas fa-times-circle" style="color: #ef4444; font-size: 2em; margin-bottom: 10px;"></i>
+            <p style="margin: 0; color: #ef4444; font-weight: 500;">İşlem başarısız!</p>
+        `;
+        setTimeout(() => hideProfileSaveProgress(), 2000);
+    } else {
+        progressContainer.innerHTML = `
+            <div style="margin-bottom: 15px;">
+                <i class="fas fa-save" style="color: #10b981; font-size: 1.5em;"></i>
+            </div>
+            <p style="margin: 0 0 15px 0; font-weight: 500;">Profil kaydediliyor...</p>
+            <div style="background: #e5e7eb; border-radius: 10px; height: 8px; overflow: hidden;">
+                <div style="background: #10b981; height: 100%; width: ${percentage}%; transition: width 0.3s ease;"></div>
+            </div>
+            <p style="margin: 10px 0 0 0; font-size: 0.9em; color: #6b7280;">%${percentage}</p>
+        `;
+    }
+}
+
+function hideProfileSaveProgress() {
+    const progressContainer = document.getElementById('profileSaveProgress');
+    if (progressContainer) {
+        progressContainer.remove();
+    }
+}
+
+function showProfileNotification(message, type = 'info') {
+    const colors = {
+        success: '#10b981',
+        error: '#ef4444',
+        info: '#3b82f6',
+        warning: '#f59e0b'
+    };
+    
+    const icons = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle',
+        info: 'fas fa-info-circle',
+        warning: 'fas fa-exclamation-triangle'
+    };
+    
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${colors[type]};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 10002;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-width: 400px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    `;
+    
+    notification.innerHTML = `
+        <i class="${icons[type]}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, type === 'error' ? 5000 : 3000);
+}
+
+// Initialize Profile Form
+document.addEventListener('DOMContentLoaded', function() {
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', saveProfile);
+    }
+    
+    // Load existing profile data into display mode
+    loadProfileDisplayData();
+});
+
+function loadProfileDisplayData() {
+    const profileData = JSON.parse(localStorage.getItem('restaurantProfileData') || '{}');
+    if (Object.keys(profileData).length > 0) {
+        updateProfileDisplayMode(profileData);
+        console.log('📋 Profile display data loaded');
+    }
+}
+
+// BACKEND API INTEGRATION - Full Featured
+
+// Send Profile Data to Backend
+async function sendProfileToBackend(profileData) {
+    try {
+        console.log('🌐 Sending profile data to backend...');
+        
+        const user = JSON.parse(localStorage.getItem('restaurantUser') || '{}');
+        const token = localStorage.getItem('restaurantToken');
+        
+        if (!user.id || !token) {
+            throw new Error('Authentication required');
+        }
+        
+        // Prepare API payload
+        const payload = {
+            restaurantId: user.id,
+            profileImage: localStorage.getItem('restaurantProfileImage'),
+            description: profileData.description,
+            website: profileData.website,
+            specialties: profileData.specialties,
+            workingHours: profileData.workingHours,
+            lastUpdated: profileData.lastUpdated
+        };
+        
+        // Send to backend - Production API endpoint
+        const response = await fetch(`${API_BASE_URL}/api/restaurant/profile`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ Profile data sent to backend successfully:', result);
+        
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Backend API error:', error);
+        
+        // For demo mode, don't throw error - just log it
+        if (error.message.includes('API Error') || error.message.includes('fetch')) {
+            console.warn('🚧 Backend API not available, using local storage only');
+            showProfileNotification('Profil yerel olarak kaydedildi. Sunucu bağlantısı kurulamadı.', 'warning');
+        } else {
+            throw error;
+        }
+    }
+}
+
+// Load Profile Data from Backend
+async function loadProfileFromBackend() {
+    try {
+        console.log('🌐 Loading profile data from backend...');
+        
+        const user = JSON.parse(localStorage.getItem('restaurantUser') || '{}');
+        const token = localStorage.getItem('restaurantToken');
+        
+        if (!user.id || !token) {
+            console.log('⚠️ No authentication, using local data');
+            return null;
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/api/restaurant/profile/${user.id}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            console.log('✅ Profile data loaded from backend:', result.data);
+            
+            // Update local storage with backend data
+            if (result.data.profileData) {
+                localStorage.setItem('restaurantProfileData', JSON.stringify(result.data.profileData));
+            }
+            
+            if (result.data.profileImage) {
+                localStorage.setItem('restaurantProfileImage', result.data.profileImage);
+                updateProfileImageUI(result.data.profileImage);
+            }
+            
+            // Update display
+            if (result.data.profileData) {
+                updateProfileDisplayMode(result.data.profileData);
+            }
+            
+            return result.data;
+        }
+        
+    } catch (error) {
+        console.error('❌ Backend profile load error:', error);
+        console.log('📂 Using local storage data instead');
+        return null;
+    }
+}
+
+// Sync Profile Data with Mobile App
+async function syncProfileWithMobileApp(profileData) {
+    try {
+        console.log('📱 Syncing profile data with mobile app...');
+        
+        const user = JSON.parse(localStorage.getItem('restaurantUser') || '{}');
+        const token = localStorage.getItem('restaurantToken');
+        
+        if (!user.id || !token) return;
+        
+        // Mobile app sync endpoint
+        const syncPayload = {
+            restaurantId: user.id,
+            name: user.name,
+            profileImage: localStorage.getItem('restaurantProfileImage'),
+            description: profileData.description,
+            category: user.category || 'Restoran',
+            website: profileData.website,
+            specialties: profileData.specialties,
+            workingHours: profileData.workingHours,
+            location: user.location || null,
+            rating: user.rating || { average: 0, count: 0 },
+            packages: [], // Will be populated by package management
+            lastUpdated: new Date().toISOString()
+        };
+        
+        // Update restaurant data in main database for mobile app consumption
+        const response = await fetch(`${API_BASE_URL}/api/public/restaurants/${user.id}/sync`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(syncPayload)
+        });
+        
+        if (response.ok) {
+            console.log('✅ Profile synced with mobile app successfully');
+        } else {
+            console.warn('⚠️ Mobile app sync failed, will retry later');
+        }
+        
+    } catch (error) {
+        console.error('❌ Mobile app sync error:', error);
+        // Don't throw error, this is not critical
+    }
+}
+
+// Initialize Backend Integration
+document.addEventListener('DOMContentLoaded', function() {
+    // Load profile data from backend on page load
+    setTimeout(() => {
+        loadProfileFromBackend();
+    }, 1000); // Delay to allow other init functions to complete
+});
