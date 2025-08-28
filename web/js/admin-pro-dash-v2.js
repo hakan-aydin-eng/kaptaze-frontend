@@ -42,6 +42,9 @@ class AdminProDashboardV2 {
         // Setup real-time features
         this.setupRealTimeFeatures();
         
+        // Initialize SendGrid service
+        await this.initializeEmailService();
+        
         console.log('✅ Admin Pro Dashboard V2 ready');
     }
 
@@ -1232,6 +1235,13 @@ class AdminProDashboardV2 {
         console.log(`📧 Sending approval email for: ${application.applicationId}`);
         
         try {
+            // Ensure SendGrid service is available
+            if (!window.sendGridService) {
+                console.error('❌ SendGrid service not available');
+                this.showNotification('error', 'Email servisi mevcut değil');
+                return;
+            }
+            
             // Generate secure credentials
             const credentials = window.sendGridService.generateCredentials(application);
             
@@ -1309,6 +1319,22 @@ class AdminProDashboardV2 {
         
         // Redirect to login
         window.location.href = './admin-login-v3.html';
+    }
+
+    async initializeEmailService() {
+        try {
+            // Initialize SendGrid service if not already available
+            if (!window.sendGridService && window.SendGridService) {
+                window.sendGridService = new SendGridService();
+                console.log('📧 SendGrid email service initialized');
+            } else if (window.sendGridService) {
+                console.log('📧 SendGrid email service already available');
+            } else {
+                console.warn('⚠️ SendGrid service class not available');
+            }
+        } catch (error) {
+            console.error('❌ Failed to initialize email service:', error);
+        }
     }
 
     // SendGrid API key setup for admins

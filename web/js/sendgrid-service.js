@@ -46,8 +46,16 @@ class SendGridService {
             localStorage.getItem('sendgrid_api_key') ||
             'SG.demo-key-for-development'; // Demo key for development
             
-        if (this.apiKey.startsWith('SG.demo')) {
+        // Ensure API key is never null/undefined
+        if (!this.apiKey) {
+            this.apiKey = 'SG.demo-key-for-development';
+            console.warn('⚠️ No SendGrid API key found, using demo key');
+        }
+            
+        if (this.apiKey && this.apiKey.startsWith('SG.demo')) {
             console.warn('⚠️ Using demo SendGrid API key - emails will be simulated');
+        } else {
+            console.log('✅ Production SendGrid API key loaded');
         }
     }
 
@@ -103,7 +111,7 @@ class SendGridService {
             console.error('❌ Failed to send approval email:', error);
             
             // Fallback: Simulate email sending in demo mode
-            if (this.apiKey.startsWith('SG.demo')) {
+            if (this.apiKey && this.apiKey.startsWith('SG.demo')) {
                 return this.simulateEmailSending('approval', application, credentials);
             }
             
@@ -162,7 +170,7 @@ class SendGridService {
             console.error('❌ Failed to send rejection email:', error);
             
             // Fallback: Simulate email sending in demo mode
-            if (this.apiKey.startsWith('SG.demo')) {
+            if (this.apiKey && this.apiKey.startsWith('SG.demo')) {
                 return this.simulateEmailSending('rejection', application, { reason });
             }
             
@@ -173,7 +181,7 @@ class SendGridService {
     async sendEmail(emailData) {
         try {
             // Check if we're in demo mode
-            if (this.apiKey.startsWith('SG.demo')) {
+            if (this.apiKey && this.apiKey.startsWith('SG.demo')) {
                 return {
                     success: true,
                     messageId: 'demo-' + Date.now(),
