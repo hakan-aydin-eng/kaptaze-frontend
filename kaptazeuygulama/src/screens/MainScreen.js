@@ -154,7 +154,12 @@ const MainScreen = ({ navigation }) => {
         profileImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl,
         restaurantImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl || restaurant.image,
         // Ensure adminNote is available from backend data
-        adminNote: restaurant.adminNote || restaurant.description || 'Restoran sahibi henüz ürün açıklaması eklememiş.'
+        adminNote: restaurant.adminNote || restaurant.description || 'Restoran sahibi henüz ürün açıklaması eklememiş.',
+        // Add working hours from restaurant profile
+        workingHours: restaurant.workingHours || {
+          weekday: { open: '09:00', close: '22:00' },
+          weekend: { open: '10:00', close: '23:00' }
+        }
       }));
 
       // Duplicate removal (by id or name)

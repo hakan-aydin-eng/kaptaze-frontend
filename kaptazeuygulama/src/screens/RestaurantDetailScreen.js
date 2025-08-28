@@ -259,7 +259,11 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             </View>
             <View style={styles.pickupTimeContainer}>
               <Text style={styles.pickupTimeIcon}>⏰</Text>
-              <Text style={styles.pickupTimeText}>18:00-21:00</Text>
+              <Text style={styles.pickupTimeText}>
+                {restaurant.workingHours?.weekday ? 
+                  `${restaurant.workingHours.weekday.open}-${restaurant.workingHours.weekday.close}` : 
+                  '18:00-21:00'}
+              </Text>
             </View>
             <Text style={styles.distanceText}>{restaurant.distance}km</Text>
           </View>
