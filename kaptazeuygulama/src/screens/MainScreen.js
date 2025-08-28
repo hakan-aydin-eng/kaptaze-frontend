@@ -137,11 +137,8 @@ const MainScreen = ({ navigation }) => {
       
       
       
-      // Tüm veri kaynaklarını birleştir
-      const allRestaurants = [
-        ...apiRestaurants, // Gerçek API verisi öncelikli
-        ...antalyaRestaurants // Fallback demo restoranlar
-      ];
+      // Use API data primarily, fallback to demo only if API completely fails
+      const allRestaurants = apiRestaurants.length > 0 ? apiRestaurants : antalyaRestaurants;
       
       // Format API data to match expected structure
       const formattedRestaurants = allRestaurants.map(restaurant => ({
