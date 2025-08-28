@@ -165,7 +165,7 @@ class BackendService {
     // Public Methods (Ana sayfa için - token gerektirmeyen)
     async getPublicStats() {
         try {
-            // Public stats endpoint'i yok ise demo data kullan
+            // Gerçek API'den stats çek
             const response = await fetch(`${this.baseURL}/public/stats`, {
                 method: 'GET',
                 headers: {
@@ -174,24 +174,32 @@ class BackendService {
             });
             
             if (response.ok) {
-                return await response.json();
+                const result = await response.json();
+                console.log('📊 Public stats loaded:', result.data);
+                
+                if (result.success) {
+                    return result.data;
+                } else {
+                    throw new Error('API returned unsuccessful response');
+                }
             } else {
-                throw new Error('Public stats not available');
+                throw new Error('API response not ok');
             }
         } catch (error) {
-            console.log('⚠️ Using demo stats for homepage');
-            // Demo stats for homepage
+            console.error('❌ Public stats API error:', error.message);
+            console.log('⚠️ Using demo stats as fallback');
             return {
                 totalPackagesSaved: 2847,
                 co2Saving: '1.2T',
-                partnerRestaurants: 156
+                partnerRestaurants: 156,
+                demo: true
             };
         }
     }
 
     async getPublicPackages() {
         try {
-            // Public packages endpoint'i yok ise demo data kullan
+            // Gerçek API'den packages çek
             const response = await fetch(`${this.baseURL}/public/packages`, {
                 method: 'GET',
                 headers: {
@@ -200,15 +208,28 @@ class BackendService {
             });
             
             if (response.ok) {
-                const data = await response.json();
-                return data.packages || data;
+                const result = await response.json();
+                console.log('📦 Public packages loaded:', result.data.packages.length);
+                
+                // Eğer gerçek data varsa onu kullan, yoksa demo data
+                if (result.success && result.data.packages.length > 0) {
+                    return result.data.packages;
+                } else {
+                    console.log('ℹ️ No packages in database, using demo data');
+                    return this.getDemoPackages();
+                }
             } else {
-                throw new Error('Public packages not available');
+                throw new Error('API response not ok');
             }
         } catch (error) {
-            console.log('⚠️ Using demo packages for homepage');
-            // Demo packages for homepage
-            return [
+            console.error('❌ Public packages API error:', error.message);
+            console.log('⚠️ Using demo packages as fallback');
+            return this.getDemoPackages();
+        }
+    }
+
+    getDemoPackages() {
+        return [
                 {
                     id: 'demo-1',
                     title: 'Karma Menü',
