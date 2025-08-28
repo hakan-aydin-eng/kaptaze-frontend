@@ -565,8 +565,8 @@ class AdminDashboard {
                     totalOrders: 0
                 });
 
-                // Send approval email (assuming SendGrid is working)
-                await this.sendApprovalEmail(application);
+                // Email sending disabled - Backend handles this
+                // await this.sendApprovalEmail(application); // DISABLED: Prevent duplicate emails
 
                 // Re-render
                 this.renderApplications();
@@ -583,9 +583,9 @@ class AdminDashboard {
     }
 
     async sendApprovalEmail(application) {
-        // Email sending with existing SendGrid integration
-        console.log('📧 Sending approval email to:', application.email);
-        // Implementation would use existing SendGrid API
+        // DISABLED: Frontend email sending removed to prevent duplicate emails
+        // Backend already handles email sending with correct credentials
+        console.log('📧 Email sending disabled - Backend handles approval emails for:', application.email);
     }
 
     rejectApplication(applicationId) {

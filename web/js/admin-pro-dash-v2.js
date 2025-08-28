@@ -802,8 +802,8 @@ class AdminProDashboardV2 {
                 // Update local data
                 app.status = 'approved';
                 
-                // Send approval email with credentials
-                await this.sendApprovalEmail(app);
+                // Email already sent by backend, no need to send again
+                // await this.sendApprovalEmail(app); // REMOVED: Duplicate email sending
                 
                 // Refresh display
                 await this.loadApplicationsData();
@@ -832,8 +832,8 @@ class AdminProDashboardV2 {
             app.status = 'approved';
             this.showNotification('success', `Demo: Başvuru ${applicationId} onaylandı!`);
             
-            // Send demo approval email
-            this.sendApprovalEmail(app);
+            // Email already sent, removed duplicate sending
+            // this.sendApprovalEmail(app); // REMOVED: Duplicate email sending
             
             this.loadApplicationsData();
             this.updateStatsCards();
@@ -1915,46 +1915,15 @@ class AdminProDashboardV2 {
     }
 
     async sendApprovalEmail(application) {
-        console.log(`📧 Sending approval email for: ${application.applicationId}`);
+        // DISABLED: Frontend email sending removed to prevent duplicate emails
+        // Backend already handles email sending with correct credentials
+        console.log(`📧 Email sending disabled - Backend handles approval emails for: ${application.applicationId}`);
         
-        try {
-            // Ensure SendGrid service is available
-            if (!window.sendGridService) {
-                console.error('❌ SendGrid service not available');
-                this.showNotification('error', 'Email servisi mevcut değil');
-                return;
-            }
-            
-            // Generate secure credentials
-            const credentials = window.sendGridService.generateCredentials(application);
-            
-            // Send email via SendGrid service
-            const result = await window.sendGridService.sendApprovalEmail(application, credentials);
-            
-            if (result.success) {
-                this.showNotification('success', 
-                    `✅ Onay e-postası gönderildi: ${application.email}${result.demo ? ' (Demo Mode)' : ''}`
-                );
-                
-                // Log the credentials for demo purposes
-                if (result.demo) {
-                    console.log(`🔐 Generated credentials for ${application.businessName}:`, {
-                        username: credentials.username,
-                        password: credentials.password,
-                        applicationId: application.applicationId
-                    });
-                }
-                
-                return result;
-            } else {
-                throw new Error(result.message || 'Email gönderilemedi');
-            }
-            
-        } catch (error) {
-            console.error('❌ Email sending failed:', error);
-            this.showNotification('error', 'Email gönderimi başarısız: ' + error.message);
-            throw error;
-        }
+        this.showNotification('info', 
+            '📧 Onay e-postası backend tarafından gönderildi'
+        );
+        
+        return { success: true, disabled: true, message: 'Frontend email sending disabled' };
     }
 
     async sendRejectionEmail(application, reason) {

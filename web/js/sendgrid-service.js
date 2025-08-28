@@ -626,9 +626,9 @@ class SendGridService {
     }
 
     generateSecurePassword() {
-        // Generate a secure, memorable password
-        const adjectives = ['Güzel', 'Hızlı', 'Taze', 'Leziz', 'Kalite', 'Premium'];
-        const nouns = ['Lezzet', 'Tatlar', 'Menü', 'Servis', 'Restoran', 'Mutfak'];
+        // Generate a secure, memorable password without Turkish characters
+        const adjectives = ['Fresh', 'Fast', 'Prime', 'Super', 'Best', 'Premium'];
+        const nouns = ['Food', 'Taste', 'Menu', 'Service', 'Kitchen', 'Dining'];
         const numbers = Math.floor(Math.random() * 9000) + 1000;
         
         const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
