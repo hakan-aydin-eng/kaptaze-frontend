@@ -17,9 +17,9 @@ if (!fs.existsSync(distDir)) {
 const htmlFiles = [
     'index.html',
     'admin-dashboard-professional.html',
-    'admin-login-v2.html',
+    'admin-pro-dash-v2.html',
+    'admin-login-v3.html',
     'customer-registration-v2.html',
-    'restaurant-login-v2.html',
     'restaurant-login.html',
     'restaurant-panel.html'
 ];
