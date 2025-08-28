@@ -1133,32 +1133,21 @@ class AdminProDashboardV2 {
     displayRestaurants(restaurants) {
         console.log('🎨 Displaying restaurants:', restaurants.length, restaurants);
         
-        // Get active section's dataContainer
-        const activeSection = document.querySelector('.content-section.active');
-        console.log('🔍 Active section found:', activeSection);
-        console.log('🔍 Available sections:', document.querySelectorAll('.content-section'));
-        console.log('🔍 Current section:', this.currentSection);
-        
-        const container = activeSection ? activeSection.querySelector('#dataContainer') : null;
-        console.log('🔍 Container in active section:', container);
+        // Get restaurants table container (fix for existing HTML structure)
+        let container = document.getElementById('restaurantsTable');
         
         if (!container) {
-            console.error('❌ dataContainer not found in active section');
-            console.log('Active section:', activeSection);
-            console.log('Active section innerHTML:', activeSection ? activeSection.innerHTML : 'null');
-            
-            // Fallback: try to get restaurants section specifically
-            const restaurantsSection = document.getElementById('restaurants');
-            console.log('🔍 Restaurants section:', restaurantsSection);
-            const fallbackContainer = restaurantsSection ? restaurantsSection.querySelector('#dataContainer') : null;
-            console.log('🔍 Fallback container:', fallbackContainer);
-            
-            if (fallbackContainer) {
-                console.log('✅ Using fallback container');
-                fallbackContainer.innerHTML = 'Using fallback container for restaurants';
-            }
+            // Fallback to dataContainer approach
+            const activeSection = document.querySelector('.content-section.active');
+            container = activeSection ? activeSection.querySelector('#dataContainer') : null;
+        }
+        
+        if (!container) {
+            console.error('❌ No suitable container found for restaurants');
             return;
         }
+        
+        console.log('✅ Using container:', container.id);
 
         const html = `
             <div class="section-header">
@@ -1284,14 +1273,22 @@ class AdminProDashboardV2 {
     displayPackages(packages) {
         console.log('📦 Displaying packages:', packages.length, packages);
         
-        // Get active section's dataContainer
-        const activeSection = document.querySelector('.content-section.active');
-        const container = activeSection ? activeSection.querySelector('#dataContainer') : null;
+        // Get packages table container (try different container IDs)
+        let container = document.getElementById('packagesTable') || 
+                       document.getElementById('dataContainer');
         
         if (!container) {
-            console.error('❌ dataContainer not found in active section for packages');
+            // Fallback to active section approach
+            const activeSection = document.querySelector('.content-section.active');
+            container = activeSection ? activeSection.querySelector('#dataContainer') : null;
+        }
+        
+        if (!container) {
+            console.error('❌ No suitable container found for packages');
             return;
         }
+        
+        console.log('✅ Using packages container:', container.id);
 
         const html = `
             <div class="section-header">
