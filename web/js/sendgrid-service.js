@@ -189,14 +189,15 @@ class SendGridService {
                 };
             }
 
-            // Real SendGrid API call
-            const response = await fetch(`${this.baseURL}/mail/send`, {
+            // Use backend proxy to avoid CORS issues
+            const backendUrl = window.KapTazeAPI?.config?.baseUrl || 'https://kaptaze-backend-api.onrender.com';
+            const response = await fetch(`${backendUrl}/admin/send-email`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Authorization': `Bearer ${localStorage.getItem('kaptaze_token')}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(emailData)
+                body: JSON.stringify({ emailData })
             });
 
             if (response.ok) {
