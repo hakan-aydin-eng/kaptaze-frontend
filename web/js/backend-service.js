@@ -8,7 +8,13 @@ class BackendService {
             customers: '/restaurant/customers',
             orders: '/orders',
             admin: '/admin',
-            packages: '/restaurant/packages'
+            packages: '/restaurant/packages',
+            // Public endpoints (no auth required)
+            public: {
+                restaurants: '/public/restaurants',
+                packages: '/public/packages',
+                stats: '/public/stats'
+            }
         };
     }
 
@@ -105,6 +111,17 @@ class BackendService {
     // Restaurant Methods
     async getRestaurants() {
         return this.makeRequest(this.endpoints.restaurants);
+    }
+
+    // Public Methods (no authentication required)
+    async getPublicRestaurants() {
+        try {
+            // Try public endpoint first
+            return await this.makeRequest(this.endpoints.public.restaurants);
+        } catch (error) {
+            console.log('⚠️ Public restaurants API error, using demo data');
+            return this.getDemoRestaurants();
+        }
     }
 
     async getRestaurantById(id) {
@@ -259,6 +276,38 @@ class BackendService {
                 image: './assets/food-3.jpg',
                 category: 'Japon',
                 location: 'Muratpaşa, Antalya'
+            }
+        ];
+    }
+
+    getDemoRestaurants() {
+        return [
+            {
+                id: 'demo-rest-1',
+                name: 'Seraser Restaurant',
+                category: 'Ana Yemek',
+                location: 'Kaleici, Antalya',
+                rating: 4.8,
+                packages: 3,
+                image: './assets/restaurant-1.jpg'
+            },
+            {
+                id: 'demo-rest-2',
+                name: 'İtalyan Mutfağı',
+                category: 'Pizza & İtalyan',
+                location: 'Lara, Antalya',
+                rating: 4.6,
+                packages: 2,
+                image: './assets/restaurant-2.jpg'
+            },
+            {
+                id: 'demo-rest-3',
+                name: 'Tokyo Sushi',
+                category: 'Japon Mutfağı',
+                location: 'Muratpaşa, Antalya',
+                rating: 4.9,
+                packages: 1,
+                image: './assets/restaurant-3.jpg'
             }
         ];
     }

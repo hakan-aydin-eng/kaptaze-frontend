@@ -54,8 +54,8 @@ async function loadDashboardData() {
         const packages = await window.backendService.getPublicPackages();
         displayPackages(packages.slice(0, 6)); // Show first 6 packages
         
-        // Load restaurants
-        const restaurants = await window.backendService.getRestaurants();
+        // Load restaurants (public endpoint - no auth required)
+        const restaurants = await window.backendService.getPublicRestaurants();
         console.log(`🍽️ Loaded ${restaurants.length} restaurants`);
         
         // Update statistics with real data
