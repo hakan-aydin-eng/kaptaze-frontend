@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,30 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
+  Modal,
+  TextInput,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { useUserData } from '../context/UserDataContext';
+import apiService from '../services/apiService';
 
 const ProfileScreen = ({ navigation }) => {
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
+  const { setUser, getUserStats } = useUserData();
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: user?.name || '',
+    surname: user?.surname || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+  });
+  const [formErrors, setFormErrors] = useState({});
+
+  const stats = getUserStats();
+
   const menuItems = [
     { id: 1, title: 'Hesap Bilgileri', icon: '👤', screen: null },
     { id: 2, title: 'Bildirim Ayarları', icon: '🔔', screen: null },
@@ -26,6 +45,107 @@ const ProfileScreen = ({ navigation }) => {
       navigation.navigate('Welcome');
     } else if (item.screen) {
       navigation.navigate(item.screen);
+    }
+  };
+
+  const openEditModal = () => {
+    setEditForm({
+      name: user?.name || '',
+      surname: user?.surname || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+    });
+    setFormErrors({});
+    setIsEditModalVisible(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalVisible(false);
+    setFormErrors({});
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+    
+    if (formErrors[field]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [field]: '',
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!editForm.name.trim()) {
+      errors.name = 'İsim gereklidir';
+    }
+
+    if (!editForm.surname.trim()) {
+      errors.surname = 'Soyisim gereklidir';
+    }
+
+    if (!editForm.email.trim()) {
+      errors.email = 'E-posta gereklidir';
+    } else if (!/\S+@\S+\.\S+/.test(editForm.email)) {
+      errors.email = 'Geçerli bir e-posta adresi girin';
+    }
+
+    if (editForm.phone && !/^[0-9]{11}$/.test(editForm.phone.replace(/\s/g, ''))) {
+      errors.phone = 'Telefon numarası 11 haneli olmalıdır';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!validateForm()) return;
+
+    setIsUpdating(true);
+    
+    try {
+      if (token) {
+        // Backend profil update API call
+        const result = await apiService.updateProfile({
+          name: editForm.name.trim(),
+          surname: editForm.surname.trim(),
+          email: editForm.email.trim(),
+          phone: editForm.phone.trim() || null,
+        }, token);
+
+        if (result.success) {
+          // Backend'den dönen güncel user bilgisiyle güncelle
+          await setUser(result.data.consumer, token);
+          closeEditModal();
+          Alert.alert('✅ Başarılı!', 'Profiliniz başarıyla güncellendi!');
+        } else {
+          throw new Error(result.error || 'Update failed');
+        }
+      } else {
+        // Token yoksa local update (demo için)
+        const updatedUser = {
+          ...user,
+          name: editForm.name.trim(),
+          surname: editForm.surname.trim(),
+          email: editForm.email.trim(),
+          phone: editForm.phone.trim() || null,
+        };
+
+        await setUser(updatedUser);
+        closeEditModal();
+        Alert.alert('✅ Başarılı!', 'Profiliniz başarıyla güncellendi! (Offline)');
+      }
+
+    } catch (error) {
+      console.error('Profile update error:', error);
+      Alert.alert('❌ Hata', error.message || 'Profil güncellenirken bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -55,7 +175,7 @@ const ProfileScreen = ({ navigation }) => {
             {user ? user.email : 'misafir@kaptaze.com'}
           </Text>
           
-          <TouchableOpacity style={styles.editButton}>
+          <TouchableOpacity style={styles.editButton} onPress={openEditModal}>
             <Text style={styles.editButtonText}>Profili Düzenle</Text>
           </TouchableOpacity>
         </View>
@@ -63,15 +183,15 @@ const ProfileScreen = ({ navigation }) => {
         {/* Stats */}
         <View style={styles.statsSection}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{stats.completedOrders}</Text>
             <Text style={styles.statLabel}>Sipariş</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>₺0</Text>
+            <Text style={styles.statNumber}>₺{stats.totalSavings.toFixed(0)}</Text>
             <Text style={styles.statLabel}>Tasarruf</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0kg</Text>
+            <Text style={styles.statNumber}>{stats.foodSaved.toFixed(1)}kg</Text>
             <Text style={styles.statLabel}>İsraf Önlendi</Text>
           </View>
         </View>
@@ -102,6 +222,102 @@ const ProfileScreen = ({ navigation }) => {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Edit Profile Modal */}
+      <Modal
+        visible={isEditModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={closeEditModal}>
+              <Text style={styles.modalCancelButton}>İptal</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Profili Düzenle</Text>
+            <TouchableOpacity 
+              onPress={handleUpdateProfile} 
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <ActivityIndicator size="small" color="#16a34a" />
+              ) : (
+                <Text style={styles.modalSaveButton}>Kaydet</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            <View style={styles.formSection}>
+              <Text style={styles.formSectionTitle}>Kişisel Bilgiler</Text>
+              
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>İsim *</Text>
+                <TextInput
+                  style={[styles.input, formErrors.name && styles.inputError]}
+                  value={editForm.name}
+                  onChangeText={(value) => handleInputChange('name', value)}
+                  placeholder="Adınız"
+                  placeholderTextColor="#9ca3af"
+                />
+                {formErrors.name && <Text style={styles.errorText}>{formErrors.name}</Text>}
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Soyisim *</Text>
+                <TextInput
+                  style={[styles.input, formErrors.surname && styles.inputError]}
+                  value={editForm.surname}
+                  onChangeText={(value) => handleInputChange('surname', value)}
+                  placeholder="Soyadınız"
+                  placeholderTextColor="#9ca3af"
+                />
+                {formErrors.surname && <Text style={styles.errorText}>{formErrors.surname}</Text>}
+              </View>
+            </View>
+
+            <View style={styles.formSection}>
+              <Text style={styles.formSectionTitle}>İletişim Bilgileri</Text>
+              
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>E-posta *</Text>
+                <TextInput
+                  style={[styles.input, formErrors.email && styles.inputError]}
+                  value={editForm.email}
+                  onChangeText={(value) => handleInputChange('email', value)}
+                  placeholder="ornek@email.com"
+                  placeholderTextColor="#9ca3af"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                {formErrors.email && <Text style={styles.errorText}>{formErrors.email}</Text>}
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Telefon</Text>
+                <TextInput
+                  style={[styles.input, formErrors.phone && styles.inputError]}
+                  value={editForm.phone}
+                  onChangeText={(value) => handleInputChange('phone', value)}
+                  placeholder="05XXXXXXXXX"
+                  placeholderTextColor="#9ca3af"
+                  keyboardType="phone-pad"
+                  maxLength={11}
+                />
+                {formErrors.phone && <Text style={styles.errorText}>{formErrors.phone}</Text>}
+                <Text style={styles.inputHint}>Opsiyonel - SMS bildirimleri için</Text>
+              </View>
+            </View>
+
+            <View style={styles.formSection}>
+              <Text style={styles.formSectionTitle}>ℹ️ Bilgi</Text>
+              <Text style={styles.infoText}>
+                E-posta adresinizi değiştirirseniz, yeni adrese doğrulama kodu gönderilecektir.
+              </Text>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -256,6 +472,90 @@ const styles = StyleSheet.create({
   impactDescription: {
     fontSize: 14,
     color: '#166534',
+    lineHeight: 20,
+  },
+  
+  // Modal Styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  modalCancelButton: {
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  modalSaveButton: {
+    fontSize: 16,
+    color: '#16a34a',
+    fontWeight: '600',
+  },
+  modalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  formSection: {
+    backgroundColor: '#ffffff',
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    borderRadius: 12,
+  },
+  formSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    backgroundColor: '#ffffff',
+    color: '#111827',
+  },
+  inputError: {
+    borderColor: '#ef4444',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#ef4444',
+    marginTop: 4,
+  },
+  inputHint: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#6b7280',
     lineHeight: 20,
   },
 });

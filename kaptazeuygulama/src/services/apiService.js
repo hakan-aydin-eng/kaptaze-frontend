@@ -115,6 +115,17 @@ class ApiService {
   async login(credentials) {
     return this.post('/auth/login', credentials);
   }
+
+  // Profile Management
+  async updateProfile(profileData, token) {
+    return this.request('/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(profileData),
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  }
 }
 
 const apiService = new ApiService();

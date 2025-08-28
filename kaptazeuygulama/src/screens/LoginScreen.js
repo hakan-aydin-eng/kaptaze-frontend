@@ -49,7 +49,7 @@ const LoginScreen = ({ navigation }) => {
         });
         
         if (result.success) {
-          await login(result.data.consumer);
+          await login(result.data.consumer, result.data.token);
           // Direkt ana sayfaya yönlendir
           navigation.navigate('Main');
           Alert.alert('✅ Başarılı!', 'Giriş başarılı!');

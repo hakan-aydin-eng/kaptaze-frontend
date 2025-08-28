@@ -12,10 +12,10 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const { currentUser, setUser, logout: userLogout, isLoading } = useUserData();
+  const { currentUser, userToken, setUser, logout: userLogout, isLoading } = useUserData();
 
-  const login = async (userData) => {
-    await setUser(userData);
+  const login = async (userData, token = null) => {
+    await setUser(userData, token);
     return userData;
   };
 
@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user: currentUser,
+    token: userToken,
     isLoading,
     login,
     logout,

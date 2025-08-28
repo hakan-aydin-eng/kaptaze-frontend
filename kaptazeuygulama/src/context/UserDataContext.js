@@ -13,6 +13,7 @@ export const useUserData = () => {
 
 export const UserDataProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [userToken, setUserToken] = useState(null);
   const [favorites, setFavorites] = useState([]);
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,6 +21,7 @@ export const UserDataProvider = ({ children }) => {
   // AsyncStorage keys
   const STORAGE_KEYS = {
     CURRENT_USER: '@kaptaze_current_user',
+    USER_TOKEN: '@kaptaze_user_token',
     FAVORITES: '@kaptaze_favorites',
     ORDERS: '@kaptaze_orders',
   };
@@ -33,14 +35,19 @@ export const UserDataProvider = ({ children }) => {
     try {
       setIsLoading(true);
       
-      const [savedUser, savedFavorites, savedOrders] = await Promise.all([
+      const [savedUser, savedToken, savedFavorites, savedOrders] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.CURRENT_USER),
+        AsyncStorage.getItem(STORAGE_KEYS.USER_TOKEN),
         AsyncStorage.getItem(STORAGE_KEYS.FAVORITES),
         AsyncStorage.getItem(STORAGE_KEYS.ORDERS),
       ]);
 
       if (savedUser) {
         setCurrentUser(JSON.parse(savedUser));
+      }
+
+      if (savedToken) {
+        setUserToken(savedToken);
       }
 
       if (savedFavorites) {
@@ -66,21 +73,33 @@ export const UserDataProvider = ({ children }) => {
   };
 
   // User management
-  const setUser = async (user) => {
+  const setUser = async (user, token = null) => {
     setCurrentUser(user);
+    if (token) {
+      setUserToken(token);
+    }
+    
     if (user) {
       await saveUserData(STORAGE_KEYS.CURRENT_USER, user);
     } else {
       await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     }
+    
+    if (token) {
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_TOKEN, token);
+    } else if (user === null) {
+      await AsyncStorage.removeItem(STORAGE_KEYS.USER_TOKEN);
+    }
   };
 
   const logout = async () => {
     setCurrentUser(null);
+    setUserToken(null);
     setFavorites([]);
     setOrders([]);
     await Promise.all([
       AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_USER),
+      AsyncStorage.removeItem(STORAGE_KEYS.USER_TOKEN),
       AsyncStorage.removeItem(STORAGE_KEYS.FAVORITES),
       AsyncStorage.removeItem(STORAGE_KEYS.ORDERS),
     ]);
@@ -191,6 +210,7 @@ export const UserDataProvider = ({ children }) => {
   const value = {
     // User state
     currentUser,
+    userToken,
     isLoading,
     
     // User actions
