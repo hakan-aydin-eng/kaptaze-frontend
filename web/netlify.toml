@@ -12,17 +12,17 @@
 # Clean URLs and redirects
 [[redirects]]
   from = "/admin"
-  to = "/admin-login-v2.html"
+  to = "/admin-login-v3.html"
   status = 301
 
 [[redirects]]
   from = "/admin-panel"  
-  to = "/admin-dashboard-professional.html"
+  to = "/admin-pro-dash-v2.html"
   status = 301
 
 [[redirects]]
   from = "/restaurant"
-  to = "/restaurant-login-v2.html"
+  to = "/restaurant-login.html"
   status = 301
 
 [[redirects]]
