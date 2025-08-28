@@ -1,6 +1,6 @@
 /**
- * Environment Variables Injection for Netlify
- * This script injects environment variables from Netlify build process
+ * Environment Variables Injection Template for Netlify
+ * This file is a template - placeholders will be replaced during build
  */
 
 // Inject Netlify environment variables into window object
@@ -9,9 +9,9 @@
     
     // Environment variables from Netlify
     // These will be replaced during build process
-    window.GOOGLE_MAPS_API_KEY = 'AIzaSyDpkdGOZ5jJWVtFbevWBxIA8Z9zmH3mqjU';
-    window.API_BASE_URL = 'https://www.kaptaze.com/.netlify/functions';
-    window.ENVIRONMENT = 'production';
+    window.GOOGLE_MAPS_API_KEY = '%%GOOGLE_MAPS_API_KEY%%';
+    window.API_BASE_URL = '%%API_BASE_URL%%';
+    window.ENVIRONMENT = '%%ENVIRONMENT%%';
     
     // Clean up placeholder values
     Object.keys(window).forEach(key => {
