@@ -16,10 +16,10 @@ const envInjectPath = path.join(__dirname, 'web', 'js', 'env-inject.js');
 // Read template file
 let envContent = fs.readFileSync(envInjectTemplatePath, 'utf8');
 
-// Environment variables to inject
+// Environment variables to inject (from Netlify environment, no fallbacks)
 const envVars = {
-    'GOOGLE_MAPS_API_KEY': process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyDpkdGOZ5jJWVtFbevWBxIA8Z9zmH3mqjU',
-    'API_BASE_URL': process.env.API_BASE_URL || 'https://https://kaptaze.com//.netlify/functions',
+    'GOOGLE_MAPS_API_KEY': process.env.GOOGLE_MAPS_API_KEY || null,
+    'API_BASE_URL': process.env.API_BASE_URL || 'https://kaptaze.com/.netlify/functions',
     'ENVIRONMENT': process.env.NODE_ENV || 'production'
 };
 
@@ -38,8 +38,11 @@ Object.entries(envVars).forEach(([key, value]) => {
     }
 });
 
-// Write the updated file
+// Write the updated file (this will be generated from template)
 fs.writeFileSync(envInjectPath, envContent);
+
+// Ensure the generated file is not tracked by git
+console.log('📝 Note: env-inject.js is generated from template and should not be committed to git');
 
 console.log('✅ Environment variables injected successfully!');
 console.log(`📄 Updated file: ${envInjectPath}`);

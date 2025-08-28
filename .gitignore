@@ -43,6 +43,7 @@ yarn-error.*
 web/js/env-inject.js
 **/api-keys.*
 **/*api*key*
+**/*env-inject.js
 
 # typescript
 *.tsbuildinfo

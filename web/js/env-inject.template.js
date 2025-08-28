@@ -1,6 +1,7 @@
 /**
  * Environment Variables Injection Template for Netlify
  * This file is a template - placeholders will be replaced during build
+ * NO ACTUAL API KEYS SHOULD BE IN THIS FILE
  */
 
 // Inject Netlify environment variables into window object
@@ -8,7 +9,7 @@
     'use strict';
     
     // Environment variables from Netlify
-    // These will be replaced during build process
+    // These placeholders will be replaced during Netlify build process
     window.GOOGLE_MAPS_API_KEY = '%%GOOGLE_MAPS_API_KEY%%';
     window.API_BASE_URL = '%%API_BASE_URL%%';
     window.ENVIRONMENT = '%%ENVIRONMENT%%';

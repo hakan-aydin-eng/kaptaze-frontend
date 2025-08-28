@@ -9,7 +9,9 @@
       "Read(C:\\Users\\hakan\\KapTazeApp\\frontend\\admin-panel/**)",
       "WebFetch(domain:github.com)",
       "Bash(deploy.bat)",
-      "Bash(cmd:*)"
+      "Bash(cmd:*)",
+      "Bash(git rm:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": [],
