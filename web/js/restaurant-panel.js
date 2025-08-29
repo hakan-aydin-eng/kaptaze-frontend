@@ -269,27 +269,31 @@ class RestaurantPanel {
                 categoryEl.textContent = profileData.businessType || profileData.businessCategory || 'Restaurant';
             }
 
-            // Contact information in profile
+            // Contact information in profile - with null safety
             const profileEmail = document.getElementById('profile-email');
-            if (profileEmail && this.currentUser.email) {
+            if (profileEmail && this.currentUser && this.currentUser.email) {
                 profileEmail.textContent = this.currentUser.email;
             }
 
             const profilePhone = document.getElementById('profile-phone');
-            if (profilePhone && this.currentUser.phone) {
+            if (profilePhone && this.currentUser && this.currentUser.phone) {
                 profilePhone.textContent = this.currentUser.phone;
             }
 
-            // Business address (combine businessAddress, district, city)
+            // Business address (combine businessAddress, district, city) - with null safety
             const profileAddress = document.getElementById('profile-address');
             if (profileAddress) {
-                const addressParts = [
-                    this.currentUser.businessAddress,
-                    this.currentUser.district,
-                    this.currentUser.city
-                ].filter(part => part && part.trim()); // Remove empty parts
-                
-                profileAddress.textContent = addressParts.length > 0 ? addressParts.join(', ') : 'Adres bilgisi';
+                if (this.currentUser) {
+                    const addressParts = [
+                        this.currentUser.businessAddress,
+                        this.currentUser.district,
+                        this.currentUser.city
+                    ].filter(part => part && part.trim()); // Remove empty parts
+                    
+                    profileAddress.textContent = addressParts.length > 0 ? addressParts.join(', ') : 'Adres bilgisi';
+                } else {
+                    profileAddress.textContent = 'Adres bilgisi';
+                }
             }
 
             // Add description from restaurantProfile or currentUser
@@ -297,19 +301,21 @@ class RestaurantPanel {
             if (profileDescription) {
                 if (this.restaurantProfile && this.restaurantProfile.description) {
                     profileDescription.textContent = this.restaurantProfile.description;
-                } else {
+                } else if (this.currentUser) {
                     const ownerName = `${this.currentUser.firstName || ''} ${this.currentUser.lastName || ''}`.trim();
                     if (ownerName) {
                         profileDescription.textContent = `${this.currentUser.businessName || 'Restaurant'} - Sahibi: ${ownerName}`;
                     } else {
                         profileDescription.textContent = `${this.currentUser.businessName || 'Restaurant'} hakkında...`;
                     }
+                } else {
+                    profileDescription.textContent = 'Restaurant hakkında...';
                 }
             }
 
             // Update specialties with business category
             const profileSpecialties = document.getElementById('profile-specialties');
-            if (profileSpecialties && this.currentUser.businessCategory) {
+            if (profileSpecialties && this.currentUser && this.currentUser.businessCategory) {
                 profileSpecialties.innerHTML = `<span class="specialty-tag">${this.currentUser.businessCategory}</span>`;
             }
 
