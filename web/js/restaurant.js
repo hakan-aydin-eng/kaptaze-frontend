@@ -7,7 +7,7 @@ function checkAuthentication() {
     
     if (!token || !user) {
         // Redirect to login
-        window.location.href = './login.html';
+        window.location.href = '/restaurant';
         return false;
     }
     
@@ -21,7 +21,7 @@ function checkAuthentication() {
         if (hoursDiff > 24) {
             localStorage.removeItem('restaurantToken');
             localStorage.removeItem('restaurantUser');
-            window.location.href = './login.html';
+            window.location.href = '/restaurant';
             return false;
         }
         
@@ -41,7 +41,7 @@ function checkAuthentication() {
     } catch (error) {
         localStorage.removeItem('restaurantToken');
         localStorage.removeItem('restaurantUser');
-        window.location.href = './login.html';
+        window.location.href = '/restaurant';
         return false;
     }
 }
@@ -51,7 +51,7 @@ function logout() {
     if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
         localStorage.removeItem('restaurantToken');
         localStorage.removeItem('restaurantUser');
-        window.location.href = './login.html';
+        window.location.href = '/restaurant';
     }
 }
 
@@ -161,7 +161,7 @@ function checkAuthentication() {
     
     if (!token || !user) {
         // Redirect to login
-        window.location.href = './login.html';
+        window.location.href = '/restaurant';
         return false;
     }
     
@@ -175,7 +175,7 @@ function checkAuthentication() {
         if (hoursDiff > 24) {
             localStorage.removeItem('restaurantToken');
             localStorage.removeItem('restaurantUser');
-            window.location.href = './login.html';
+            window.location.href = '/restaurant';
             return false;
         }
         
@@ -201,7 +201,7 @@ function checkAuthentication() {
     } catch (error) {
         localStorage.removeItem('restaurantToken');
         localStorage.removeItem('restaurantUser');
-        window.location.href = './login.html';
+        window.location.href = '/restaurant';
         return false;
     }
 }
@@ -211,7 +211,7 @@ function logout() {
     if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
         localStorage.removeItem('restaurantToken');
         localStorage.removeItem('restaurantUser');
-        window.location.href = './login.html';
+        window.location.href = '/restaurant';
     }
 }
 
@@ -397,7 +397,7 @@ function renderPackages(packages) {
     container.innerHTML = packages.map(pkg => `
         <div class="package-card">
             <div class="package-image">
-                <img src="${pkg.image}" alt="${pkg.name}" onerror="this.src='https://via.placeholder.com/300x200?text=Paket+Görseli'">
+                <img src="${pkg.image}" alt="${pkg.name}" onerror="this.src='./assets/default-food.jpg'">
                 <div class="package-status ${pkg.status}">${getStatusText(pkg.status)}</div>
             </div>
             <div class="package-content">
