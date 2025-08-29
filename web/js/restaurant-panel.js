@@ -39,35 +39,65 @@ class RestaurantPanel {
     }
 
     checkAuthentication() {
-        console.log('🔐 Checking restaurant authentication...');
+        console.log('🔐 Restaurant Panel Auth Check v2025.08.29.3 - NO LOCALSTORAGE');
         
-        const token = window.KapTazeAPI.getAuthToken();
-        const userRole = localStorage.getItem(window.KapTazeAPI.storage.userRole);
+        // Check pure API authentication - NO localStorage fallbacks
+        const token = localStorage.getItem('restaurantToken');
+        const user = localStorage.getItem('restaurantUser');
         
-        console.log('🔍 Auth check:', {
+        console.log('🔍 Pure API Auth Debug:', {
             hasToken: !!token,
-            userRole: userRole,
-            tokenPreview: token ? token.substring(0, 20) + '...' : 'null'
+            hasUser: !!user,
+            tokenLength: token ? token.length : 0,
+            userLength: user ? user.length : 0,
+            tokenValue: token ? token.substring(0, 20) + '...' : null,
+            userData: user ? user.substring(0, 100) + '...' : null
         });
         
-        if (!token || userRole !== 'restaurant') {
-            console.log('❌ No restaurant authentication found, redirecting to login');
-            window.location.href = '/restaurant-login.html';
+        if (!token || !user) {
+            console.log('❌ No restaurant token/user found, redirecting to login');
+            window.location.href = '/restaurant';
             return false;
         }
 
-        // Get user data from API storage
-        const userData = localStorage.getItem(window.KapTazeAPI.storage.userData);
-        if (userData) {
-            this.currentUser = JSON.parse(userData);
+        try {
+            this.currentUser = JSON.parse(user);
+            const loginTime = new Date(this.currentUser.loginTime);
+            const now = new Date();
+            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+            
+            console.log('⏰ Time Debug:', {
+                loginTime: this.currentUser.loginTime,
+                parsedLoginTime: loginTime,
+                now: now,
+                hoursDiff: hoursDiff,
+                isExpired: hoursDiff > 24
+            });
+            
+            // Token expires after 24 hours
+            if (hoursDiff > 24) {
+                console.log('❌ Token expired, clearing and redirecting');
+                localStorage.removeItem('restaurantToken');
+                localStorage.removeItem('restaurantUser');
+                window.location.href = '/restaurant';
+                return false;
+            }
+            
             console.log('✅ Restaurant authenticated:', {
                 username: this.currentUser.username,
-                businessName: this.currentUser.businessName,
-                email: this.currentUser.email
+                firstName: this.currentUser.firstName,
+                loginTime: this.currentUser.loginTime
             });
+            
+            return true;
+        } catch (error) {
+            console.log('❌ JSON parse error or other issue:', error);
+            console.log('🔍 Raw user data:', user);
+            localStorage.removeItem('restaurantToken');
+            localStorage.removeItem('restaurantUser');
+            window.location.href = '/restaurant';
+            return false;
         }
-
-        return true;
     }
 
     async loadRestaurantProfile() {
