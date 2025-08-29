@@ -100,7 +100,7 @@ class RestaurantPanel {
     async loadRestaurantProfile() {
         try {
             console.log('📋 Loading restaurant profile from API...');
-            const response = await window.backendService.makeRequest('/restaurant/me');
+            const response = await window.backendService.getRestaurantProfile();
             
             if (response.success && response.data) {
                 this.restaurantProfile = response.data;
