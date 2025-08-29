@@ -107,7 +107,7 @@ class RestaurantPanel {
                 console.log('✅ Restaurant profile loaded:', this.restaurantProfile);
                 this.updateRestaurantInfoDisplay();
             } else {
-                console.warn('⚠️ No restaurant profile found - creating new profile');
+                console.warn('⚠️ No restaurant profile found - creating new profile in backend');
                 await this.createAndSaveProfile();
             }
         } catch (error) {
@@ -149,13 +149,21 @@ class RestaurantPanel {
 
             console.log('📤 Creating profile with data:', profileData);
             const response = await window.backendService.createRestaurantProfile(profileData);
+            
+            console.log('📥 Profile creation response:', response);
 
-            if (response.success && response.data) {
+            if (response && response.success && response.data) {
                 this.restaurantProfile = response.data;
-                console.log('✅ Restaurant profile created and saved:', this.restaurantProfile);
+                console.log('✅ Restaurant profile created and saved in backend:', this.restaurantProfile);
+                this.updateRestaurantInfoDisplay();
+            } else if (response && response.data) {
+                // Sometimes success field might be missing but data exists
+                this.restaurantProfile = response.data;
+                console.log('✅ Restaurant profile created (no success field):', this.restaurantProfile);
                 this.updateRestaurantInfoDisplay();
             } else {
-                console.warn('⚠️ Profile creation failed, using fallback');
+                console.error('❌ Profile creation failed, response:', response);
+                console.warn('⚠️ Using local fallback profile');
                 this.createProfileFromUserData();
             }
 
@@ -194,7 +202,7 @@ class RestaurantPanel {
                 },
                 status: 'active'
             };
-            console.log('📝 Comprehensive profile created from user data:', this.restaurantProfile);
+            console.warn('⚠️ FALLBACK: Profile created locally from user data (NOT SAVED TO BACKEND):', this.restaurantProfile);
             this.updateRestaurantInfoDisplay();
         }
     }
