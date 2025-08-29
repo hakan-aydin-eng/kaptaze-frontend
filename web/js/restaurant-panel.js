@@ -521,11 +521,20 @@ class RestaurantPanel {
                 }
             };
             
-            // Handle main image upload
+            // Handle main image upload via Cloudinary
             const mainImageInput = document.getElementById('mainImageInput');
             if (mainImageInput.files.length > 0) {
-                const imageData = await this.processImage(mainImageInput.files[0]);
-                updates.mainImage = imageData;
+                console.log('🔄 Starting image upload...');
+                const imageUrl = await this.uploadImageToCloudinary(mainImageInput.files[0]);
+                if (imageUrl) {
+                    console.log('✅ Image uploaded successfully:', imageUrl);
+                    updates.imageUrl = imageUrl;
+                    updates.mainImage = imageUrl; // For display
+                } else {
+                    console.error('❌ Image upload failed');
+                    this.showErrorMessage('Resim yüklenemedi. Tekrar deneyin.');
+                    return;
+                }
             }
             
             console.log('📤 Sending profile updates:', updates);
@@ -572,6 +581,36 @@ class RestaurantPanel {
         } catch (error) {
             console.error('❌ Profile update error:', error);
             this.showErrorMessage('Profil güncellenirken hata oluştu.');
+        }
+    }
+
+    async uploadImageToCloudinary(file) {
+        try {
+            // Check file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                this.showErrorMessage('Dosya boyutu 5MB\'dan büyük olamaz');
+                return null;
+            }
+
+            console.log('🔄 Uploading image via Cloudinary...');
+            
+            // Create FormData for image upload
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            // Upload to backend Cloudinary endpoint
+            const response = await backendService.uploadRestaurantImage(formData);
+            
+            if (response.success && response.data.imageUrl) {
+                console.log('✅ Cloudinary upload successful:', response.data.imageUrl);
+                return response.data.imageUrl;
+            } else {
+                console.error('❌ Cloudinary upload failed:', response);
+                return null;
+            }
+        } catch (error) {
+            console.error('❌ Image upload error:', error);
+            return null;
         }
     }
 

@@ -260,6 +260,14 @@ class BackendService {
         });
     }
 
+    async uploadRestaurantImage(formData) {
+        // Upload restaurant image to Cloudinary via /restaurant/profile/image endpoint
+        return this.makeRequest(`${this.endpoints.restaurants}/profile/image`, {
+            method: 'POST',
+            body: formData
+        });
+    }
+
     // Public Methods (no authentication required)
     async getPublicRestaurants() {
         // NO FALLBACK - Direct API call only
