@@ -2,10 +2,22 @@
 
 // Authentication check
 function checkAuthentication() {
+    console.log('🔐 Restaurant panel JS loaded v2025.08.29.2 - AUTH CHECK');
+    
     const token = localStorage.getItem('restaurantToken');
     const user = localStorage.getItem('restaurantUser');
     
+    console.log('🔍 Auth Debug:', {
+        hasToken: !!token,
+        hasUser: !!user,
+        tokenLength: token ? token.length : 0,
+        userLength: user ? user.length : 0,
+        tokenValue: token ? token.substring(0, 20) + '...' : null,
+        userData: user ? user.substring(0, 100) + '...' : null
+    });
+    
     if (!token || !user) {
+        console.log('❌ No token or user found, redirecting to login');
         // Redirect to login
         window.location.href = '/restaurant';
         return false;
@@ -13,12 +25,23 @@ function checkAuthentication() {
     
     try {
         const userData = JSON.parse(user);
+        console.log('📊 User Data Parsed:', userData);
+        
         const loginTime = new Date(userData.loginTime);
         const now = new Date();
         const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
         
+        console.log('⏰ Time Debug:', {
+            loginTime: userData.loginTime,
+            parsedLoginTime: loginTime,
+            now: now,
+            hoursDiff: hoursDiff,
+            isExpired: hoursDiff > 24
+        });
+        
         // Token expires after 24 hours
         if (hoursDiff > 24) {
+            console.log('❌ Token expired, clearing and redirecting');
             localStorage.removeItem('restaurantToken');
             localStorage.removeItem('restaurantUser');
             window.location.href = '/restaurant';
@@ -37,8 +60,11 @@ function checkAuthentication() {
             userInfoEl.textContent = userData.ownerName || userData.username;
         }
         
+        console.log('✅ Authentication passed, user authenticated');
         return true;
     } catch (error) {
+        console.log('❌ JSON parse error or other issue:', error);
+        console.log('🔍 Raw user data:', user);
         localStorage.removeItem('restaurantToken');
         localStorage.removeItem('restaurantUser');
         window.location.href = '/restaurant';
