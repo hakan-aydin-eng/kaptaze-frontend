@@ -100,6 +100,14 @@ class RestaurantPanel {
     async loadRestaurantProfile() {
         try {
             console.log('📋 Loading restaurant profile from API...');
+            
+            // Wait for backend service to be available
+            await this.waitForBackendService();
+            
+            if (!window.backendService) {
+                throw new Error('Backend service not available after waiting');
+            }
+            
             const response = await window.backendService.getRestaurantProfile();
             
             if (response.success && response.data) {
@@ -128,6 +136,15 @@ class RestaurantPanel {
             
             if (!this.currentUser) {
                 console.error('❌ No current user data for profile creation');
+                return;
+            }
+            
+            // Wait for backend service to be available
+            await this.waitForBackendService();
+            
+            if (!window.backendService) {
+                console.error('❌ Backend service not available for profile creation');
+                this.createProfileFromUserData();
                 return;
             }
 
