@@ -107,11 +107,61 @@ class RestaurantPanel {
                 console.log('✅ Restaurant profile loaded:', this.restaurantProfile);
                 this.updateRestaurantInfoDisplay();
             } else {
-                console.warn('⚠️ No restaurant profile found, using current user data');
-                this.createProfileFromUserData();
+                console.warn('⚠️ No restaurant profile found - creating new profile');
+                await this.createAndSaveProfile();
             }
         } catch (error) {
             console.error('❌ Failed to load restaurant profile:', error);
+            // If profile doesn't exist, create one
+            if (error.message.includes('404') || error.message.includes('not found')) {
+                await this.createAndSaveProfile();
+            } else {
+                // For other errors, use fallback
+                this.createProfileFromUserData();
+            }
+        }
+    }
+
+    async createAndSaveProfile() {
+        try {
+            console.log('🏗️ Creating new restaurant profile in backend...');
+            
+            if (!this.currentUser) {
+                console.error('❌ No current user data for profile creation');
+                return;
+            }
+
+            const profileData = {
+                businessName: this.currentUser.businessName || this.currentUser.firstName || 'Restaurant',
+                businessType: this.currentUser.businessCategory || 'Restaurant', 
+                description: 'Henüz açıklama eklenmemiş.',
+                website: '',
+                address: this.currentUser.address || '',
+                phone: this.currentUser.phone || '',
+                email: this.currentUser.email || '',
+                specialties: [],
+                businessHours: {
+                    weekday: { open: '09:00', close: '22:00' },
+                    weekend: { open: '10:00', close: '23:00' }
+                },
+                status: 'active'
+            };
+
+            console.log('📤 Creating profile with data:', profileData);
+            const response = await window.backendService.createRestaurantProfile(profileData);
+
+            if (response.success && response.data) {
+                this.restaurantProfile = response.data;
+                console.log('✅ Restaurant profile created and saved:', this.restaurantProfile);
+                this.updateRestaurantInfoDisplay();
+            } else {
+                console.warn('⚠️ Profile creation failed, using fallback');
+                this.createProfileFromUserData();
+            }
+
+        } catch (error) {
+            console.error('❌ Failed to create restaurant profile:', error);
+            console.warn('⚠️ Falling back to local profile');
             this.createProfileFromUserData();
         }
     }
@@ -120,16 +170,31 @@ class RestaurantPanel {
         // Create profile from current user data if no restaurant profile exists
         if (this.currentUser) {
             this.restaurantProfile = {
-                name: this.currentUser.businessName || 'Restaurant',
+                // Display fields (what updateProfileDisplay expects)
+                businessName: this.currentUser.businessName || this.currentUser.firstName || 'Restaurant',
+                businessType: this.currentUser.businessCategory || 'Restaurant',
+                description: 'Henüz açıklama eklenmemiş.',
+                website: '',
+                address: this.currentUser.address || '',
+                
+                // Legacy fields (what might be expected elsewhere)
+                name: this.currentUser.businessName || this.currentUser.firstName || 'Restaurant',
                 owner: `${this.currentUser.firstName || ''} ${this.currentUser.lastName || ''}`.trim(),
                 email: this.currentUser.email,
                 phone: this.currentUser.phone,
                 category: this.currentUser.businessCategory || 'Restaurant',
-                address: this.currentUser.address,
                 city: this.currentUser.city,
-                district: this.currentUser.district
+                district: this.currentUser.district,
+                
+                // Profile specific fields
+                specialties: [],
+                businessHours: {
+                    weekday: { open: '09:00', close: '22:00' },
+                    weekend: { open: '10:00', close: '23:00' }
+                },
+                status: 'active'
             };
-            console.log('📝 Profile created from user data:', this.restaurantProfile);
+            console.log('📝 Comprehensive profile created from user data:', this.restaurantProfile);
             this.updateRestaurantInfoDisplay();
         }
     }
@@ -783,11 +848,16 @@ class RestaurantPanel {
 
     async updateRestaurantProfileAPI(profileData) {
         try {
-            const response = await window.backendService.makeRequest('/restaurant/me', {
-                method: 'PUT',
-                body: profileData
-            });
-            return response.data;
+            console.log('🔄 Updating restaurant profile via API...');
+            const response = await window.backendService.updateRestaurantProfile(profileData);
+            
+            if (response.success && response.data) {
+                console.log('✅ Profile updated successfully:', response.data);
+                return response.data;
+            } else {
+                console.error('❌ Profile update failed:', response.error);
+                throw new Error(response.error || 'Profile update failed');
+            }
         } catch (error) {
             console.error('❌ Failed to update profile:', error);
             throw error;

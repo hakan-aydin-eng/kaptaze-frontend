@@ -237,6 +237,20 @@ class BackendService {
         return this.makeRequest(this.endpoints.restaurants);
     }
 
+    async createRestaurantProfile(profileData) {
+        return this.makeRequest(`${this.endpoints.restaurants}/profile`, {
+            method: 'POST',
+            body: profileData
+        });
+    }
+
+    async updateRestaurantProfile(profileData) {
+        return this.makeRequest(`${this.endpoints.restaurants}/profile`, {
+            method: 'PUT', 
+            body: profileData
+        });
+    }
+
     // Public Methods (no authentication required)
     async getPublicRestaurants() {
         // NO FALLBACK - Direct API call only
