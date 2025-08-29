@@ -702,7 +702,7 @@ class RestaurantPanel {
             const formData = new FormData();
             formData.append('image', file);
 
-            const response = await window.KapTazeAPIService.request('/restaurant/profile/image', {
+            const response = await window.backendService.makeRequest('/restaurant/profile/image', {
                 method: 'POST',
                 body: formData,
                 headers: {} // Let browser set content-type for FormData
@@ -730,7 +730,7 @@ class RestaurantPanel {
     // API Methods for Render Integration
     async getRestaurantPackages(restaurantId) {
         try {
-            const response = await window.KapTazeAPIService.request('/restaurant/packages');
+            const response = await window.backendService.makeRequest('/restaurant/packages');
             return response.data || [];
         } catch (error) {
             console.error('❌ Failed to load packages:', error);
@@ -740,7 +740,7 @@ class RestaurantPanel {
 
     async addPackageAPI(restaurantId, packageData) {
         try {
-            const response = await window.KapTazeAPIService.request('/restaurant/packages', {
+            const response = await window.backendService.makeRequest('/restaurant/packages', {
                 method: 'POST',
                 body: packageData
             });
@@ -753,7 +753,7 @@ class RestaurantPanel {
 
     async updatePackageAPI(packageId, updates) {
         try {
-            const response = await window.KapTazeAPIService.request(`/restaurant/packages/${packageId}`, {
+            const response = await window.backendService.makeRequest(`/restaurant/packages/${packageId}`, {
                 method: 'PATCH',
                 body: updates
             });
@@ -766,7 +766,7 @@ class RestaurantPanel {
 
     async updateRestaurantProfileAPI(profileData) {
         try {
-            const response = await window.KapTazeAPIService.request('/restaurant/me', {
+            const response = await window.backendService.makeRequest('/restaurant/me', {
                 method: 'PUT',
                 body: profileData
             });
@@ -779,7 +779,7 @@ class RestaurantPanel {
 
     async getStatisticsAPI() {
         try {
-            const response = await window.KapTazeAPIService.request('/restaurant/stats');
+            const response = await window.backendService.makeRequest('/restaurant/stats');
             return response.data;
         } catch (error) {
             console.error('❌ Failed to get statistics:', error);
