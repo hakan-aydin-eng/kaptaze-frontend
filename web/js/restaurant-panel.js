@@ -42,6 +42,9 @@ class RestaurantPanel {
         console.log('🔐 Restaurant Panel Auth Check v2025.08.29.5 - PURE API NO LOCALSTORAGE');
         
         try {
+            // Wait for backend service to be available
+            await this.waitForBackendService();
+            
             // Check API session directly - NO localStorage at all
             if (!window.backendService) {
                 console.log('❌ Backend service not loaded');
@@ -76,6 +79,21 @@ class RestaurantPanel {
             console.log('❌ API session check failed:', error);
             window.location.href = '/restaurant';
             return false;
+        }
+    }
+
+    async waitForBackendService(maxWait = 10000) {
+        console.log('⏳ Waiting for backend service to be available...');
+        const start = Date.now();
+        
+        while (!window.backendService && (Date.now() - start) < maxWait) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        if (window.backendService) {
+            console.log('✅ Backend service is now available');
+        } else {
+            console.log('❌ Backend service timeout after', maxWait, 'ms');
         }
     }
 
