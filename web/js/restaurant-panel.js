@@ -229,9 +229,13 @@ class RestaurantPanel {
     }
 
     updateProfileDisplay() {
-        if (!this.restaurantProfile) return;
+        if (!this.restaurantProfile) {
+            console.warn('⚠️ No restaurant profile for display update');
+            return;
+        }
         
         const profile = this.restaurantProfile;
+        console.log('🔄 Updating profile display with:', profile);
         
         // Basic info
         this.updateElement('profile-restaurant-name', profile.businessName);
@@ -384,11 +388,16 @@ class RestaurantPanel {
                 updates.mainImage = imageData;
             }
             
+            console.log('📤 Sending profile updates:', updates);
+            
             // Update via API
             const updatedProfile = await this.updateRestaurantProfileAPI(updates);
             
+            console.log('📥 Received updated profile:', updatedProfile);
+            
             if (updatedProfile) {
                 this.restaurantProfile = updatedProfile;
+                console.log('✅ Profile updated in memory:', this.restaurantProfile);
                 this.updateProfileDisplay();
                 this.showSuccessMessage('Profil başarıyla güncellendi!');
                 this.toggleProfileEdit(); // Exit edit mode
