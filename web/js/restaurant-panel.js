@@ -39,7 +39,7 @@ class RestaurantPanel {
     }
 
     async checkAuthentication() {
-        console.log('🔐 Restaurant Panel Auth Check v2025.08.29.4 - PURE API NO LOCALSTORAGE');
+        console.log('🔐 Restaurant Panel Auth Check v2025.08.29.5 - PURE API NO LOCALSTORAGE');
         
         try {
             // Check API session directly - NO localStorage at all

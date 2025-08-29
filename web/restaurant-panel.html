@@ -11,7 +11,7 @@
     <!-- Backend API Integration -->
     <script src="./js/api-config.js?v=2025.08.23"></script>
     <script src="./js/api-service.js?v=2025.08.23"></script>
-    <script src="./js/backend-service.js?v=2025.08.29.4"></script>
+    <script src="./js/backend-service.js?v=2025.08.29.5"></script>
 </head>
 <body>
     <!-- Mobile Menu Toggle -->
@@ -726,12 +726,18 @@
         </div>
     </div>
 
-    <script src="./js/restaurant-panel.js?v=2025.08.29.4"></script>
+    <script src="./js/restaurant-panel.js?v=2025.08.29.5"></script>
     
     <script>
         // Initialize Restaurant Panel with class-based architecture (like admin)
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🏪 Initializing Restaurant Panel...');
+            console.log('🏪 Initializing Restaurant Panel v2025.08.29.5...');
+            
+            // Initialize Backend Service first
+            window.backendService = new BackendService();
+            console.log('✅ Backend service initialized:', window.backendService.baseURL);
+            
+            // Then initialize panel
             window.restaurantPanel = new RestaurantPanel();
         });
         
