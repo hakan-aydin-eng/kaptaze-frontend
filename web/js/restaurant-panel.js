@@ -255,16 +255,18 @@ class RestaurantPanel {
         }
 
         // Update all profile section fields with real admin approval data
-        if (this.currentUser) {
+        if (this.restaurantProfile || this.currentUser) {
+            const profileData = this.restaurantProfile || this.currentUser;
+            
             // Restaurant name and category
             const profileName = document.getElementById('profile-restaurant-name');
             if (profileName) {
-                profileName.textContent = this.currentUser.businessName || 'Restaurant Adı';
+                profileName.textContent = profileData.businessName || profileData.name || 'Restaurant Adı';
             }
 
             const categoryEl = document.getElementById('profile-restaurant-category');
             if (categoryEl) {
-                categoryEl.textContent = this.currentUser.businessCategory || 'Restaurant';
+                categoryEl.textContent = profileData.businessType || profileData.businessCategory || 'Restaurant';
             }
 
             // Contact information in profile
@@ -290,14 +292,18 @@ class RestaurantPanel {
                 profileAddress.textContent = addressParts.length > 0 ? addressParts.join(', ') : 'Adres bilgisi';
             }
 
-            // Add owner info to description section
+            // Add description from restaurantProfile or currentUser
             const profileDescription = document.getElementById('profile-description');
             if (profileDescription) {
-                const ownerName = `${this.currentUser.firstName || ''} ${this.currentUser.lastName || ''}`.trim();
-                if (ownerName) {
-                    profileDescription.textContent = `${this.currentUser.businessName || 'Restaurant'} - Sahibi: ${ownerName}`;
+                if (this.restaurantProfile && this.restaurantProfile.description) {
+                    profileDescription.textContent = this.restaurantProfile.description;
                 } else {
-                    profileDescription.textContent = `${this.currentUser.businessName || 'Restaurant'} hakkında...`;
+                    const ownerName = `${this.currentUser.firstName || ''} ${this.currentUser.lastName || ''}`.trim();
+                    if (ownerName) {
+                        profileDescription.textContent = `${this.currentUser.businessName || 'Restaurant'} - Sahibi: ${ownerName}`;
+                    } else {
+                        profileDescription.textContent = `${this.currentUser.businessName || 'Restaurant'} hakkında...`;
+                    }
                 }
             }
 
@@ -307,12 +313,17 @@ class RestaurantPanel {
                 profileSpecialties.innerHTML = `<span class="specialty-tag">${this.currentUser.businessCategory}</span>`;
             }
 
+            // Update restaurant avatar if restaurantProfile has mainImage
+            const avatarEl = document.getElementById('restaurant-avatar');
+            if (avatarEl && this.restaurantProfile && this.restaurantProfile.mainImage) {
+                console.log('🖼️ Updating restaurant avatar:', this.restaurantProfile.mainImage.substring(0, 50) + '...');
+                avatarEl.src = this.restaurantProfile.mainImage;
+            }
+
             console.log('📊 Restaurant profile updated with real admin approval data:', {
-                businessName: this.currentUser.businessName,
-                owner: `${this.currentUser.firstName} ${this.currentUser.lastName}`,
-                email: this.currentUser.email,
-                phone: this.currentUser.phone,
-                address: `${this.currentUser.businessAddress}, ${this.currentUser.city}`
+                businessName: profileData.businessName || profileData.name,
+                description: this.restaurantProfile?.description || 'Default',
+                hasImage: !!(this.restaurantProfile?.mainImage)
             });
         }
 
@@ -507,6 +518,7 @@ class RestaurantPanel {
                 this.restaurantProfile = updatedProfile;
                 console.log('✅ Profile updated in memory:', this.restaurantProfile);
                 this.updateProfileDisplay();
+                this.updateRestaurantInfoDisplay(); // Also update main display
                 this.showSuccessMessage('Profil başarıyla güncellendi!');
                 this.toggleProfileEdit(); // Exit edit mode
             } else {
