@@ -10,6 +10,7 @@
     <!-- API Configuration -->
     <script src="./js/api-config.js?v=2025.08.23"></script>
     <script src="./js/api-service.js?v=2025.08.23"></script>
+    <script src="./js/backend-service.js?v=2025.08.29"></script>
     
     <style>
         * {
@@ -277,6 +278,10 @@
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🏪 KapTaze Restaurant Login - Backend API Integration');
+            
+            // Initialize Backend Service
+            window.backendService = new BackendService();
+            console.log('✅ Backend service initialized:', window.backendService.baseURL);
             
             // Check API status
             checkApiStatus();
