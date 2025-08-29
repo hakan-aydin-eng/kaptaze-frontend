@@ -165,22 +165,40 @@ class RestaurantPanel {
             };
 
             console.log('📤 Creating profile with data:', profileData);
-            const response = await window.backendService.createRestaurantProfile(profileData);
             
-            console.log('📥 Profile creation response:', response);
-
-            if (response && response.success && response.data) {
-                this.restaurantProfile = response.data;
-                console.log('✅ Restaurant profile created and saved in backend:', this.restaurantProfile);
-                this.updateRestaurantInfoDisplay();
-            } else if (response && response.data) {
-                // Sometimes success field might be missing but data exists
-                this.restaurantProfile = response.data;
-                console.log('✅ Restaurant profile created (no success field):', this.restaurantProfile);
-                this.updateRestaurantInfoDisplay();
-            } else {
-                console.error('❌ Profile creation failed, response:', response);
-                console.warn('⚠️ Using local fallback profile');
+            try {
+                const response = await window.backendService.createRestaurantProfile(profileData);
+                console.log('📥 Profile creation response:', response);
+                
+                // Backend'e request gitti, response kontrolü
+                if (!response) {
+                    console.error('❌ No response from backend profile creation');
+                    this.createProfileFromUserData();
+                    return;
+                }
+                
+                // Process the response
+                if (response && response.success && response.data) {
+                    this.restaurantProfile = response.data;
+                    console.log('✅ Restaurant profile created and saved in backend:', this.restaurantProfile);
+                    this.updateRestaurantInfoDisplay();
+                } else if (response && response.data) {
+                    // Sometimes success field might be missing but data exists
+                    this.restaurantProfile = response.data;
+                    console.log('✅ Restaurant profile created (no success field):', this.restaurantProfile);
+                    this.updateRestaurantInfoDisplay();
+                } else {
+                    console.error('❌ Profile creation failed, response:', response);
+                    console.warn('⚠️ Using local fallback profile');
+                    this.createProfileFromUserData();
+                }
+                
+            } catch (createError) {
+                console.error('❌ Profile creation request failed:', createError);
+                console.log('📤 Backend might not have POST /restaurant/me endpoint');
+                
+                // If POST fails, backend might not support profile creation yet
+                console.warn('⚠️ Profile creation not supported by backend, using fallback');
                 this.createProfileFromUserData();
             }
 
