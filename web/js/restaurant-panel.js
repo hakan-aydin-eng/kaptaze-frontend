@@ -528,10 +528,30 @@ class RestaurantPanel {
             const updatedProfile = await this.updateRestaurantProfileAPI(updates);
             
             console.log('📥 Received updated profile:', updatedProfile);
+            console.log('🔍 Profile fields:', Object.keys(updatedProfile || {}));
+            console.log('🔍 Image fields in profile:', {
+                mainImage: !!updatedProfile?.mainImage,
+                image: !!updatedProfile?.image, 
+                imageUrl: !!updatedProfile?.imageUrl,
+                profileImage: !!updatedProfile?.profileImage,
+                avatar: !!updatedProfile?.avatar
+            });
             
             if (updatedProfile) {
+                // Map different possible image field names to mainImage
+                if (!updatedProfile.mainImage) {
+                    const imageFields = ['image', 'imageUrl', 'profileImage', 'avatar'];
+                    for (const field of imageFields) {
+                        if (updatedProfile[field]) {
+                            console.log(`🔄 Mapping ${field} to mainImage:`, updatedProfile[field].substring(0, 50) + '...');
+                            updatedProfile.mainImage = updatedProfile[field];
+                            break;
+                        }
+                    }
+                }
+                
                 this.restaurantProfile = updatedProfile;
-                console.log('✅ Profile updated in memory:', this.restaurantProfile);
+                console.log('✅ Profile updated in memory with mainImage:', !!this.restaurantProfile.mainImage);
                 this.updateProfileDisplay();
                 this.updateRestaurantInfoDisplay(); // Also update main display
                 this.showSuccessMessage('Profil başarıyla güncellendi!');
