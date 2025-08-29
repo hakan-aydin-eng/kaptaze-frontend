@@ -54,11 +54,19 @@ class BackendService {
 
         // Use instance token, sessionStorage, or localStorage fallback
         const token = this.authToken || sessionStorage.getItem('kaptaze_session_token') || localStorage.getItem('kaptaze_token');
+        console.log('🔑 TOKEN DEBUG:', {
+            instanceToken: !!this.authToken,
+            sessionToken: !!sessionStorage.getItem('kaptaze_session_token'), 
+            localToken: !!localStorage.getItem('kaptaze_token'),
+            finalToken: !!token,
+            sessionStorage: sessionStorage.getItem('kaptaze_session_token')?.substring(0, 20) + '...'
+        });
         if (token) {
             defaultOptions.headers['Authorization'] = `Bearer ${token}`;
         }
 
         const config = {
+            credentials: 'include', // Include cookies for authentication
             ...defaultOptions,
             ...options,
             headers: {
@@ -73,7 +81,13 @@ class BackendService {
             
             const response = await fetch(url, config);
             
+            // Debug response headers for CORS and authentication
             console.log('📨 Response status:', response.status, response.statusText);
+            console.log('📨 Response headers:', {
+                'set-cookie': response.headers.get('set-cookie'),
+                'access-control-allow-credentials': response.headers.get('access-control-allow-credentials'),
+                'access-control-allow-origin': response.headers.get('access-control-allow-origin')
+            });
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -105,19 +119,58 @@ class BackendService {
     }
 
     async restaurantLogin(username, password) {
-        const response = await this.makeRequest(`${this.endpoints.auth}/restaurant/login`, {
-            method: 'POST',  
-            body: JSON.stringify({ username, password, userType: 'restaurant' })
-        });
+        // Try restaurant-specific login endpoint first
+        console.log('🍴 Trying restaurant login endpoint...');
         
-        // Store token from login response
-        if (response && response.token) {
-            this.authToken = response.token;
-            sessionStorage.setItem('kaptaze_session_token', response.token);
-            console.log('✅ Auth token stored for session');
+        try {
+            const response = await this.makeRequest(`/restaurant/login`, {
+                method: 'POST',  
+                body: JSON.stringify({ username, password })
+            });
+            
+            console.log('🔍 LOGIN RESPONSE DEBUG:', {
+                response: response,
+                hasToken: !!response?.token,
+                hasAccessToken: !!response?.accessToken, 
+                hasData: !!response?.data,
+                responseKeys: response ? Object.keys(response) : null
+            });
+            
+            // Store token from login response - try different token field names
+            const token = response?.token || response?.accessToken || response?.data?.token || response?.data?.accessToken;
+            if (token) {
+                this.authToken = token;
+                sessionStorage.setItem('kaptaze_session_token', token);
+                console.log('✅ Auth token stored for session:', token.substring(0, 20) + '...');
+            } else {
+                console.log('❌ NO TOKEN FOUND in login response!');
+            }
+            
+            return response;
+            
+        } catch (error) {
+            console.log('❌ /restaurant/login failed, trying fallback /auth/restaurant/login');
+            
+            // Fallback to auth endpoint
+            const response = await this.makeRequest(`${this.endpoints.auth}/restaurant/login`, {
+                method: 'POST',  
+                body: JSON.stringify({ username, password, userType: 'restaurant' })
+            });
+            
+            console.log('🔍 FALLBACK LOGIN RESPONSE DEBUG:', response);
+            
+            // Store token from fallback response
+            const token = response?.token || response?.accessToken || response?.data?.token || response?.data?.accessToken;
+            if (token) {
+                this.authToken = token;
+                sessionStorage.setItem('kaptaze_session_token', token);
+                console.log('✅ Auth token stored for session (fallback):', token.substring(0, 20) + '...');
+            } else {
+                console.log('❌ NO TOKEN FOUND in fallback response!');
+            }
+            
+            return response;
         }
-        
-        return response;
     }
 
     async register(userData) {
