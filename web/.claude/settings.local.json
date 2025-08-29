@@ -20,7 +20,12 @@
       "Bash(npm run build:*)",
       "Bash(netlify deploy:*)",
       "Bash(npm run deploy:*)",
-      "Bash(move restaurant-login.html restaurant-login-v2.html)"
+      "Bash(move restaurant-login.html restaurant-login-v2.html)",
+      "Bash(npm start)",
+      "Bash(git -C /c/Users/hakan/KapTazeApp/kaptaze-backend-api status)",
+      "Bash(git -C /c/Users/hakan/KapTazeApp/kaptaze-backend-api add .)",
+      "Bash(git -C /c/Users/hakan/KapTazeApp/kaptaze-backend-api commit -m \"FEAT: Cloudinary image storage integration\n\n- Add Cloudinary configuration and dependencies\n- Update restaurant image upload to use Cloudinary CDN\n- Memory storage with auto-resize (400x400px) \n- Persistent restaurant profile images\n- Support imageUrl in profile updates\n- Production-ready image handling with CDN URLs\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
+      "Bash(git -C /c/Users/hakan/KapTazeApp/kaptaze-backend-api push)"
     ],
     "deny": [],
     "ask": [],
