@@ -2,6 +2,13 @@
 class BackendService {
     constructor() {
         this.baseURL = this.getBackendURL();
+        
+        // 🔴 API TEST MODE - localStorage fallback'leri devre dışı bırak
+        this.API_TEST_MODE = window.location.search.includes('apitest=true');
+        if (this.API_TEST_MODE) {
+            console.log('🔴 API TEST MODE ACTIVE - No fallbacks, no demo data!');
+        }
+        
         this.endpoints = {
             auth: '/auth',
             restaurants: '/restaurant',
@@ -126,6 +133,10 @@ class BackendService {
             // Try public endpoint first
             return await this.makeRequest(this.endpoints.public.restaurants);
         } catch (error) {
+            if (this.API_TEST_MODE) {
+                console.error('🔴 API TEST MODE: Restaurant endpoint failed!', error);
+                throw error; // Test mode'da hata fırlat, demo verme
+            }
             console.log('⚠️ Public restaurants API error, using demo data');
             return this.getDemoRestaurants();
         }
@@ -210,6 +221,10 @@ class BackendService {
                 throw new Error('API response not ok');
             }
         } catch (error) {
+            if (this.API_TEST_MODE) {
+                console.error('🔴 API TEST MODE: Stats endpoint failed!', error);
+                throw error; // Test mode'da hata fırlat
+            }
             console.error('❌ Public stats API error:', error.message);
             console.log('⚠️ Using demo stats as fallback');
             return {
@@ -246,6 +261,10 @@ class BackendService {
                 throw new Error('API response not ok');
             }
         } catch (error) {
+            if (this.API_TEST_MODE) {
+                console.error('🔴 API TEST MODE: Packages endpoint failed!', error);
+                throw error; // Test mode'da hata fırlat
+            }
             console.error('❌ Public packages API error:', error.message);
             console.log('⚠️ Using demo packages as fallback');
             return this.getDemoPackages();

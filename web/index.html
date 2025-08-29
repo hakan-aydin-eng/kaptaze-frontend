@@ -388,6 +388,25 @@
         window.backendService = new BackendService();
         console.log('🚀 Backend service initialized');
         console.log('🔗 Backend URL:', window.backendService.baseURL);
+        
+        // API Connection Status Display
+        if (window.backendService.API_TEST_MODE) {
+            const statusDiv = document.createElement('div');
+            statusDiv.style.cssText = 'position:fixed;top:10px;right:10px;padding:10px 20px;background:#ff4444;color:white;border-radius:5px;z-index:9999;font-weight:bold;';
+            statusDiv.innerHTML = '🔴 API TEST MODE - No Fallbacks!';
+            document.body.appendChild(statusDiv);
+            
+            // Test real API connection
+            fetch(window.backendService.baseURL + '/health')
+                .then(res => {
+                    statusDiv.style.background = '#44ff44';
+                    statusDiv.innerHTML = '✅ API Connected: ' + window.backendService.baseURL;
+                })
+                .catch(err => {
+                    statusDiv.style.background = '#ff4444';
+                    statusDiv.innerHTML = '❌ API OFFLINE: ' + err.message;
+                });
+        }
     </script>
     
     <!-- JavaScript -->
