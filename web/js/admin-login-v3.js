@@ -182,17 +182,14 @@ class AdminLoginV3 {
                             };
                         }
                     } else {
-                        console.log('Real API login failed, trying demo mode');
+                        console.log('Real API login failed');
                     }
                 } catch (apiError) {
                     console.log('API Error:', apiError.message);
                 }
             }
 
-            // Fallback to demo login
-            if (!loginResult && this.isDemoCredentials(username, password)) {
-                loginResult = this.createDemoLogin();
-            }
+            // NO DEMO FALLBACK - Real API only
 
             if (loginResult && loginResult.success) {
                 await this.handleSuccessfulLogin(loginResult);
@@ -214,47 +211,7 @@ class AdminLoginV3 {
         }
     }
 
-    isDemoCredentials(username, password) {
-        const demoCredentials = [
-            { username: 'admin', password: 'admin123' },
-            { username: 'admin@kaptaze.com', password: 'admin123' },
-            { username: 'superadmin', password: 'kaptaze2025' }
-        ];
-
-        return demoCredentials.some(cred => 
-            cred.username === username && cred.password === password
-        );
-    }
-
-    createDemoLogin() {
-        const demoUser = {
-            id: 'admin-' + Date.now(),
-            name: 'Demo Admin',
-            email: 'admin@kaptaze.com',
-            role: 'admin',
-            permissions: ['all'],
-            loginTime: new Date().toISOString(),
-            source: 'demo'
-        };
-
-        // Create proper JWT-like demo token
-        const header = btoa(JSON.stringify({alg: 'HS256', typ: 'JWT'}));
-        const payload = btoa(JSON.stringify({
-            id: demoUser.id,
-            role: 'admin',
-            userType: 'admin',
-            exp: Math.floor(Date.now() / 1000) + (60 * 60 * 8) // 8 hours
-        }));
-        const signature = btoa('kaptaze-ultra-admin-v3-' + Date.now());
-        const demoToken = `${header}.${payload}.${signature}`;
-
-        return {
-            success: true,
-            token: demoToken,
-            user: demoUser,
-            source: 'demo'
-        };
-    }
+    // Demo methods removed - NO FALLBACKS
 
     async handleSuccessfulLogin(loginResult) {
         console.log('✅ Login successful:', loginResult);

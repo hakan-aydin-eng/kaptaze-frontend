@@ -62,9 +62,21 @@ async function loadDashboardData() {
         await updateStatistics();
         
     } catch (error) {
-        console.log('⚠️ Using demo data - Backend not available:', error.message);
-        loadDemoData();
+        console.error('❌ Backend API Error:', error);
+        // NO FALLBACK - Show error to user
+        displayError('Backend bağlantısı kurulamadı: ' + error.message);
     }
+}
+
+function displayError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:20px;background:#ff4444;color:white;border-radius:10px;z-index:9999;font-size:18px;max-width:80%;text-align:center;';
+    errorDiv.innerHTML = `
+        <h3>❌ Bağlantı Hatası</h3>
+        <p>${message}</p>
+        <p style="font-size:14px;margin-top:10px;">API URL: ${window.backendService?.baseURL}</p>
+    `;
+    document.body.appendChild(errorDiv);
 }
 
 function displayPackages(packages) {
@@ -172,33 +184,7 @@ function animateNumber(element, targetNumber) {
     updateNumber();
 }
 
-function loadDemoData() {
-    // Demo packages for display when backend is not available
-    const demoPackages = [
-        {
-            _id: 'demo1',
-            name: 'Karma Menü',
-            restaurantName: 'Seraser Restaurant',
-            originalPrice: 45,
-            discountedPrice: 18,
-            image: './assets/food1.jpg',
-            pickupTime: '18:00-20:00',
-            quantity: 5
-        },
-        {
-            _id: 'demo2', 
-            name: 'Pizza Çeşitleri',
-            restaurantName: 'Milano Pizzeria',
-            originalPrice: 35,
-            discountedPrice: 15,
-            image: './assets/food2.jpg',
-            pickupTime: '19:00-21:00',
-            quantity: 3
-        }
-    ];
-    
-    displayPackages(demoPackages);
-}
+// Demo data removed - NO FALLBACKS
 
 async function handleRegistration(event) {
     event.preventDefault();

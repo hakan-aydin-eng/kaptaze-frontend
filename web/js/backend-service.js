@@ -129,17 +129,8 @@ class BackendService {
 
     // Public Methods (no authentication required)
     async getPublicRestaurants() {
-        try {
-            // Try public endpoint first
-            return await this.makeRequest(this.endpoints.public.restaurants);
-        } catch (error) {
-            if (this.API_TEST_MODE) {
-                console.error('🔴 API TEST MODE: Restaurant endpoint failed!', error);
-                throw error; // Test mode'da hata fırlat, demo verme
-            }
-            console.log('⚠️ Public restaurants API error, using demo data');
-            return this.getDemoRestaurants();
-        }
+        // NO FALLBACK - Direct API call only
+        return await this.makeRequest(this.endpoints.public.restaurants);
     }
 
     async getRestaurantById(id) {
@@ -199,144 +190,42 @@ class BackendService {
 
     // Public Methods (Ana sayfa için - token gerektirmeyen)
     async getPublicStats() {
-        try {
-            // Gerçek API'den stats çek
-            const response = await fetch(`${this.baseURL}/public/stats`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                console.log('📊 Public stats loaded:', result.data);
-                
-                if (result.success) {
-                    return result.data;
-                } else {
-                    throw new Error('API returned unsuccessful response');
-                }
-            } else {
-                throw new Error('API response not ok');
+        // NO FALLBACK - Direct API call only
+        const response = await fetch(`${this.baseURL}/public/stats`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
             }
-        } catch (error) {
-            if (this.API_TEST_MODE) {
-                console.error('🔴 API TEST MODE: Stats endpoint failed!', error);
-                throw error; // Test mode'da hata fırlat
-            }
-            console.error('❌ Public stats API error:', error.message);
-            console.log('⚠️ Using demo stats as fallback');
-            return {
-                totalPackagesSaved: 2847,
-                co2Saving: '1.2T',
-                partnerRestaurants: 156,
-                demo: true
-            };
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            console.log('📊 Public stats loaded:', result);
+            return result.data || result;
+        } else {
+            throw new Error(`Stats API failed: ${response.status}`);
         }
     }
 
     async getPublicPackages() {
-        try {
-            // Gerçek API'den packages çek
-            const response = await fetch(`${this.baseURL}/public/packages`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                console.log('📦 Public packages loaded:', result.data.packages.length);
-                
-                // Eğer gerçek data varsa onu kullan, yoksa demo data
-                if (result.success && result.data.packages.length > 0) {
-                    return result.data.packages;
-                } else {
-                    console.log('ℹ️ No packages in database, using demo data');
-                    return this.getDemoPackages();
-                }
-            } else {
-                throw new Error('API response not ok');
+        // NO FALLBACK - Direct API call only
+        const response = await fetch(`${this.baseURL}/public/packages`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
             }
-        } catch (error) {
-            if (this.API_TEST_MODE) {
-                console.error('🔴 API TEST MODE: Packages endpoint failed!', error);
-                throw error; // Test mode'da hata fırlat
-            }
-            console.error('❌ Public packages API error:', error.message);
-            console.log('⚠️ Using demo packages as fallback');
-            return this.getDemoPackages();
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            console.log('📦 Public packages loaded');
+            return result.data?.packages || result;
+        } else {
+            throw new Error(`Packages API failed: ${response.status}`);
         }
     }
 
-    getDemoPackages() {
-        return [
-            {
-                id: 'demo-1',
-                title: 'Karma Menü',
-                restaurant: 'Seraser Restaurant',
-                originalPrice: 45,
-                discountedPrice: 18,
-                image: './assets/food-1.jpg',
-                category: 'Ana Yemek',
-                location: 'Kaleici, Antalya'
-            },
-            {
-                id: 'demo-2',
-                title: 'Pizza Margarita',
-                restaurant: 'İtalyan Mutfağı',
-                originalPrice: 35,
-                discountedPrice: 15,
-                image: './assets/food-2.jpg',
-                category: 'Pizza',
-                location: 'Lara, Antalya'
-            },
-            {
-                id: 'demo-3',
-                title: 'Sushi Set',
-                restaurant: 'Tokyo Sushi',
-                originalPrice: 65,
-                discountedPrice: 25,
-                image: './assets/food-3.jpg',
-                category: 'Japon',
-                location: 'Muratpaşa, Antalya'
-            }
-        ];
-    }
-
-    getDemoRestaurants() {
-        return [
-            {
-                id: 'demo-rest-1',
-                name: 'Seraser Restaurant',
-                category: 'Ana Yemek',
-                location: 'Kaleici, Antalya',
-                rating: 4.8,
-                packages: 3,
-                image: './assets/restaurant-1.jpg'
-            },
-            {
-                id: 'demo-rest-2',
-                name: 'İtalyan Mutfağı',
-                category: 'Pizza & İtalyan',
-                location: 'Lara, Antalya',
-                rating: 4.6,
-                packages: 2,
-                image: './assets/restaurant-2.jpg'
-            },
-            {
-                id: 'demo-rest-3',
-                name: 'Tokyo Sushi',
-                category: 'Japon Mutfağı',
-                location: 'Muratpaşa, Antalya',
-                rating: 4.9,
-                packages: 1,
-                image: './assets/restaurant-3.jpg'
-            }
-        ];
-    }
+    // Demo methods removed - NO FALLBACKS
 
     // Admin Methods
     async getAdminStats() {

@@ -16,7 +16,11 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git pull:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(npm run build:*)",
+      "Bash(netlify deploy:*)",
+      "Bash(npm run deploy:*)",
+      "Bash(move restaurant-login.html restaurant-login-v2.html)"
     ],
     "deny": [],
     "ask": [],

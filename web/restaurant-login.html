@@ -393,44 +393,7 @@
             } catch (error) {
                 console.error('❌ Restaurant login failed:', error);
                 
-                // Try demo credentials as fallback
-                if ((username === 'demo' && password === 'demo123') || 
-                    (username === 'restaurant' && password === 'test123')) {
-                    
-                    console.log('🎭 Using demo restaurant login');
-                    
-                    // Demo login data
-                    const demoLoginResult = {
-                        data: {
-                            token: 'demo-restaurant-token-' + Date.now(),
-                            user: { 
-                                firstName: 'Demo Restaurant',
-                                id: 'demo-restaurant-1',
-                                role: 'restaurant'
-                            }
-                        }
-                    };
-                    
-                    // Store demo auth
-                    localStorage.setItem('restaurantToken', demoLoginResult.data.token);
-                    localStorage.setItem('restaurantUser', JSON.stringify(demoLoginResult.data.user));
-                    localStorage.setItem('kaptaze_token', demoLoginResult.data.token);
-                    localStorage.setItem('kaptaze_user', JSON.stringify(demoLoginResult.data.user));
-                    
-                    // Show demo success
-                    successMessage.innerHTML = `
-                        <i class="fas fa-check-circle"></i> 
-                        Demo modunda giriş başarılı! Panel'e yönlendiriliyorsunuz...
-                    `;
-                    successMessage.style.display = 'block';
-                    
-                    // Redirect after demo login
-                    setTimeout(() => {
-                        window.location.href = '/restaurant-panel';
-                    }, 1500);
-                    
-                    return;
-                }
+                // NO DEMO FALLBACK - Real API only
                 
                 // Show error message
                 let errorText = 'Giriş başarısız oldu.';
