@@ -75,9 +75,14 @@ class BackendService {
             }
         };
 
-        // Auto-stringify body if it's an object
-        if (config.body && typeof config.body === 'object') {
+        // Auto-stringify body if it's an object (but not FormData or string)
+        if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
             config.body = JSON.stringify(config.body);
+        }
+
+        // Remove Content-Type for FormData (let browser set it with boundary)
+        if (config.body instanceof FormData) {
+            delete config.headers['Content-Type'];
         }
 
         try {

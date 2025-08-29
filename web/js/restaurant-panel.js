@@ -342,9 +342,17 @@ class RestaurantPanel {
     async handleProfileSubmit(e) {
         e.preventDefault();
         
+        console.log('📝 Profile submit triggered');
+        console.log('🔍 Restaurant profile exists:', !!this.restaurantProfile);
+        console.log('🔍 Current user exists:', !!this.currentUser);
+        
         if (!this.restaurantProfile) {
-            console.error('❌ No restaurant profile found');
-            return;
+            console.error('❌ No restaurant profile found - creating from user data');
+            this.createProfileFromUserData();
+            if (!this.restaurantProfile) {
+                console.error('❌ Still no restaurant profile after creation');
+                return;
+            }
         }
         
         try {
