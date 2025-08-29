@@ -315,9 +315,24 @@ class RestaurantPanel {
 
             // Update restaurant avatar if restaurantProfile has mainImage
             const avatarEl = document.getElementById('restaurant-avatar');
+            console.log('🔍 Avatar element found:', !!avatarEl);
+            console.log('🔍 Restaurant profile exists:', !!this.restaurantProfile);
+            console.log('🔍 MainImage exists:', !!(this.restaurantProfile?.mainImage));
+            
             if (avatarEl && this.restaurantProfile && this.restaurantProfile.mainImage) {
                 console.log('🖼️ Updating restaurant avatar:', this.restaurantProfile.mainImage.substring(0, 50) + '...');
+                console.log('🖼️ Avatar element before update:', avatarEl.src);
+                
                 avatarEl.src = this.restaurantProfile.mainImage;
+                
+                console.log('🖼️ Avatar element after update:', avatarEl.src.substring(0, 50) + '...');
+                console.log('🖼️ Avatar element visible:', avatarEl.offsetWidth > 0 && avatarEl.offsetHeight > 0);
+            } else {
+                console.warn('⚠️ Avatar update skipped:', {
+                    avatarFound: !!avatarEl,
+                    profileExists: !!this.restaurantProfile,
+                    imageExists: !!(this.restaurantProfile?.mainImage)
+                });
             }
 
             console.log('📊 Restaurant profile updated with real admin approval data:', {
@@ -870,13 +885,27 @@ class RestaurantPanel {
                 console.log('✅ Restaurant image uploaded successfully:', imageUrl);
                 
                 if (imageUrl) {
+                    console.log('🔄 Setting avatar.src to:', imageUrl.substring(0, 50) + '...');
                     avatar.src = imageUrl;
+                    
                     // Also update profile data
                     if (this.restaurantProfile) {
                         this.restaurantProfile.mainImage = imageUrl;
+                        console.log('✅ Updated restaurantProfile.mainImage');
                     }
+                    
+                    // Force UI refresh
+                    this.updateRestaurantInfoDisplay();
+                    
                 } else {
                     console.warn('⚠️ No imageUrl in response, keeping preview');
+                    // Even if no URL, keep the base64 preview
+                    if (this.restaurantProfile) {
+                        // Use the base64 data from reader
+                        console.log('🔄 Using base64 preview as mainImage');
+                        this.restaurantProfile.mainImage = avatar.src;
+                        this.updateRestaurantInfoDisplay();
+                    }
                 }
                 
                 this.showSuccessMessage('Restaurant görseli başarıyla güncellendi!');
