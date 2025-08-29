@@ -556,7 +556,16 @@ class RestaurantPanel {
                     }
                 }
                 
+                // WORKAROUND: Backend doesn't save/return image, so preserve it locally
+                const existingImage = this.restaurantProfile?.mainImage;
                 this.restaurantProfile = updatedProfile;
+                
+                // If backend doesn't return image but we had one, keep it
+                if (!this.restaurantProfile.mainImage && existingImage) {
+                    console.log('🔄 Backend lost image, preserving locally:', existingImage.substring(0, 50) + '...');
+                    this.restaurantProfile.mainImage = existingImage;
+                }
+                
                 console.log('✅ Profile updated in memory with mainImage:', !!this.restaurantProfile.mainImage);
                 this.updateProfileDisplay();
                 this.updateRestaurantInfoDisplay(); // Also update main display
@@ -927,10 +936,11 @@ class RestaurantPanel {
                     console.warn('⚠️ No imageUrl in response, keeping preview');
                     // Even if no URL, keep the base64 preview
                     if (this.restaurantProfile) {
-                        // Use the base64 data from reader
+                        // Use the base64 data from avatar (from FileReader)
                         console.log('🔄 Using base64 preview as mainImage');
                         this.restaurantProfile.mainImage = avatar.src;
                         this.updateRestaurantInfoDisplay();
+                        console.log('✅ Base64 image saved to profile locally');
                     }
                 }
                 
