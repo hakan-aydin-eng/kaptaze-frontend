@@ -370,7 +370,10 @@
                 const loginResult = {
                     data: {
                         token: loginResponse.token,
-                        user: loginResponse.user || { firstName: username }
+                        user: {
+                            ...(loginResponse.user || { firstName: username }),
+                            loginTime: new Date().toISOString()
+                        }
                     }
                 };
                 
