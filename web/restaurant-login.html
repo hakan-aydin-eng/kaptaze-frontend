@@ -10,7 +10,7 @@
     <!-- API Configuration -->
     <script src="./js/api-config.js?v=2025.08.23"></script>
     <script src="./js/api-service.js?v=2025.08.23"></script>
-    <script src="./js/backend-service.js?v=2025.08.29"></script>
+    <script src="./js/backend-service.js?v=2025.08.29.4"></script>
     
     <style>
         * {
@@ -364,32 +364,18 @@
                     throw new Error('Backend service not loaded. Please refresh the page.');
                 }
                 
-                // Call restaurant login API using BackendService
+                // Call restaurant login API using BackendService - NO localStorage
                 const loginResponse = await window.backendService.restaurantLogin(username, password);
                 
-                const loginResult = {
-                    data: {
-                        token: loginResponse.token,
-                        user: {
-                            ...(loginResponse.user || { firstName: username }),
-                            loginTime: new Date().toISOString()
-                        }
-                    }
-                };
+                console.log('✅ Restaurant login successful - API session created:', loginResponse);
                 
-                console.log('✅ Restaurant login successful:', loginResult);
-                
-                // Store authentication data
-                localStorage.setItem('restaurantToken', loginResult.data.token);
-                localStorage.setItem('restaurantUser', JSON.stringify(loginResult.data.user));
-                localStorage.setItem('kaptaze_token', loginResult.data.token);
-                localStorage.setItem('kaptaze_user', JSON.stringify(loginResult.data.user));
-                console.log('✅ Authentication data stored successfully');
+                // NO localStorage storing - API handles session with cookies/tokens
                 
                 // Show success message
+                const userName = loginResponse.user?.firstName || loginResponse.user?.username || username;
                 successMessage.innerHTML = `
                     <i class="fas fa-check-circle"></i> 
-                    Hoş geldiniz, ${loginResult.data.user.firstName}! Panel'e yönlendiriliyorsunuz...
+                    Hoş geldiniz, ${userName}! Panel'e yönlendiriliyorsunuz...
                 `;
                 successMessage.style.display = 'block';
                 

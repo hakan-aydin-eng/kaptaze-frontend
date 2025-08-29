@@ -117,9 +117,27 @@ class BackendService {
     }
 
     async logout() {
-        localStorage.removeItem('kaptaze_token');
-        localStorage.removeItem('kaptaze_user');
-        return Promise.resolve();
+        // NO localStorage - API-only logout
+        try {
+            return await this.makeRequest(`${this.endpoints.auth}/logout`, {
+                method: 'POST'
+            });
+        } catch (error) {
+            console.log('Logout API call failed, but clearing session anyway');
+            return Promise.resolve();
+        }
+    }
+
+    async checkSession() {
+        try {
+            // Check if user has valid session via API
+            return await this.makeRequest(`${this.endpoints.auth}/session`, {
+                method: 'GET'
+            });
+        } catch (error) {
+            console.log('Session check failed:', error);
+            return null;
+        }
     }
 
     // Restaurant Methods

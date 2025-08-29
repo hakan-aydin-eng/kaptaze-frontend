@@ -38,63 +38,42 @@ class RestaurantPanel {
         console.log('✅ Restaurant Panel ready');
     }
 
-    checkAuthentication() {
-        console.log('🔐 Restaurant Panel Auth Check v2025.08.29.3 - NO LOCALSTORAGE');
+    async checkAuthentication() {
+        console.log('🔐 Restaurant Panel Auth Check v2025.08.29.4 - PURE API NO LOCALSTORAGE');
         
-        // Check pure API authentication - NO localStorage fallbacks
-        const token = localStorage.getItem('restaurantToken');
-        const user = localStorage.getItem('restaurantUser');
-        
-        console.log('🔍 Pure API Auth Debug:', {
-            hasToken: !!token,
-            hasUser: !!user,
-            tokenLength: token ? token.length : 0,
-            userLength: user ? user.length : 0,
-            tokenValue: token ? token.substring(0, 20) + '...' : null,
-            userData: user ? user.substring(0, 100) + '...' : null
-        });
-        
-        if (!token || !user) {
-            console.log('❌ No restaurant token/user found, redirecting to login');
-            window.location.href = '/restaurant';
-            return false;
-        }
-
         try {
-            this.currentUser = JSON.parse(user);
-            const loginTime = new Date(this.currentUser.loginTime);
-            const now = new Date();
-            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
-            
-            console.log('⏰ Time Debug:', {
-                loginTime: this.currentUser.loginTime,
-                parsedLoginTime: loginTime,
-                now: now,
-                hoursDiff: hoursDiff,
-                isExpired: hoursDiff > 24
-            });
-            
-            // Token expires after 24 hours
-            if (hoursDiff > 24) {
-                console.log('❌ Token expired, clearing and redirecting');
-                localStorage.removeItem('restaurantToken');
-                localStorage.removeItem('restaurantUser');
+            // Check API session directly - NO localStorage at all
+            if (!window.backendService) {
+                console.log('❌ Backend service not loaded');
                 window.location.href = '/restaurant';
                 return false;
             }
             
-            console.log('✅ Restaurant authenticated:', {
+            console.log('🔍 Checking API session...');
+            const sessionCheck = await window.backendService.checkSession();
+            
+            if (!sessionCheck || !sessionCheck.user) {
+                console.log('❌ No valid API session found, redirecting to login');
+                window.location.href = '/restaurant';
+                return false;
+            }
+            
+            if (sessionCheck.user.role !== 'restaurant') {
+                console.log('❌ User is not a restaurant, redirecting');
+                window.location.href = '/restaurant';
+                return false;
+            }
+            
+            this.currentUser = sessionCheck.user;
+            console.log('✅ Restaurant authenticated via API:', {
                 username: this.currentUser.username,
                 firstName: this.currentUser.firstName,
-                loginTime: this.currentUser.loginTime
+                role: this.currentUser.role
             });
             
             return true;
         } catch (error) {
-            console.log('❌ JSON parse error or other issue:', error);
-            console.log('🔍 Raw user data:', user);
-            localStorage.removeItem('restaurantToken');
-            localStorage.removeItem('restaurantUser');
+            console.log('❌ API session check failed:', error);
             window.location.href = '/restaurant';
             return false;
         }
