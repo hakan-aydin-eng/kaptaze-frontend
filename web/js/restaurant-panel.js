@@ -784,15 +784,46 @@ class RestaurantPanel {
             const formData = new FormData();
             formData.append('image', file);
 
-            const response = await window.backendService.makeRequest('/restaurant/profile/image', {
-                method: 'POST',
-                body: formData,
-                headers: {} // Let browser set content-type for FormData
-            });
+            console.log('📤 Uploading image to backend...');
+            
+            // Try image-specific endpoint first, fallback to general update
+            let response;
+            try {
+                response = await window.backendService.makeRequest('/restaurant/profile/image', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {} // Let browser set content-type for FormData
+                });
+            } catch (error) {
+                if (error.message.includes('404')) {
+                    console.log('📤 Image endpoint not found, using profile update...');
+                    // Fallback: update profile with image data
+                    response = await window.backendService.makeRequest('/restaurant/me', {
+                        method: 'PUT',
+                        body: formData,
+                        headers: {} // Let browser set content-type for FormData
+                    });
+                } else {
+                    throw error;
+                }
+            }
+
+            console.log('📥 Upload response:', response);
 
             if (response.success) {
-                console.log('✅ Restaurant image uploaded successfully:', response.data.imageUrl);
-                avatar.src = response.data.imageUrl;
+                const imageUrl = response.data?.imageUrl || response.data?.url || response.imageUrl;
+                console.log('✅ Restaurant image uploaded successfully:', imageUrl);
+                
+                if (imageUrl) {
+                    avatar.src = imageUrl;
+                    // Also update profile data
+                    if (this.restaurantProfile) {
+                        this.restaurantProfile.mainImage = imageUrl;
+                    }
+                } else {
+                    console.warn('⚠️ No imageUrl in response, keeping preview');
+                }
+                
                 this.showSuccessMessage('Restaurant görseli başarıyla güncellendi!');
             } else {
                 throw new Error(response.error || 'Upload failed');
