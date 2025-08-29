@@ -130,10 +130,24 @@ class BackendService {
 
     async checkSession() {
         try {
-            // Check if user has valid session via API
-            return await this.makeRequest(`${this.endpoints.auth}/session`, {
+            // Check if user has valid session via API using /restaurant/me
+            const response = await this.makeRequest(`${this.endpoints.restaurants}/me`, {
                 method: 'GET'
             });
+            
+            // If successful, create user object format expected by restaurant panel
+            if (response && response.data) {
+                return {
+                    user: {
+                        username: response.data.username || response.data.name,
+                        firstName: response.data.ownerName || response.data.name,
+                        role: 'restaurant',
+                        ...response.data
+                    }
+                };
+            }
+            
+            return null;
         } catch (error) {
             console.log('Session check failed:', error);
             return null;

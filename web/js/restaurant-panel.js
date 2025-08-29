@@ -100,7 +100,7 @@ class RestaurantPanel {
     async loadRestaurantProfile() {
         try {
             console.log('📋 Loading restaurant profile from API...');
-            const response = await window.KapTazeAPIService.request('/restaurant/me');
+            const response = await window.backendService.makeRequest('/restaurant/me');
             
             if (response.success && response.data) {
                 this.restaurantProfile = response.data;
