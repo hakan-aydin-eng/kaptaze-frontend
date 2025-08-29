@@ -165,7 +165,7 @@ class AdminLoginV3 {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            email: username,
+                            username: username,
                             password: password,
                             userType: 'admin'
                         })
