@@ -75,6 +75,11 @@ class BackendService {
             }
         };
 
+        // Auto-stringify body if it's an object
+        if (config.body && typeof config.body === 'object') {
+            config.body = JSON.stringify(config.body);
+        }
+
         try {
             console.log('🌐 Making API request to:', url);
             console.log('📋 Request config:', config);
