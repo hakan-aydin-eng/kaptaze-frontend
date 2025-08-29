@@ -2,6 +2,7 @@
 class BackendService {
     constructor() {
         this.baseURL = this.getBackendURL();
+        this.authToken = sessionStorage.getItem('kaptaze_session_token'); // Load existing token
         
         // 🔴 API TEST MODE - localStorage fallback'leri devre dışı bırak
         this.API_TEST_MODE = window.location.search.includes('apitest=true');
@@ -51,7 +52,8 @@ class BackendService {
             }
         };
 
-        const token = localStorage.getItem('kaptaze_token');
+        // Use instance token, sessionStorage, or localStorage fallback
+        const token = this.authToken || sessionStorage.getItem('kaptaze_session_token') || localStorage.getItem('kaptaze_token');
         if (token) {
             defaultOptions.headers['Authorization'] = `Bearer ${token}`;
         }
@@ -103,10 +105,19 @@ class BackendService {
     }
 
     async restaurantLogin(username, password) {
-        return this.makeRequest(`${this.endpoints.auth}/restaurant/login`, {
+        const response = await this.makeRequest(`${this.endpoints.auth}/restaurant/login`, {
             method: 'POST',  
             body: JSON.stringify({ username, password, userType: 'restaurant' })
         });
+        
+        // Store token from login response
+        if (response && response.token) {
+            this.authToken = response.token;
+            sessionStorage.setItem('kaptaze_session_token', response.token);
+            console.log('✅ Auth token stored for session');
+        }
+        
+        return response;
     }
 
     async register(userData) {
@@ -125,6 +136,10 @@ class BackendService {
         } catch (error) {
             console.log('Logout API call failed, but clearing session anyway');
             return Promise.resolve();
+        } finally {
+            // Clear session token
+            this.authToken = null;
+            sessionStorage.removeItem('kaptaze_session_token');
         }
     }
 
