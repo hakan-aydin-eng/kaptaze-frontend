@@ -546,7 +546,7 @@ class RestaurantPanel {
             if (updatedProfile) {
                 // Map different possible image field names to mainImage
                 if (!updatedProfile.mainImage) {
-                    const imageFields = ['image', 'imageUrl', 'profileImage', 'avatar'];
+                    const imageFields = ['imageUrl', 'profileImage', 'image', 'avatar'];
                     for (const field of imageFields) {
                         if (updatedProfile[field]) {
                             console.log(`🔄 Mapping ${field} to mainImage:`, updatedProfile[field].substring(0, 50) + '...');
@@ -556,15 +556,9 @@ class RestaurantPanel {
                     }
                 }
                 
-                // WORKAROUND: Backend doesn't save/return image, so preserve it locally
-                const existingImage = this.restaurantProfile?.mainImage;
+                // Backend now saves images persistently with imageUrl field
                 this.restaurantProfile = updatedProfile;
-                
-                // If backend doesn't return image but we had one, keep it
-                if (!this.restaurantProfile.mainImage && existingImage) {
-                    console.log('🔄 Backend lost image, preserving locally:', existingImage.substring(0, 50) + '...');
-                    this.restaurantProfile.mainImage = existingImage;
-                }
+                console.log('✅ Profile loaded from backend. Image present:', !!this.restaurantProfile.mainImage);
                 
                 console.log('✅ Profile updated in memory with mainImage:', !!this.restaurantProfile.mainImage);
                 this.updateProfileDisplay();
