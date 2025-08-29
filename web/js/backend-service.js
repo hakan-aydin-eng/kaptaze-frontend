@@ -238,14 +238,16 @@ class BackendService {
     }
 
     async createRestaurantProfile(profileData) {
-        return this.makeRequest(`${this.endpoints.restaurants}/profile`, {
+        // Use /restaurant/me endpoint for now (backend will implement /restaurant/profile later)
+        return this.makeRequest(`${this.endpoints.restaurants}/me`, {
             method: 'POST',
             body: profileData
         });
     }
 
     async updateRestaurantProfile(profileData) {
-        return this.makeRequest(`${this.endpoints.restaurants}/profile`, {
+        // Use /restaurant/me endpoint for now (backend will implement /restaurant/profile later)
+        return this.makeRequest(`${this.endpoints.restaurants}/me`, {
             method: 'PUT', 
             body: profileData
         });
