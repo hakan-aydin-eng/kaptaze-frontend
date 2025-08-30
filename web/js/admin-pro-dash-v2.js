@@ -1430,6 +1430,15 @@ class AdminProDashboardV2 {
                         <button class="action-btn action-view" onclick="adminDashboard.viewRestaurant('${restaurant._id || restaurant.id}')" title="Detay">
                             <i class="fas fa-eye"></i>
                         </button>
+                        ${status === 'suspended' ? `
+                            <button class="action-btn action-approve" onclick="adminDashboard.resumeRestaurant('${restaurant._id || restaurant.id}')" title="Devam Ettir">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        ` : `
+                            <button class="action-btn action-reject" onclick="adminDashboard.suspendRestaurant('${restaurant._id || restaurant.id}')" title="Askıya Al">
+                                <i class="fas fa-pause"></i>
+                            </button>
+                        `}
                     </div>
                 </td>
             </tr>
@@ -1452,9 +1461,80 @@ class AdminProDashboardV2 {
 
     viewRestaurant(restaurantId) {
         console.log('👁️ Viewing restaurant:', restaurantId);
-        const restaurant = this.data.restaurants.find(r => r._id === restaurantId);
+        const restaurant = this.data.restaurants.find(r => r._id === restaurantId || r.id === restaurantId);
         if (restaurant) {
             alert(`Restoran Detayları:\n\nAdı: ${restaurant.name}\nKategori: ${restaurant.category}\nSahip: ${restaurant.owner.firstName} ${restaurant.owner.lastName}\nDurum: ${restaurant.status}`);
+        }
+    }
+
+    async suspendRestaurant(restaurantId) {
+        console.log('⏸️ Suspending restaurant:', restaurantId);
+        
+        const reason = prompt('Askıya alma sebebini belirtin:');
+        if (!reason) return;
+        
+        try {
+            const response = await window.KapTazeAPIService.request(`/admin/restaurants/${restaurantId}/status`, {
+                method: 'PATCH',
+                body: JSON.stringify({ action: 'suspend', reason })
+            });
+
+            if (response.success) {
+                this.showNotification('success', 'Restoran başarıyla askıya alındı!');
+                
+                // Update local data
+                const restaurant = this.data.restaurants.find(r => r._id === restaurantId || r.id === restaurantId);
+                if (restaurant) {
+                    restaurant.status = 'suspended';
+                }
+                
+                // Refresh display
+                this.displayRestaurants(this.data.restaurants);
+                this.updateStatsCards();
+                
+            } else {
+                throw new Error(response.message || 'Askıya alma işlemi başarısız');
+            }
+
+        } catch (error) {
+            console.error('❌ Restaurant suspension failed:', error);
+            this.showNotification('error', 'Restoran askıya alınamadı: ' + error.message);
+        }
+    }
+
+    async resumeRestaurant(restaurantId) {
+        console.log('▶️ Resuming restaurant:', restaurantId);
+        
+        if (!confirm('Bu restoranı yeniden aktif hale getirmek istediğinizden emin misiniz?')) {
+            return;
+        }
+        
+        try {
+            const response = await window.KapTazeAPIService.request(`/admin/restaurants/${restaurantId}/status`, {
+                method: 'PATCH',
+                body: JSON.stringify({ action: 'resume' })
+            });
+
+            if (response.success) {
+                this.showNotification('success', 'Restoran başarıyla aktif hale getirildi!');
+                
+                // Update local data
+                const restaurant = this.data.restaurants.find(r => r._id === restaurantId || r.id === restaurantId);
+                if (restaurant) {
+                    restaurant.status = 'active';
+                }
+                
+                // Refresh display
+                this.displayRestaurants(this.data.restaurants);
+                this.updateStatsCards();
+                
+            } else {
+                throw new Error(response.message || 'Devam ettirme işlemi başarısız');
+            }
+
+        } catch (error) {
+            console.error('❌ Restaurant resume failed:', error);
+            this.showNotification('error', 'Restoran aktif hale getirilemedi: ' + error.message);
         }
     }
 
