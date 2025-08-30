@@ -271,7 +271,7 @@ const MapScreen = ({ navigation, route }) => {
                 console.log('Window loaded, waiting for Google Maps...');
             };
         </script>
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyJgpILUNURU1-al2B8hdSELjzInR7t4Q&callback=initMap" async defer></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&callback=initMap" async defer></script>
     </body>
     </html>
     `;
