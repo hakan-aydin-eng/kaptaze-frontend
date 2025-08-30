@@ -438,8 +438,9 @@ class RestaurantPanel {
         
         // Website
         const websiteEl = document.getElementById('profile-website');
-        if (websiteEl && profile.website) {
-            websiteEl.href = profile.website;
+        const websiteUrl = (profile.socialMedia && profile.socialMedia.website) || profile.website;
+        if (websiteEl && websiteUrl) {
+            websiteEl.href = websiteUrl;
             websiteEl.style.display = 'block';
         } else if (websiteEl) {
             websiteEl.style.display = 'none';
@@ -562,7 +563,9 @@ class RestaurantPanel {
             
             const updates = {
                 description: document.getElementById('editDescription').value,
-                website: websiteValue,
+                socialMedia: {
+                    website: websiteValue
+                },
                 specialties: document.getElementById('editSpecialties').value
                     .split(',')
                     .map(s => s.trim())
@@ -893,7 +896,8 @@ class RestaurantPanel {
         const profile = this.restaurantProfile;
         
         document.getElementById('editDescription').value = profile.description || '';
-        document.getElementById('editWebsite').value = profile.website || '';
+        document.getElementById('editWebsite').value = 
+            (profile.socialMedia && profile.socialMedia.website) || profile.website || '';
         document.getElementById('editSpecialties').value = 
             profile.specialties ? profile.specialties.join(', ') : '';
         
