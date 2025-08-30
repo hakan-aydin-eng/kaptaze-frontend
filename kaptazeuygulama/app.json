@@ -19,6 +19,9 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyBGEzq8t3l5L1H4n5v8Y9yW1uF9O5dQ7X2"
       }
     },
     "android": {
@@ -28,7 +31,12 @@
       },
       "package": "com.kaptaze.app",
       "edgeToEdgeEnabled": true,
-      "jsEngine": "hermes"
+      "jsEngine": "hermes",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBGEzq8t3l5L1H4n5v8Y9yW1uF9O5dQ7X2"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
