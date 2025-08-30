@@ -247,6 +247,40 @@ class RestaurantPanel {
 
         // Use restaurant profile or current user data
         const data = this.restaurantProfile || this.currentUser;
+        
+        // Update restaurant image from backend
+        const restaurantAvatar = document.getElementById('restaurant-avatar');
+        const mainImagePreview = document.getElementById('mainImagePreview');
+        const uploadPlaceholder = document.getElementById('imageUploadPlaceholder');
+        
+        if (data.imageUrl) {
+            // Restaurant has a saved image in backend
+            if (restaurantAvatar) {
+                restaurantAvatar.src = data.imageUrl;
+                restaurantAvatar.style.display = 'block';
+            }
+            if (mainImagePreview) {
+                mainImagePreview.src = data.imageUrl;
+                mainImagePreview.style.display = 'block';
+            }
+            if (uploadPlaceholder) {
+                uploadPlaceholder.style.display = 'none';
+            }
+            console.log('✅ Loaded restaurant image from backend:', data.imageUrl);
+        } else if (data.mainImage) {
+            // Fallback to mainImage field if exists
+            if (restaurantAvatar) {
+                restaurantAvatar.src = data.mainImage;
+                restaurantAvatar.style.display = 'block';
+            }
+            if (mainImagePreview) {
+                mainImagePreview.src = data.mainImage;
+                mainImagePreview.style.display = 'block';
+            }
+            if (uploadPlaceholder) {
+                uploadPlaceholder.style.display = 'none';
+            }
+        }
 
         // Update header restaurant name
         const headerName = document.getElementById('restaurant-name');
@@ -280,20 +314,37 @@ class RestaurantPanel {
                 profilePhone.textContent = this.currentUser.phone;
             }
 
-            // Business address (combine businessAddress, district, city) - with null safety
+            // Business address - try restaurant profile first, then user data
             const profileAddress = document.getElementById('profile-address');
             if (profileAddress) {
-                if (this.currentUser) {
+                let addressText = 'Adres bilgisi';
+                
+                if (this.restaurantProfile && this.restaurantProfile.address) {
+                    // Get address from restaurant profile (from approved application)
+                    const addr = this.restaurantProfile.address;
+                    const addressParts = [
+                        addr.street,
+                        addr.district,
+                        addr.city
+                    ].filter(part => part && part.trim());
+                    
+                    if (addressParts.length > 0) {
+                        addressText = addressParts.join(', ');
+                    }
+                } else if (this.currentUser) {
+                    // Fallback to user data
                     const addressParts = [
                         this.currentUser.businessAddress,
                         this.currentUser.district,
                         this.currentUser.city
-                    ].filter(part => part && part.trim()); // Remove empty parts
+                    ].filter(part => part && part.trim());
                     
-                    profileAddress.textContent = addressParts.length > 0 ? addressParts.join(', ') : 'Adres bilgisi';
-                } else {
-                    profileAddress.textContent = 'Adres bilgisi';
+                    if (addressParts.length > 0) {
+                        addressText = addressParts.join(', ');
+                    }
                 }
+                
+                profileAddress.textContent = addressText;
             }
 
             // Add description from restaurantProfile or currentUser
@@ -502,9 +553,16 @@ class RestaurantPanel {
         try {
             // Collect form data
             const formData = new FormData(e.target);
+            
+            // Normalize website URL - allow flexible input
+            let websiteValue = document.getElementById('editWebsite').value.trim();
+            if (websiteValue && !websiteValue.startsWith('http://') && !websiteValue.startsWith('https://')) {
+                websiteValue = 'https://' + websiteValue;
+            }
+            
             const updates = {
                 description: document.getElementById('editDescription').value,
-                website: document.getElementById('editWebsite').value,
+                website: websiteValue,
                 specialties: document.getElementById('editSpecialties').value
                     .split(',')
                     .map(s => s.trim())
