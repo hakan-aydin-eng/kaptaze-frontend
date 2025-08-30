@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,11 @@ import {
   Platform,
   Image,
   Modal,
+  Animated,
+  RefreshControl,
+  Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import apiService from '../services/apiService';
 import { antalyaRestaurants, categoryFilters } from '../data/antalyaRestaurants';
@@ -21,14 +25,37 @@ import { useUserData } from '../context/UserDataContext';
 
 const getRestaurantIcon = (category) => {
   const icons = {
-    'Pizza & Fast Food': '🍕',
+    'Türk Mutfağı': '🇹🇷',
+    'Yerel Lezzetler': '🏠',
+    'Unlu Mamüller': '🍞',
+    'Tatlı': '🧁',
+    'Manav': '🥬',
+    'Çiçek': '🌸',
+    'Uzakdoğu Mutfağı': '🥢',
+    'Vegan': '🌱',
+    'Vejeteryan': '🥗',
     'Fast Food': '🍔',
+    // Legacy support for old categories
+    'Pizza & Fast Food': '🍕',
     'Kahve & Atıştırmalık': '☕',
-    'Türk Mutfağı': '🍽️',
     'Vegan & Sağlıklı': '🥗',
     'Özel Kahve': '☕'
   };
   return icons[category] || '🍽️';
+};
+
+// Calculate distance between two coordinates using Haversine formula
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Radius of the Earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const d = R * c; // Distance in km
+  return Math.round(d * 10) / 10; // Round to 1 decimal place
 };
 
 
@@ -46,6 +73,9 @@ const MainScreen = ({ navigation }) => {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [categories, setCategories] = useState([]);
   
+  // Refresh state
+  const [refreshing, setRefreshing] = useState(false);
+  
   // Infinite scroll states
   const [displayedRestaurants, setDisplayedRestaurants] = useState([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -55,10 +85,16 @@ const MainScreen = ({ navigation }) => {
 
   useEffect(() => {
     loadRestaurants();
-    loadFeaturedRestaurants(); 
     loadCategories();
     loadUserLocation();
   }, []);
+
+  // Load featured restaurants after main restaurants are loaded
+  useEffect(() => {
+    if (restaurants.length > 0) {
+      loadFeaturedRestaurants();
+    }
+  }, [restaurants]);
 
   // 🔄 PHASE 2: Real-time Restaurant Updates
   useEffect(() => {
@@ -161,12 +197,46 @@ const MainScreen = ({ navigation }) => {
       const allRestaurants = apiRestaurants.length > 0 ? apiRestaurants : antalyaRestaurants;
       
       // Format API data to match expected structure
-      const formattedRestaurants = allRestaurants.map(restaurant => ({
-        ...restaurant,
-        name: restaurant.name || restaurant.ad, // API uses 'name', fallback uses 'ad'
-        rating: typeof restaurant.rating === 'object' ? restaurant.rating.average || 0 : restaurant.rating || 0,
-        distance: restaurant.distance || '2.5km',
-        packages: restaurant.packages || [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3 }],
+      const formattedRestaurants = allRestaurants.map((restaurant, index) => {
+        // Calculate real distance from user coordinates
+        let calculatedDistance = '2.5km';
+        if (userCoordinates && restaurant.location) {
+          let restaurantLat, restaurantLng;
+          
+          // Handle different coordinate formats
+          if (restaurant.location.coordinates && Array.isArray(restaurant.location.coordinates)) {
+            // MongoDB GeoJSON format: [longitude, latitude]
+            restaurantLng = restaurant.location.coordinates[0];
+            restaurantLat = restaurant.location.coordinates[1];
+          } else if (restaurant.location.lat && restaurant.location.lng) {
+            // Direct lat/lng format
+            restaurantLat = restaurant.location.lat;
+            restaurantLng = restaurant.location.lng;
+          }
+          
+          if (restaurantLat && restaurantLng) {
+            const distance = calculateDistance(
+              userCoordinates.latitude, 
+              userCoordinates.longitude,
+              restaurantLat, 
+              restaurantLng
+            );
+            calculatedDistance = `${distance}km`;
+          }
+        } else {
+          // If no user coordinates, assign default distance based on index for demo
+          calculatedDistance = `${(2 + (index * 0.5)).toFixed(1)}km`;
+        }
+        
+        return {
+          ...restaurant,
+          name: restaurant.name || restaurant.ad, // API uses 'name', fallback uses 'ad'
+          rating: typeof restaurant.rating === 'object' ? restaurant.rating.average || 4.5 : restaurant.rating || 4.5,
+          distance: calculatedDistance,
+          distanceValue: parseFloat(calculatedDistance), // For sorting
+          packages: restaurant.packages || [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3 }],
+          // Add isNew flag to first few restaurants for demo
+          isNew: index < 2,
         // Add image support for restaurant profile images
         profileImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl,
         restaurantImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl || restaurant.image,
@@ -188,16 +258,24 @@ const MainScreen = ({ navigation }) => {
             isAvailable: pkg.isAvailable !== undefined ? pkg.isAvailable : (pkg.quantity > 0)
           })) : 
           [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3, isAvailable: true }] // Fallback package
-      }));
+        };
+      });
 
       // Duplicate removal (by id or name)
       const uniqueRestaurants = formattedRestaurants.filter((restaurant, index, self) => 
         index === self.findIndex(r => r._id === restaurant._id || r.name === restaurant.name)
       );
       
-      setRestaurants(uniqueRestaurants);
-      setDisplayedRestaurants(uniqueRestaurants.slice(0, ITEMS_PER_PAGE));
-      setHasMore(uniqueRestaurants.length > ITEMS_PER_PAGE);
+      // Sort by distance (nearest first)
+      const sortedRestaurants = uniqueRestaurants.sort((a, b) => {
+        const distanceA = a.distanceValue || parseFloat(a.distance) || 999;
+        const distanceB = b.distanceValue || parseFloat(b.distance) || 999;
+        return distanceA - distanceB;
+      });
+      
+      setRestaurants(sortedRestaurants);
+      setDisplayedRestaurants(sortedRestaurants.slice(0, ITEMS_PER_PAGE));
+      setHasMore(sortedRestaurants.length > ITEMS_PER_PAGE);
       
       console.log(`📱 Toplam ${uniqueRestaurants.length} restoran yüklendi (${apiRestaurants.length} API + ${antalyaRestaurants.length} fallback)`);
       
@@ -216,23 +294,38 @@ const MainScreen = ({ navigation }) => {
     try {
       console.log('Loading featured restaurants from API...');
       
-      // Gerçek API'den restoranları yükle
-      const response = await apiService.getRestaurants();
-      
-      if (response.success && response.data.restaurants) {
-        const apiRestaurants = response.data.restaurants;
-        // Yüksek puanlı restoranları featured olarak kullan
-        setFeaturedRestaurants(apiRestaurants.filter(r => r.rating >= 4.0).slice(0, 8));
-        console.log('Featured restaurants loaded from API:', apiRestaurants.length);
+      // Use already loaded restaurants from main list (for consistency)
+      if (restaurants.length > 0) {
+        const nearbyHighRated = restaurants.filter(restaurant => {
+          const rating = typeof restaurant.rating === 'object' ? 
+            restaurant.rating.average : restaurant.rating;
+          const distance = restaurant.distanceValue || parseFloat(restaurant.distance) || 999;
+          
+          // Filter: Within 5km radius AND 4+ rating
+          return distance <= 5 && rating >= 4.0;
+        }).slice(0, 8);
+        
+        setFeaturedRestaurants(nearbyHighRated);
+        console.log(`✨ Featured: ${nearbyHighRated.length} restaurants within 5km with 4+ rating`);
       } else {
-        // Fallback olarak mock data kullan
-        setFeaturedRestaurants(antalyaRestaurants.filter(r => r.rating >= 4.5).slice(0, 8));
-        console.log('Featured restaurants loaded from fallback data');
+        // Fallback to API call if restaurants not loaded yet
+        const response = await apiService.getRestaurants();
+        
+        if (response.success && response.data.restaurants) {
+          const apiRestaurants = response.data.restaurants;
+          setFeaturedRestaurants(apiRestaurants.filter(r => {
+            const rating = typeof r.rating === 'object' ? r.rating.average : r.rating;
+            return rating >= 4.0;
+          }).slice(0, 8));
+          console.log('Featured restaurants loaded from API:', apiRestaurants.length);
+        } else {
+          setFeaturedRestaurants(antalyaRestaurants.filter(r => r.rating >= 4.0).slice(0, 8));
+          console.log('Featured restaurants loaded from fallback data');
+        }
       }
     } catch (error) {
       console.error('Featured restaurants error:', error);
-      // Hata durumunda fallback data kullan
-      setFeaturedRestaurants(antalyaRestaurants.filter(r => r.rating >= 4.5).slice(0, 8));
+      setFeaturedRestaurants(antalyaRestaurants.filter(r => r.rating >= 4.0).slice(0, 8));
     }
   };
 
@@ -262,8 +355,15 @@ const MainScreen = ({ navigation }) => {
         setCategories([
           { id: 'all', name: 'Hepsi', emoji: '🍽️' },
           { id: 'turkish', name: 'Türk Mutfağı', emoji: '🇹🇷' },
+          { id: 'local', name: 'Yerel Lezzetler', emoji: '🏠' },
+          { id: 'bakery', name: 'Unlu Mamüller', emoji: '🍞' },
+          { id: 'dessert', name: 'Tatlı', emoji: '🧁' },
+          { id: 'grocery', name: 'Manav', emoji: '🥬' },
+          { id: 'flower', name: 'Çiçek', emoji: '🌸' },
+          { id: 'asian', name: 'Uzakdoğu Mutfağı', emoji: '🥢' },
+          { id: 'vegan', name: 'Vegan', emoji: '🌱' },
+          { id: 'vegetarian', name: 'Vejeteryan', emoji: '🥗' },
           { id: 'fastfood', name: 'Fast Food', emoji: '🍔' },
-          { id: 'coffee', name: 'Kahve', emoji: '☕' },
         ]);
       }
     } catch (error) {
@@ -271,8 +371,15 @@ const MainScreen = ({ navigation }) => {
       setCategories([
         { id: 'all', name: 'Hepsi', emoji: '🍽️' },
         { id: 'turkish', name: 'Türk Mutfağı', emoji: '🇹🇷' },
+        { id: 'local', name: 'Yerel Lezzetler', emoji: '🏠' },
+        { id: 'bakery', name: 'Unlu Mamüller', emoji: '🍞' },
+        { id: 'dessert', name: 'Tatlı', emoji: '🧁' },
+        { id: 'grocery', name: 'Manav', emoji: '🥬' },
+        { id: 'flower', name: 'Çiçek', emoji: '🌸' },
+        { id: 'asian', name: 'Uzakdoğu Mutfağı', emoji: '🥢' },
+        { id: 'vegan', name: 'Vegan', emoji: '🌱' },
+        { id: 'vegetarian', name: 'Vejeteryan', emoji: '🥗' },
         { id: 'fastfood', name: 'Fast Food', emoji: '🍔' },
-        { id: 'coffee', name: 'Kahve', emoji: '☕' },
       ]);
     }
   };
@@ -303,6 +410,22 @@ const MainScreen = ({ navigation }) => {
     setHasMore(filteredRestaurants.length > ITEMS_PER_PAGE);
     setCurrentPage(1);
   }, [activeFilter, restaurants]);
+
+  // Pull to refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        loadRestaurants(),
+        loadFeaturedRestaurants(),
+        loadCategories()
+      ]);
+    } catch (error) {
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Load more function for infinite scroll
   const loadMoreRestaurants = () => {
@@ -410,14 +533,19 @@ const MainScreen = ({ navigation }) => {
             <View style={styles.ratingContainer}>
               <Text style={styles.starIcon}>⭐</Text>
               <Text style={styles.ratingText}>
-                {typeof item.rating === 'object' ? item.rating.average || item.rating : item.rating}
+                {typeof item.rating === 'object' ? 
+                  (item.rating.average || 4.5).toFixed(1) : 
+                  (item.rating || 4.5).toFixed(1)
+                }
               </Text>
             </View>
             <View style={styles.pickupTimeContainer}>
               <Text style={styles.pickupTimeIcon}>⏰</Text>
-              <Text style={styles.pickupTimeText}>18:00-21:00</Text>
+              <Text style={styles.pickupTimeText}>
+                {item.packages?.[0]?.pickupTime || item.pickupTime || '18:00-21:00'}
+              </Text>
             </View>
-            <Text style={styles.distanceText}>{item.distance}km</Text>
+            <Text style={styles.distanceText}>{item.distance}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -436,14 +564,32 @@ const MainScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <LinearGradient
+      colors={['#f0fdf4', '#dcfce7']}
+      style={styles.container}
+    >
+      <SafeAreaView style={styles.safeArea}>
       <ScrollView 
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={400}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#16a34a']}
+            progressBackgroundColor="#ffffff"
+            tintColor="#16a34a"
+          />
+        }
       >
         {/* Header */}
-        <View style={styles.header}>
+        <LinearGradient
+          colors={['#16a34a', '#059669', '#065f46']}
+          style={styles.header}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
           <View style={styles.headerTop}>
             <View style={styles.locationContainer}>
               <Text style={styles.locationIcon}>📍</Text>
@@ -474,13 +620,16 @@ const MainScreen = ({ navigation }) => {
 
           {/* Search Bar */}
           <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Restoran ara..."
-              placeholderTextColor="#9ca3af"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
+            <View style={styles.searchGlass}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Restoran ara..."
+                placeholderTextColor="rgba(255,255,255,0.7)"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              <Text style={styles.searchIcon}>🔍</Text>
+            </View>
           </View>
 
           {/* Teslim Al Tab */}
@@ -493,13 +642,34 @@ const MainScreen = ({ navigation }) => {
               </View>
             </View>
           </View>
+        </LinearGradient>
+
+        {/* Special Offer Banner */}
+        <View style={styles.offerBanner}>
+          <LinearGradient
+            colors={['#f59e0b', '#d97706']}
+            style={styles.offerGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <View style={styles.offerContent}>
+              <Text style={styles.offerEmoji}>⚡</Text>
+              <View style={styles.offerText}>
+                <Text style={styles.offerTitle}>Sınırlı Süre!</Text>
+                <Text style={styles.offerSubtitle}>İlk siparişinizde %20 ekstra indirim</Text>
+              </View>
+              <TouchableOpacity style={styles.offerButton}>
+                <Text style={styles.offerButtonText}>Kullan</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
         </View>
 
         {/* Featured Restaurants Section */}
         <View style={styles.featuredSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Keşfettin mi?</Text>
-            <Text style={styles.sectionSubtitle}>{selectedDistance}km çevrendeki en iyi restoranlar</Text>
+            <Text style={styles.sectionSubtitle}>5km çevrendeki 4+ puanlı restoranlar</Text>
           </View>
           
           <FlatList
@@ -538,24 +708,28 @@ const MainScreen = ({ navigation }) => {
           </ScrollView>
         </View>
 
-        {/* Stats Header */}
-        <View style={styles.statsContainer}>
-          <View>
-            <Text style={styles.statsTitle}>
-              {filteredRestaurants.length} restoran
-            </Text>
-            <Text style={styles.statsSubtitle}>
-              {filteredRestaurants.reduce((sum, r) => sum + (r.packages?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0)} paket mevcut
-            </Text>
+        {/* Stats Banner */}
+        <View style={styles.statsBanner}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{filteredRestaurants.length}</Text>
+            <Text style={styles.statLabel}>Restoran</Text>
           </View>
-          <View style={styles.statsRight}>
-            <Text style={styles.savingsAmount}>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>
+              {filteredRestaurants.reduce((sum, r) => sum + (r.packages?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0)}
+            </Text>
+            <Text style={styles.statLabel}>Paket</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>
               ₺{filteredRestaurants.reduce((sum, r) => {
                 const pkg = r.packages?.[0];
                 return sum + ((pkg?.originalPrice || 0) - (pkg?.salePrice || 0));
               }, 0).toFixed(0)}
             </Text>
-            <Text style={styles.savingsText}>toplam tasarruf</Text>
+            <Text style={styles.statLabel}>Tasarruf</Text>
           </View>
         </View>
 
@@ -606,48 +780,46 @@ const MainScreen = ({ navigation }) => {
                       </Text>
                     </TouchableOpacity>
                     
-                    {/* Package Count */}
-                    <View style={styles.restaurantPackageBadge}>
-                      <Text style={styles.restaurantPackageText}>{totalPackages} paket</Text>
-                    </View>
-
-                    {/* Status Badge */}
-                    <View style={[styles.statusBadge, { backgroundColor: statusInfo.color }]}>
-                      <Text style={styles.statusText}>{statusInfo.text}</Text>
-                    </View>
-
-                    {/* Price Info */}
-                    <View style={styles.restaurantPriceBadge}>
-                      <View style={styles.restaurantPriceRow}>
-                        <Text style={styles.restaurantOriginalPrice}>
-                          ₺{mainPackage.originalPrice || 0}
-                        </Text>
-                        <Text style={styles.restaurantSalePrice}>
-                          ₺{mainPackage.salePrice || 0}
-                        </Text>
+                    {/* NEW Badge (for new restaurants) */}
+                    {restaurant.isNew && (
+                      <View style={styles.newBadge}>
+                        <Text style={styles.newBadgeText}>YENİ</Text>
                       </View>
-                      <Text style={styles.restaurantDiscount}>
-                        %{mainPackage.discount || 0}
-                      </Text>
+                    )}
+
+                    {/* Price Info - Real Package Prices */}
+                    <View style={styles.priceTagOverlay}>
+                      <Text style={styles.originalPrice}>₺{mainPackage.originalPrice || 50}</Text>
+                      <Text style={styles.salePrice}>₺{mainPackage.discountPrice || mainPackage.salePrice || 25}</Text>
+                      <View style={styles.discountBadge}>
+                        <Text style={styles.discountBadgeText}>-{Math.round(((mainPackage.originalPrice - (mainPackage.discountPrice || mainPackage.salePrice)) / mainPackage.originalPrice) * 100) || 50}%</Text>
+                      </View>
                     </View>
                   </View>
                   
-                  {/* Restaurant Info */}
-                  <View style={styles.restaurantInfo}>
+                  {/* Restaurant Info - HTML Style Compact */}
+                  <View style={styles.cardContent}>
                     <Text style={styles.restaurantName}>{restaurant.name}</Text>
-                    <Text style={styles.restaurantCategory}>{restaurant.category}</Text>
                     <View style={styles.restaurantMeta}>
                       <View style={styles.ratingContainer}>
                         <Text style={styles.starIcon}>⭐</Text>
                         <Text style={styles.ratingText}>
-                          {typeof restaurant.rating === 'object' ? restaurant.rating.average || restaurant.rating : restaurant.rating}
+                          {typeof restaurant.rating === 'object' ? 
+                            (restaurant.rating.average || 4.5).toFixed(1) : 
+                            (restaurant.rating || 4.5).toFixed(1)
+                          }
                         </Text>
                       </View>
                       <View style={styles.pickupTimeContainer}>
-                        <Text style={styles.pickupTimeIcon}>⏰</Text>
-                        <Text style={styles.pickupTimeText}>18:00-21:00</Text>
+                        <Text style={styles.pickupTimeIcon}>⏱️</Text>
+                        <Text style={styles.pickupTimeText}>
+                          {mainPackage.pickupTime || restaurant.pickupTime || '18:00-21:00'}
+                        </Text>
                       </View>
-                      <Text style={styles.distanceText}>{restaurant.distance}</Text>
+                      <View style={styles.distanceContainer}>
+                        <Text style={styles.distanceIcon}>📍</Text>
+                        <Text style={styles.distanceText}>{restaurant.distance}</Text>
+                      </View>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -788,14 +960,17 @@ const MainScreen = ({ navigation }) => {
           <Text style={styles.navLabel}>Profil</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+  },
+  safeArea: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -808,11 +983,10 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   header: {
-    backgroundColor: '#ffffff',
     paddingHorizontal: 16,
     paddingVertical: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   headerTop: {
     flexDirection: 'row',
@@ -831,11 +1005,11 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: '#ffffff',
   },
   changeLocationText: {
     fontSize: 12,
-    color: '#16a34a',
+    color: 'rgba(255,255,255,0.8)',
   },
   headerButtons: {
     flexDirection: 'row',
@@ -844,36 +1018,53 @@ const styles = StyleSheet.create({
   headerButton: {
     width: 40,
     height: 40,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   headerButtonIcon: {
     fontSize: 18,
+    color: '#ffffff',
   },
   searchContainer: {
     marginBottom: 16,
   },
-  searchInput: {
-    backgroundColor: '#ffffff',
+  searchGlass: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 12,
+    borderColor: 'rgba(255,255,255,0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  searchInput: {
+    flex: 1,
     fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '500',
+  },
+  searchIcon: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.7)',
+    marginLeft: 8,
   },
   tabContainer: {
     alignItems: 'center',
   },
   deliveryTab: {
-    backgroundColor: '#16a34a',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   deliveryIcon: {
     fontSize: 16,
@@ -894,6 +1085,55 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 10,
     fontWeight: '500',
+  },
+  offerBanner: {
+    marginHorizontal: 16,
+    marginVertical: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#f59e0b',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  offerGradient: {
+    padding: 20,
+  },
+  offerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  offerEmoji: {
+    fontSize: 32,
+    marginRight: 16,
+  },
+  offerText: {
+    flex: 1,
+  },
+  offerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  offerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+  },
+  offerButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  offerButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   featuredSection: {
     backgroundColor: '#ffffff',
@@ -920,14 +1160,19 @@ const styles = StyleSheet.create({
   featuredCard: {
     width: 200,
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    borderRadius: 20,
     marginRight: 16,
     borderWidth: 1,
     borderColor: '#e5e7eb',
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
   },
   featuredImageContainer: {
-    height: 80,
+    height: 100,
     position: 'relative',
   },
   featuredImage: {
@@ -1004,7 +1249,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   featuredInfo: {
-    padding: 12,
+    padding: 16,
   },
   featuredName: {
     fontSize: 14,
@@ -1040,7 +1285,7 @@ const styles = StyleSheet.create({
   },
   filterSection: {
     backgroundColor: '#ffffff',
-    paddingVertical: 16,
+    paddingVertical: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
@@ -1052,60 +1297,81 @@ const styles = StyleSheet.create({
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    marginRight: 4,
   },
   filterButtonActive: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#16a34a',
     borderWidth: 1,
     borderColor: '#16a34a',
+    shadowColor: '#16a34a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+    transform: [{ scale: 1.05 }],
   },
   filterEmoji: {
-    fontSize: 16,
+    fontSize: 18,
     marginRight: 8,
   },
   filterText: {
     fontSize: 14,
     color: '#6b7280',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   filterTextActive: {
-    color: '#16a34a',
+    color: '#ffffff',
+    fontWeight: '700',
   },
-  statsContainer: {
-    backgroundColor: '#f0fdf4',
-    marginHorizontal: 16,
-    marginTop: 16,
-    padding: 16,
-    borderRadius: 12,
+  statsBanner: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    marginHorizontal: 20,
+    marginTop: 20,
+    padding: 20,
+    borderRadius: 20,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: 'rgba(255,255,255,0.5)',
   },
-  statsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
   },
-  statsSubtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  statsRight: {
-    alignItems: 'flex-end',
-  },
-  savingsAmount: {
-    fontSize: 18,
+  statNumber: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#16a34a',
+    marginBottom: 4,
   },
-  savingsText: {
+  statLabel: {
     fontSize: 12,
     color: '#6b7280',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(107, 114, 128, 0.2)',
+    marginHorizontal: 10,
   },
   restaurantList: {
     paddingHorizontal: 16,
@@ -1123,10 +1389,16 @@ const styles = StyleSheet.create({
   },
   restaurantCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+    marginBottom: 8,
   },
   restaurantImageContainer: {
     height: 160,
@@ -1165,6 +1437,76 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  newBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: '#f59e0b',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    shadowColor: '#f59e0b',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  newBadgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+  priceTagOverlay: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  originalPrice: {
+    fontSize: 14,
+    color: '#6b7280',
+    textDecorationLine: 'line-through',
+    textDecorationStyle: 'solid',
+  },
+  salePrice: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#16a34a',
+  },
+  discountBadge: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  discountBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  cardContent: {
+    padding: 15,
+  },
+  distanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  distanceIcon: {
+    fontSize: 12,
+    marginRight: 4,
   },
   restaurantPackageBadge: {
     position: 'absolute',
@@ -1230,29 +1572,33 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#111827',
-    marginBottom: 4,
-  },
-  restaurantCategory: {
-    fontSize: 14,
-    color: '#6b7280',
     marginBottom: 8,
   },
   restaurantMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 15,
   },
   bottomNav: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: 16,
+    left: 16,
+    right: 16,
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    paddingVertical: 8,
-    paddingBottom: 20,
+    borderTopColor: 'rgba(229, 231, 235, 0.3)',
+    paddingVertical: 12,
+    paddingBottom: 16,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 12,
   },
   navItem: {
     flex: 1,

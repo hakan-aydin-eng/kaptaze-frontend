@@ -15,10 +15,19 @@ const FavoritesScreen = ({ navigation }) => {
 
   const getRestaurantIcon = (category) => {
     const icons = {
-      'Pizza & Fast Food': '🍕',
+      'Türk Mutfağı': '🇹🇷',
+      'Yerel Lezzetler': '🏠',
+      'Unlu Mamüller': '🍞',
+      'Tatlı': '🧁',
+      'Manav': '🥬',
+      'Çiçek': '🌸',
+      'Uzakdoğu Mutfağı': '🥢',
+      'Vegan': '🌱',
+      'Vejeteryan': '🥗',
       'Fast Food': '🍔',
+      // Legacy support for old categories
+      'Pizza & Fast Food': '🍕',
       'Kahve & Atıştırmalık': '☕',
-      'Türk Mutfağı': '🍽️',
       'Vegan & Sağlıklı': '🥗',
       'Özel Kahve': '☕'
     };
@@ -39,7 +48,7 @@ const FavoritesScreen = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={styles.header}>
+        <View style={styles.pageHeader}>
           <Text style={styles.title}>❤️ Favori Restoranlarım</Text>
           <Text style={styles.subtitle}>
             {currentUser ? `${favorites.length} favori restoran` : 'Giriş yapın'}
@@ -156,13 +165,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#16a34a',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff',
   },
   backIcon: {
     fontSize: 20,
-    color: '#374151',
+    color: '#ffffff',
+    fontWeight: 'bold',
   },
   headerTitle: {
     fontSize: 18,
@@ -175,7 +187,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  header: {
+  pageHeader: {
     padding: 16,
     alignItems: 'center',
   },

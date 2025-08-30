@@ -67,7 +67,7 @@ const OrdersScreen = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={styles.header}>
+        <View style={styles.pageHeader}>
           <Text style={styles.title}>📋 Siparişlerim</Text>
           <Text style={styles.subtitle}>
             {currentUser ? `${orders.length} sipariş` : 'Giriş yapın'}
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  header: {
+  pageHeader: {
     padding: 16,
     alignItems: 'center',
   },

@@ -49,27 +49,30 @@ const MapScreen = ({ navigation, route }) => {
         ...antalyaRestaurants
       ];
       
-      // Format restaurants with coordinates
-      const formattedRestaurants = allRestaurants.map(restaurant => ({
-        ...restaurant,
-        name: restaurant.name || restaurant.ad,
-        rating: typeof restaurant.rating === 'object' ? restaurant.rating.average || 0 : restaurant.rating || 0,
-        coordinates: restaurant.location?.coordinates || [30.7133 + (Math.random() - 0.5) * 0.1, 36.8969 + (Math.random() - 0.5) * 0.1],
-        packages: restaurant.packages || [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3 }]
-      }));
-
-      // Remove duplicates
-      const uniqueRestaurants = formattedRestaurants.filter((restaurant, index, self) => 
-        index === self.findIndex(r => r._id === restaurant._id || r.name === restaurant.name)
-      );
+      // Koordinatları olan restaurantları filtrele
+      const restaurantsWithCoords = allRestaurants.filter(r => {
+        if (r.location?.coordinates) return true;
+        if (r.location?.lat && r.location?.lng) return true;
+        return false;
+      });
       
+      // Ensure unique restaurants by ID
+      const uniqueRestaurants = restaurantsWithCoords.reduce((acc, current) => {
+        const exists = acc.find(item => item._id === current._id);
+        if (!exists) {
+          acc.push(current);
+        }
+        return acc;
+      }, []);
+      
+      console.log(`📍 Found ${uniqueRestaurants.length} restaurants with coordinates`);
       setRestaurants(uniqueRestaurants);
-      console.log(`🗺️ Map loaded with ${uniqueRestaurants.length} restaurants`);
+      
+      // Delay to ensure WebView is ready
+      setTimeout(() => setLoading(false), 100);
       
     } catch (error) {
-      console.error('Map restaurants loading error:', error);
-      setRestaurants(antalyaRestaurants);
-    } finally {
+      console.error('❌ Error loading restaurants:', error);
       setLoading(false);
     }
   };
@@ -78,11 +81,13 @@ const MapScreen = ({ navigation, route }) => {
     const markersData = restaurants.map(restaurant => ({
       id: restaurant._id,
       name: restaurant.name,
-      category: restaurant.category,
-      rating: restaurant.rating,
-      coordinates: restaurant.coordinates,
-      packages: restaurant.packages?.length || 0,
-      price: restaurant.packages?.[0]?.salePrice || restaurant.packages?.[0]?.discountedPrice || restaurant.packages?.[0]?.price || 0
+      category: restaurant.category || 'Restaurant',
+      description: restaurant.description || '',
+      coordinates: restaurant.location?.coordinates || [restaurant.location?.lng, restaurant.location?.lat],
+      address: restaurant.address?.street || restaurant.location?.address || '',
+      rating: typeof restaurant.rating === 'object' ? restaurant.rating.average : restaurant.rating,
+      price: restaurant.avgPrice || restaurant.price || '',
+      distance: restaurant.distance || ''
     }));
 
     return `
@@ -103,7 +108,7 @@ const MapScreen = ({ navigation, route }) => {
                 color: #111827;
                 margin-bottom: 4px;
             }
-            .restaurant-info {
+            .restaurant-category {
                 font-size: 12px;
                 color: #6b7280;
                 margin-bottom: 2px;
@@ -126,113 +131,147 @@ const MapScreen = ({ navigation, route }) => {
                 width: 100%;
             }
         </style>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     </head>
     <body>
         <div id="map"></div>
-        <div id="error-container" style="position: absolute; top: 10px; left: 10px; right: 10px; background: red; color: white; padding: 10px; border-radius: 8px; display: none; z-index: 1000;"></div>
         <script>
             let map;
             let markers = [];
             const restaurants = ${JSON.stringify(markersData)};
             
             function initMap() {
-                console.log('initMap called with Leaflet');
+                console.log('🗺️ Initializing Google Maps...');
                 
                 try {
-                    // Initialize Leaflet map
-                    map = L.map('map').setView([${mapCenter.lat}, ${mapCenter.lng}], 12);
+                    // Initialize Google Maps
+                    map = new google.maps.Map(document.getElementById('map'), {
+                        center: { lat: ${mapCenter.lat}, lng: ${mapCenter.lng} },
+                        zoom: 13,
+                        mapTypeControl: false,
+                        streetViewControl: false,
+                        fullscreenControl: false,
+                        styles: [
+                            {
+                                featureType: "poi.business",
+                                stylers: [{ visibility: "off" }]
+                            }
+                        ]
+                    });
                     
-                    // Add OpenStreetMap tiles
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors',
-                        maxZoom: 19
-                    }).addTo(map);
+                    console.log('✅ Google Maps initialized successfully');
                     
-                    console.log('Leaflet map initialized successfully');
-                
-                restaurants.forEach(restaurant => {
-                    if (restaurant.coordinates && restaurant.coordinates.length >= 2) {
-                        const position = [
-                            parseFloat(restaurant.coordinates[1]),
-                            parseFloat(restaurant.coordinates[0])
-                        ];
-                        
-                        // Create custom icon for restaurant markers
-                        const restaurantIcon = L.divIcon({
-                            className: 'restaurant-marker',
-                            html: '<div style="background: #16a34a; border: 2px solid white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">🍽️</div>',
-                            iconSize: [40, 40],
-                            iconAnchor: [20, 20],
-                            popupAnchor: [0, -20]
-                        });
-                        
-                        const marker = L.marker(position, { icon: restaurantIcon })
-                            .addTo(map)
-                            .bindPopup(createInfoWindowContent(restaurant))
-                            .on('click', () => {
-                                marker.openPopup();
+                    // Add restaurant markers
+                    restaurants.forEach(restaurant => {
+                        if (restaurant.coordinates && restaurant.coordinates.length >= 2) {
+                            const position = {
+                                lat: parseFloat(restaurant.coordinates[1]),
+                                lng: parseFloat(restaurant.coordinates[0])
+                            };
+                            
+                            // Create custom marker
+                            const marker = new google.maps.Marker({
+                                position: position,
+                                map: map,
+                                title: restaurant.name,
+                                icon: {
+                                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                                        '<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">' +
+                                        '<circle cx="20" cy="20" r="18" fill="#16a34a" stroke="white" stroke-width="2"/>' +
+                                        '<text x="20" y="25" text-anchor="middle" font-size="16">🍽️</text>' +
+                                        '</svg>'
+                                    ),
+                                    scaledSize: new google.maps.Size(40, 40),
+                                    anchor: new google.maps.Point(20, 20)
+                                }
                             });
-                        
-                        markers.push({ marker });
-                    }
-                });
-
-                // Add user location marker
-                const userIcon = L.divIcon({
-                    className: 'user-marker',
-                    html: '<div style="background: #3b82f6; border: 3px solid white; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"><div style="background: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; opacity: 0.8;"><div style="background: #3b82f6; border-radius: 50%; width: 16px; height: 16px;"></div></div><div style="position: absolute; top: 8px; font-size: 12px;">📍</div></div>',
-                    iconSize: [50, 50],
-                    iconAnchor: [25, 25],
-                    popupAnchor: [0, -25]
-                });
-
-                const userLocationMarker = L.marker([${mapCenter.lat}, ${mapCenter.lng}], { 
-                    icon: userIcon,
-                    zIndexOffset: 1000
-                })
-                .addTo(map)
-                .bindPopup(\`
-                    <div class="info-window">
-                        <div class="restaurant-name">📍 Konumunuz</div>
-                        <div class="restaurant-info">${userLocation || 'Mevcut Konum'}</div>
-                        <div class="restaurant-info">Çevresindeki restoranları görüntülüyorsunuz</div>
-                    </div>
-                \`);
-                
+                            
+                            // Create info window content
+                            const contentString = createInfoWindowContent(restaurant);
+                            const infoWindow = new google.maps.InfoWindow({
+                                content: contentString
+                            });
+                            
+                            marker.addListener('click', () => {
+                                // Close all other info windows
+                                markers.forEach(m => {
+                                    if (m.infoWindow) {
+                                        m.infoWindow.close();
+                                    }
+                                });
+                                infoWindow.open(map, marker);
+                            });
+                            
+                            marker.infoWindow = infoWindow;
+                            markers.push(marker);
+                        }
+                    });
+                    
+                    // Add user location marker
+                    const userMarker = new google.maps.Marker({
+                        position: { lat: ${mapCenter.lat}, lng: ${mapCenter.lng} },
+                        map: map,
+                        title: 'Konumunuz',
+                        icon: {
+                            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                                '<svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">' +
+                                '<circle cx="25" cy="25" r="22" fill="#3b82f6" stroke="white" stroke-width="3"/>' +
+                                '<circle cx="25" cy="25" r="8" fill="white"/>' +
+                                '<circle cx="25" cy="25" r="5" fill="#3b82f6"/>' +
+                                '</svg>'
+                            ),
+                            scaledSize: new google.maps.Size(50, 50),
+                            anchor: new google.maps.Point(25, 25)
+                        },
+                        zIndex: 999
+                    });
+                    
+                    const userInfoWindow = new google.maps.InfoWindow({
+                        content: '<div class="info-window"><p class="restaurant-name">📍 Konumunuz</p><p class="restaurant-category">${userLocation}</p></div>'
+                    });
+                    
+                    userMarker.addListener('click', () => {
+                        userInfoWindow.open(map, userMarker);
+                    });
+                    
+                    console.log('✅ Added ' + markers.length + ' restaurant markers');
+                    
                 } catch (error) {
-                    console.error('Map initialization error:', error);
-                    document.getElementById('error-container').style.display = 'block';
-                    document.getElementById('error-container').innerHTML = 'Harita yüklenirken bir hata oluştu: ' + error.message;
+                    console.error('❌ Map initialization error:', error);
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'error',
+                        message: error.message
+                    }));
                 }
             }
             
             function createInfoWindowContent(restaurant) {
                 return \`
                     <div class="info-window">
-                        <div class="restaurant-name">\${restaurant.name}</div>
-                        <div class="restaurant-info">📍 \${restaurant.category}</div>
-                        <div class="restaurant-info">⭐ \${restaurant.rating}/5</div>
-                        <div class="restaurant-info">📦 \${restaurant.packages} paket mevcut</div>
-                        \${restaurant.price > 0 ? \`<div class="restaurant-price">₺\${restaurant.price}</div>\` : ''}
-                        <button class="view-details-btn" onclick="viewRestaurantDetails('\${restaurant.id}')">
-                            Detayları Görüntüle
+                        <p class="restaurant-name">\${restaurant.name}</p>
+                        <p class="restaurant-category">\${restaurant.category}</p>
+                        \${restaurant.rating ? \`<p class="restaurant-category">⭐ \${restaurant.rating}</p>\` : ''}
+                        \${restaurant.price ? \`<p class="restaurant-price">💰 \${restaurant.price}</p>\` : ''}
+                        \${restaurant.distance ? \`<p class="restaurant-category">📍 \${restaurant.distance}km</p>\` : ''}
+                        <button class="view-details-btn" onclick="viewDetails('\${restaurant.id}')">
+                            Detayları Gör
                         </button>
                     </div>
                 \`;
             }
             
-            function viewRestaurantDetails(restaurantId) {
+            function viewDetails(restaurantId) {
                 window.ReactNativeWebView.postMessage(JSON.stringify({
-                    type: 'RESTAURANT_SELECTED',
+                    type: 'navigate',
                     restaurantId: restaurantId
                 }));
             }
             
             // Initialize map when page loads
-            window.onload = initMap;
+            window.onload = function() {
+                console.log('Window loaded, waiting for Google Maps...');
+            };
         </script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyJgpILUNURU1-al2B8hdSELjzInR7t4Q&callback=initMap" async defer></script>
     </body>
     </html>
     `;
@@ -242,120 +281,64 @@ const MapScreen = ({ navigation, route }) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       
-      // Handle console messages from WebView
-      if (data.type === 'console.log') {
-        console.log('📱 WebView Log:', ...data.data);
-      } else if (data.type === 'console.error') {
-        console.error('📱 WebView Error:', ...data.data);
-      } else if (data.type === 'console.warn') {
-        console.warn('📱 WebView Warning:', ...data.data);
-      } else if (data.type === 'RESTAURANT_SELECTED') {
-        const selectedRestaurant = restaurants.find(r => r._id === data.restaurantId);
-        if (selectedRestaurant) {
-          navigation.navigate('RestaurantDetail', { restaurant: selectedRestaurant });
+      if (data.type === 'navigate' && data.restaurantId) {
+        const restaurant = restaurants.find(r => r._id === data.restaurantId);
+        if (restaurant) {
+          navigation.navigate('RestaurantDetail', { restaurant });
         }
+      } else if (data.type === 'error') {
+        console.error('WebView error:', data.message);
+        Alert.alert('Hata', 'Harita yüklenirken bir hata oluştu');
       }
     } catch (error) {
-      console.error('Error handling WebView message:', error);
+      console.log('Message parse error:', error);
     }
   };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Harita</Text>
-          <View style={styles.placeholder} />
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#16a34a" />
-          <Text style={styles.loadingText}>Harita yükleniyor...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{userLocation} Haritası</Text>
-        <TouchableOpacity 
-          style={styles.infoButton}
-          onPress={() => Alert.alert(
-            'Harita Kullanımı',
-            'Haritadaki yeşil işaretlere tıklayarak restoran detaylarını görüntüleyebilirsiniz.',
-            [{ text: 'Tamam' }]
-          )}
-        >
-          <Text style={styles.infoIcon}>ℹ️</Text>
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Haritada Gör</Text>
+        <Text style={styles.locationText}>{userLocation}</Text>
       </View>
-      
-      <WebView
-        source={{ html: generateMapHTML() }}
-        style={styles.webView}
-        onMessage={handleWebViewMessage}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        startInLoadingState={true}
-        scalesPageToFit={true}
-        scrollEnabled={false}
-        mixedContentMode="compatibility"
-        allowsInlineMediaPlayback={true}
-        originWhitelist={['*']}
-        onError={(syntheticEvent) => {
-          const { nativeEvent } = syntheticEvent;
-          console.error('WebView error:', nativeEvent);
-          Alert.alert('Harita Hatası', 'Harita yüklenirken bir hata oluştu. Lütfen tekrar deneyin.');
-        }}
-        onHttpError={(syntheticEvent) => {
-          const { nativeEvent } = syntheticEvent;
-          console.error('WebView HTTP error:', nativeEvent);
-        }}
-        onLoadEnd={() => {
-          console.log('🗺️ Map loaded successfully');
-        }}
-        injectedJavaScript={`
-          const meta = document.createElement('meta');
-          meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0');
-          meta.setAttribute('name', 'viewport');
-          document.getElementsByTagName('head')[0].appendChild(meta);
-          
-          // Forward console messages to React Native
-          const consoleLog = console.log;
-          const consoleError = console.error;
-          const consoleWarn = console.warn;
-          
-          console.log = function() {
-            window.ReactNativeWebView.postMessage(JSON.stringify({type: 'console.log', data: Array.from(arguments)}));
-            consoleLog.apply(console, arguments);
-          };
-          
-          console.error = function() {
-            window.ReactNativeWebView.postMessage(JSON.stringify({type: 'console.error', data: Array.from(arguments)}));
-            consoleError.apply(console, arguments);
-          };
-          
-          console.warn = function() {
-            window.ReactNativeWebView.postMessage(JSON.stringify({type: 'console.warn', data: Array.from(arguments)}));
-            consoleWarn.apply(console, arguments);
-          };
-          
-          true;
-        `}
-      />
+
+      <View style={styles.mapContainer}>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#16a34a" />
+            <Text style={styles.loadingText}>Harita yükleniyor...</Text>
+          </View>
+        ) : (
+          <WebView
+            source={{ html: generateMapHTML() }}
+            style={styles.webView}
+            onMessage={handleWebViewMessage}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            scalesPageToFit={true}
+            scrollEnabled={false}
+            mixedContentMode="compatibility"
+            allowsInlineMediaPlayback={true}
+            originWhitelist={['*']}
+            onError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.error('WebView error:', nativeEvent);
+            }}
+            renderLoading={() => (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#16a34a" />
+              </View>
+            )}
+          />
+        )}
+      </View>
     </SafeAreaView>
   );
 };
@@ -363,7 +346,7 @@ const MapScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f9fafb',
   },
   header: {
     flexDirection: 'row',
@@ -391,33 +374,29 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#111827',
+    flex: 1,
+    textAlign: 'center',
   },
-  infoButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f3f4f6',
-    justifyContent: 'center',
-    alignItems: 'center',
+  locationText: {
+    fontSize: 14,
+    color: '#6b7280',
   },
-  infoIcon: {
-    fontSize: 16,
+  mapContainer: {
+    flex: 1,
   },
-  placeholder: {
-    width: 40,
+  webView: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f9fafb',
   },
   loadingText: {
-    marginTop: 16,
+    marginTop: 12,
     fontSize: 16,
     color: '#6b7280',
-  },
-  webView: {
-    flex: 1,
   },
 });
 

@@ -6,6 +6,54 @@ class ApiService {
     this.baseURL = API_BASE_URL;
   }
 
+  // Fix Turkish character encoding issues from backend
+  fixTurkishChars(text) {
+    if (typeof text !== 'string') return text;
+    
+    const charMap = {
+      'Ã¼': 'ü', 'Ã': 'ü',
+      'Ã§': 'ç', 'Â§': 'ç',
+      'Ä±': 'ı', 'Â±': 'ı', 
+      'Ä°': 'İ', 'Â°': 'İ',
+      'Ã¶': 'ö', 'Ã¶': 'ö',
+      'ÅŸ': 'ş', 'Å': 'ş',
+      'Äž': 'ğ', 'Â®': 'ğ',
+      'Ã¢': 'â', 'Ã¢': 'â',
+      'Ã‡': 'Ç', 'Ã‡': 'Ç',
+      'Ãœ': 'Ü', 'Ãœ': 'Ü',
+      'Ã–': 'Ö', 'Ã–': 'Ö',
+      'ÅŽ': 'Ş', 'ÅŽ': 'Ş',
+      'Äž': 'Ğ', 'Äž': 'Ğ',
+      'T�rk': 'Türk',
+      'Mutfa��': 'Mutfağı',
+      'Mutfa�': 'Mutfağı',
+      '�': 'ü'
+    };
+
+    let fixed = text;
+    Object.keys(charMap).forEach(key => {
+      fixed = fixed.replace(new RegExp(key, 'g'), charMap[key]);
+    });
+
+    return fixed;
+  }
+
+  // Fix Turkish characters in object recursively
+  fixTurkishInObject(obj) {
+    if (typeof obj === 'string') {
+      return this.fixTurkishChars(obj);
+    } else if (Array.isArray(obj)) {
+      return obj.map(item => this.fixTurkishInObject(item));
+    } else if (obj && typeof obj === 'object') {
+      const fixed = {};
+      Object.keys(obj).forEach(key => {
+        fixed[key] = this.fixTurkishInObject(obj[key]);
+      });
+      return fixed;
+    }
+    return obj;
+  }
+
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     
@@ -24,15 +72,18 @@ class ApiService {
       const response = await fetch(url, config);
       const data = await response.json();
       
+      // Fix Turkish character encoding in response data
+      const fixedData = this.fixTurkishInObject(data);
+      
       console.log(`📨 Response status: ${response.status}`);
-      console.log('📥 Response data:', data);
+      console.log('📥 Response data (fixed):', fixedData);
       
       if (!response.ok) {
-        console.error(`❌ API Error ${response.status}:`, data);
-        throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+        console.error(`❌ API Error ${response.status}:`, fixedData);
+        throw new Error(fixedData.message || fixedData.error || `HTTP error! status: ${response.status}`);
       }
 
-      return data;
+      return fixedData;
     } catch (error) {
       console.error('🚨 API Request Error:', error);
       console.error('🔍 Error details:', {

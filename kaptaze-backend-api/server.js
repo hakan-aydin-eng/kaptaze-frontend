@@ -74,9 +74,26 @@ const limiter = rateLimit({
 });
 // app.use(limiter);  // TEMPORARILY DISABLED FOR TESTING
 
-// Body Parser Middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body Parser Middleware with UTF-8 support
+app.use(express.json({ 
+    limit: '10mb',
+    type: 'application/json',
+    verify: (req, res, buf) => {
+        req.rawBody = buf.toString('utf8');
+    }
+}));
+app.use(express.urlencoded({ 
+    extended: true, 
+    limit: '10mb',
+    parameterLimit: 1000,
+    type: 'application/x-www-form-urlencoded'
+}));
+
+// UTF-8 Encoding for Turkish Characters
+app.use((req, res, next) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    next();
+});
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));

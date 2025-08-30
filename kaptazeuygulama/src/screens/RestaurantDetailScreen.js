@@ -96,10 +96,19 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 
   const getRestaurantIcon = (category) => {
     const icons = {
-      'Pizza & Fast Food': '🍕',
+      'Türk Mutfağı': '🇹🇷',
+      'Yerel Lezzetler': '🏠',
+      'Unlu Mamüller': '🍞',
+      'Tatlı': '🧁',
+      'Manav': '🥬',
+      'Çiçek': '🌸',
+      'Uzakdoğu Mutfağı': '🥢',
+      'Vegan': '🌱',
+      'Vejeteryan': '🥗',
       'Fast Food': '🍔',
+      // Legacy support for old categories
+      'Pizza & Fast Food': '🍕',
       'Kahve & Atıştırmalık': '☕',
-      'Türk Mutfağı': '🍽️',
       'Vegan & Sağlıklı': '🥗',
       'Özel Kahve': '☕'
     };
