@@ -635,16 +635,6 @@ const MainScreen = ({ navigation }) => {
             </View>
             
             <View style={styles.headerButtons}>
-              <TouchableOpacity 
-                style={styles.headerButton}
-                onPress={() => navigation.navigate('Map', {
-                  userLocation,
-                  userCoordinates,
-                  selectedDistance
-                })}
-              >
-                <Text style={styles.headerButtonIcon}>🗺️</Text>
-              </TouchableOpacity>
               <TouchableOpacity style={styles.headerButton}>
                 <Text style={styles.headerButtonIcon}>🔔</Text>
               </TouchableOpacity>
@@ -986,10 +976,14 @@ const MainScreen = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.navItem}
-          onPress={() => navigation.navigate('Nearby')}
+          onPress={() => navigation.navigate('Map', {
+            userLocation,
+            userCoordinates,
+            selectedDistance
+          })}
         >
-          <Text style={styles.navIcon}>📍</Text>
-          <Text style={styles.navLabel}>Yakınımdaki</Text>
+          <Text style={styles.navIcon}>🗺️</Text>
+          <Text style={styles.navLabel}>Harita</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.navItem}
