@@ -69,7 +69,7 @@ const MainScreen = ({ navigation }) => {
   const [locationPermissionStatus, setLocationPermissionStatus] = useState(null);
   const [userCoordinates, setUserCoordinates] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDistance, setSelectedDistance] = useState(10);
+  const [selectedDistance, setSelectedDistance] = useState(25);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [categories, setCategories] = useState([]);
   
@@ -146,9 +146,9 @@ const MainScreen = ({ navigation }) => {
       
       if (reverseGeocode.length > 0) {
         const address = reverseGeocode[0];
-        const cityName = address.city || address.district || address.subregion || 'Konum Tespit Edildi';
-        setUserLocation(cityName);
-        console.log('🏙️ User city:', cityName);
+        const districtName = address.district || address.subregion || address.city || 'Konum Tespit Edildi';
+        setUserLocation(districtName);
+        console.log('🏙️ User district:', districtName);
       } else {
         setUserLocation('Konum Tespit Edildi');
       }
@@ -166,6 +166,39 @@ const MainScreen = ({ navigation }) => {
       userCoordinates,
       selectedDistance
     });
+  };
+
+  const applyDistanceFilter = () => {
+    console.log('📏 Applying distance filter:', selectedDistance, 'km');
+    
+    if (!userCoordinates) {
+      console.log('⚠️ No user coordinates available for distance filtering');
+      return;
+    }
+    
+    // Filter restaurants by distance
+    const filteredByDistance = restaurants.filter(restaurant => {
+      if (!restaurant.location || !restaurant.location.coordinates) {
+        return true; // Keep restaurants without coordinates
+      }
+      
+      const [lon, lat] = restaurant.location.coordinates;
+      const distance = calculateDistance(
+        userCoordinates.latitude,
+        userCoordinates.longitude,
+        lat,
+        lon
+      );
+      
+      return distance <= selectedDistance;
+    });
+    
+    console.log(`✅ Filtered ${restaurants.length} restaurants to ${filteredByDistance.length} within ${selectedDistance}km`);
+    
+    // Update displayed restaurants
+    setDisplayedRestaurants(filteredByDistance.slice(0, ITEMS_PER_PAGE));
+    setHasMore(filteredByDistance.length > ITEMS_PER_PAGE);
+    setCurrentPage(1);
   };
 
   const loadRestaurants = async () => {
@@ -594,9 +627,9 @@ const MainScreen = ({ navigation }) => {
             <View style={styles.locationContainer}>
               <Text style={styles.locationIcon}>📍</Text>
               <View>
-                <Text style={styles.locationText}>{userLocation}</Text>
-                <TouchableOpacity onPress={handleLocationChange}>
-                  <Text style={styles.changeLocationText}>Konum değiştir</Text>
+                <TouchableOpacity onPress={() => setShowLocationModal(true)}>
+                  <Text style={styles.locationText}>{userLocation}</Text>
+                  <Text style={styles.radiusText}>{selectedDistance} km çapı</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -853,56 +886,75 @@ const MainScreen = ({ navigation }) => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Konum Seç</Text>
+            <Text style={styles.modalTitle}>Konum ve Çap Ayarı</Text>
             <Text style={styles.modalSubtitle}>
-              {userLocation} konumundaki teklifleri görüyorsunuz.
+              {userLocation} konumundaki restoranları görüyorsunuz
             </Text>
             
             <Text style={styles.distanceLabel}>
-              Kaç km mesafedeki teklifleri görmek istersin?
+              Arama Çapı: {selectedDistance} km
             </Text>
             
             <View style={styles.sliderContainer}>
-              <Text style={styles.sliderValue}>{selectedDistance} km</Text>
-              
-              {/* Distance Options */}
-              <View style={styles.distanceOptions}>
-                {[0, 5, 10, 15, 20].map((distance) => (
-                  <TouchableOpacity
-                    key={distance}
-                    style={[
-                      styles.distanceOption,
-                      selectedDistance === distance && styles.distanceOptionActive
-                    ]}
-                    onPress={() => setSelectedDistance(distance)}
-                  >
-                    <Text style={[
-                      styles.distanceOptionText,
-                      selectedDistance === distance && styles.distanceOptionTextActive
-                    ]}>
-                      {distance}km
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              {/* Distance Slider */}
+              <View style={styles.sliderTrack}>
+                <View style={styles.sliderProgress} />
+                <TouchableOpacity 
+                  style={[styles.sliderThumb, { left: `${((selectedDistance - 1) / 24) * 100}%` }]}
+                  onPanGesture={true}
+                />
               </View>
               
-              {/* Manual Adjustment */}
-              <View style={styles.manualAdjustment}>
+              {/* Distance Controls */}
+              <View style={styles.distanceControls}>
                 <TouchableOpacity
                   style={styles.adjustButton}
-                  onPress={() => setSelectedDistance(Math.max(0, selectedDistance - 1))}
+                  onPress={() => setSelectedDistance(Math.max(1, selectedDistance - 1))}
                 >
                   <Text style={styles.adjustButtonText}>-</Text>
                 </TouchableOpacity>
                 <Text style={styles.currentDistance}>{selectedDistance} km</Text>
                 <TouchableOpacity
                   style={styles.adjustButton}
-                  onPress={() => setSelectedDistance(Math.min(20, selectedDistance + 1))}
+                  onPress={() => setSelectedDistance(Math.min(25, selectedDistance + 1))}
                 >
                   <Text style={styles.adjustButtonText}>+</Text>
                 </TouchableOpacity>
               </View>
+              
+              {/* Quick Distance Options */}
+              <View style={styles.quickOptions}>
+                {[1, 5, 10, 15, 25].map((distance) => (
+                  <TouchableOpacity
+                    key={distance}
+                    style={[
+                      styles.quickOption,
+                      selectedDistance === distance && styles.quickOptionActive
+                    ]}
+                    onPress={() => setSelectedDistance(distance)}
+                  >
+                    <Text style={[
+                      styles.quickOptionText,
+                      selectedDistance === distance && styles.quickOptionTextActive
+                    ]}>
+                      {distance}km
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
+            
+            {/* Use My Location Button */}
+            <TouchableOpacity 
+              style={styles.useLocationButton}
+              onPress={async () => {
+                await loadUserLocation();
+                setShowLocationModal(false);
+              }}
+            >
+              <Text style={styles.useLocationIcon}>📍</Text>
+              <Text style={styles.useLocationText}>Konumumu Kullan</Text>
+            </TouchableOpacity>
             
             <View style={styles.modalButtons}>
               <TouchableOpacity 
@@ -915,7 +967,8 @@ const MainScreen = ({ navigation }) => {
                 style={styles.modalButtonConfirm}
                 onPress={() => {
                   setShowLocationModal(false);
-                  // Refresh restaurants with new distance
+                  // Apply distance filter to restaurants
+                  applyDistanceFilter();
                 }}
               >
                 <Text style={styles.modalButtonConfirmText}>Uygula</Text>
@@ -1006,6 +1059,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
+    textDecorationLine: 'underline',
+  },
+  radiusText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
   },
   changeLocationText: {
     fontSize: 12,
@@ -1682,36 +1741,104 @@ const styles = StyleSheet.create({
   sliderContainer: {
     marginBottom: 24,
   },
-  sliderValue: {
+  sliderTrack: {
+    height: 6,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 3,
+    position: 'relative',
+    marginBottom: 16,
+  },
+  sliderProgress: {
+    height: '100%',
+    backgroundColor: '#16a34a',
+    borderRadius: 3,
+    width: '60%',
+  },
+  sliderThumb: {
+    position: 'absolute',
+    top: -8,
+    width: 22,
+    height: 22,
+    backgroundColor: '#16a34a',
+    borderRadius: 11,
+    borderWidth: 3,
+    borderColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  distanceControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    gap: 20,
+  },
+  currentDistance: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#16a34a',
+    minWidth: 60,
     textAlign: 'center',
-    marginBottom: 16,
   },
-  distanceOptions: {
+  adjustButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  adjustButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#16a34a',
+  },
+  quickOptions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
     gap: 8,
   },
-  distanceOption: {
+  quickOption: {
     flex: 1,
     backgroundColor: '#f3f4f6',
-    padding: 12,
+    padding: 10,
     borderRadius: 8,
     alignItems: 'center',
   },
-  distanceOptionActive: {
+  quickOptionActive: {
     backgroundColor: '#16a34a',
   },
-  distanceOptionText: {
-    fontSize: 14,
+  quickOptionText: {
+    fontSize: 12,
     fontWeight: '600',
     color: '#6b7280',
   },
-  distanceOptionTextActive: {
+  quickOptionTextActive: {
     color: '#ffffff',
+  },
+  useLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3b82f6',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginBottom: 24,
+    gap: 8,
+  },
+  useLocationIcon: {
+    fontSize: 16,
+  },
+  useLocationText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   manualAdjustment: {
     flexDirection: 'row',
