@@ -45,8 +45,8 @@ const PurchaseScreen = ({ route, navigation }) => {
               const orderData = {
                 customer: {
                   id: currentUser?.id || 'guest_' + Date.now(),
-                  name: 'Paket Siparişi',
-                  phone: 'Mobil Uygulama',
+                  name: currentUser?.name || 'Mobil Kullanıcı',
+                  phone: currentUser?.phone || '05XX XXX XX XX',
                   address: 'Restorana gelip alacak'
                 },
                 restaurantId: restaurant._id || restaurant.id,
