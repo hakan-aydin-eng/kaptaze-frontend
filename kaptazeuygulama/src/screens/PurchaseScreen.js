@@ -4,68 +4,96 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
+  Platform,
+  TextInput,
 } from 'react-native';
 import { useUserData } from '../context/UserDataContext';
 
 const PurchaseScreen = ({ route, navigation }) => {
   const { restaurant, package: selectedPackage, quantity } = route.params;
   const { addOrder, currentUser } = useUserData();
-  const [paymentMethod, setPaymentMethod] = useState('credit_card');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [notes, setNotes] = useState('');
 
   const totalPrice = selectedPackage.salePrice * quantity;
   const originalTotal = selectedPackage.originalPrice * quantity;
   const totalSavings = originalTotal - totalPrice;
 
   const paymentMethods = [
-    { id: 'credit_card', name: 'Kredi Kartı', icon: '💳' },
-    { id: 'debit_card', name: 'Banka Kartı', icon: '💳' },
-    { id: 'apple_pay', name: 'Apple Pay', icon: '📱' },
-    { id: 'google_pay', name: 'Google Pay', icon: '📱' },
+    { id: 'cash', name: 'Nakit', icon: '💵' },
+    { id: 'card', name: 'Kredi/Banka Kartı', icon: '💳' },
+    { id: 'online', name: 'Online Ödeme', icon: '📱' },
   ];
 
   const confirmPurchase = async () => {
-    if (!currentUser) {
-      Alert.alert(
-        'Giriş Gerekli',
-        'Sipariş vermek için giriş yapmalısınız.',
-        [
-          { text: 'İptal', style: 'cancel' },
-          { 
-            text: 'Giriş Yap', 
-            onPress: () => navigation.navigate('Login')
-          }
-        ]
-      );
-      return;
-    }
-
     Alert.alert(
-      'Siparişi Onayla',
-      `${restaurant.name}'dan ${selectedPackage.name} (${quantity} adet) siparişinizi onaylıyor musunuz?\n\nToplam: ₺${totalPrice}`,
+      'Rezervasyonu Onayla',
+      `${restaurant.name}'dan ${selectedPackage.name} (${quantity} adet) rezerve etmek istiyorsunuz?\n\nToplam: ₺${totalPrice}\n\nRezerve ettiğiniz paketi restorana giderek teslim alabilirsiniz.`,
       [
         { text: 'İptal', style: 'cancel' },
         { 
-          text: 'Onayla', 
+          text: 'Rezerve Et', 
           onPress: async () => {
             try {
+              // Debug logging
+              console.log('Restaurant data:', restaurant);
+              console.log('Package data:', selectedPackage);
+              
+              // Prepare order data for backend
               const orderData = {
-                restaurant,
-                package: selectedPackage,
-                quantity,
-                totalPrice,
-                originalPrice: originalTotal,
-                paymentMethod
+                customer: {
+                  id: currentUser?.id || 'guest_' + Date.now(),
+                  name: 'Paket Siparişi',
+                  phone: 'Mobil Uygulama',
+                  address: 'Restorana gelip alacak'
+                },
+                restaurantId: restaurant._id || restaurant.id,
+                items: [{
+                  productId: selectedPackage.id || selectedPackage._id,
+                  name: selectedPackage.name,
+                  price: selectedPackage.salePrice,
+                  quantity: quantity,
+                  total: selectedPackage.salePrice * quantity
+                }],
+                totalAmount: totalPrice,
+                paymentMethod: paymentMethod,
+                notes: notes || 'Mobil uygulama rezervasyonu'
               };
+
+              // Debug order data
+              console.log('Order data being sent:', orderData);
+
+              // Send order to backend
+              const API_URL = 'https://kaptaze-backend-api.onrender.com';
+              const response = await fetch(`${API_URL}/orders/create`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData)
+              });
+
+              console.log('Response status:', response.status);
+              const result = await response.json();
+              console.log('Response data:', result);
               
-              const newOrder = await addOrder(orderData);
-              
-              if (newOrder) {
+              if (response.ok && result.success) {
+                // Also save to local context
+                await addOrder({
+                  restaurant,
+                  package: selectedPackage,
+                  quantity,
+                  totalPrice,
+                  originalPrice: originalTotal,
+                  paymentMethod,
+                  orderId: result.orderId
+                });
+
                 Alert.alert(
                   'Başarılı! 🎉',
-                  `Siparişiniz alındı. Teslim alma kodunuz: ${newOrder.pickupCode}\n\nRestorana giderek bu kodla paketinizi teslim alabilirsiniz.`,
+                  `Rezervasyonunuz alındı. Rezervasyon No: #${result.orderId.slice(-6)}\n\nPaketinizi ${restaurant.name} restoranına giderek teslim alabilirsiniz.\n\nTeslim saatleri: 18:00 - 21:00`,
                   [
                     { 
                       text: 'Siparişlerim', 
@@ -78,11 +106,11 @@ const PurchaseScreen = ({ route, navigation }) => {
                   ]
                 );
               } else {
-                Alert.alert('Hata', 'Sipariş oluşturulurken bir hata oluştu.');
+                Alert.alert('Hata', result.error || 'Rezervasyon oluşturulurken bir hata oluştu.');
               }
             } catch (error) {
               console.error('Order creation error:', error);
-              Alert.alert('Hata', 'Sipariş oluşturulurken bir hata oluştu.');
+              Alert.alert('Hata', 'Rezervasyon oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
             }
           }
         }
@@ -91,7 +119,7 @@ const PurchaseScreen = ({ route, navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity 
@@ -167,17 +195,20 @@ const PurchaseScreen = ({ route, navigation }) => {
               <Text style={styles.pickupIcon}>📍</Text>
               <View>
                 <Text style={styles.pickupLabel}>Adres</Text>
-                <Text style={styles.pickupValue}>{restaurant.location?.address}</Text>
+                <Text style={styles.pickupValue}>
+                  {restaurant.address 
+                    ? (typeof restaurant.address === 'object' 
+                        ? `${restaurant.address.street || ''} ${restaurant.address.district || ''} ${restaurant.address.city || ''}`.trim()
+                        : restaurant.address)
+                    : restaurant.location?.address
+                      ? (typeof restaurant.location.address === 'object'
+                          ? `${restaurant.location.address.street || ''} ${restaurant.location.address.district || ''} ${restaurant.location.address.city || ''}`.trim()
+                          : restaurant.location.address)
+                      : 'Restoran adresi belirtilmemiş'}
+                </Text>
               </View>
             </View>
             
-            <View style={styles.pickupRow}>
-              <Text style={styles.pickupIcon}>📞</Text>
-              <View>
-                <Text style={styles.pickupLabel}>Telefon</Text>
-                <Text style={styles.pickupValue}>{restaurant.phone}</Text>
-              </View>
-            </View>
           </View>
           
           <View style={styles.importantNote}>
@@ -186,6 +217,20 @@ const PurchaseScreen = ({ route, navigation }) => {
               Teslim alırken kimlik belgesi götürmeyi unutmayın!
             </Text>
           </View>
+        </View>
+
+        {/* Rezervasyon Notu */}
+        <View style={styles.notesSection}>
+          <Text style={styles.sectionTitle}>📝 Rezervasyon Notu (Opsiyonel)</Text>
+          
+          <TextInput
+            style={[styles.input, styles.notesInput]}
+            placeholder="Özel bir isteğiniz var mı?"
+            value={notes}
+            onChangeText={setNotes}
+            multiline
+            numberOfLines={2}
+          />
         </View>
 
         {/* Ödeme Yöntemi */}
@@ -241,10 +286,10 @@ const PurchaseScreen = ({ route, navigation }) => {
           style={styles.purchaseButton}
           onPress={confirmPurchase}
         >
-          <Text style={styles.purchaseButtonText}>Siparişi Tamamla</Text>
+          <Text style={styles.purchaseButtonText}>🎯 Rezerve Et</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -258,7 +303,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: Platform.OS === 'ios' ? 50 : 16,
+    paddingBottom: 16,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
@@ -449,6 +495,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#92400e',
     flex: 1,
+  },
+  notesSection: {
+    backgroundColor: '#ffffff',
+    padding: 16,
+    marginTop: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#111827',
+    marginBottom: 12,
+    backgroundColor: '#f9fafb',
+  },
+  addressInput: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  notesInput: {
+    minHeight: 60,
+    textAlignVertical: 'top',
   },
   paymentSection: {
     backgroundColor: '#ffffff',
