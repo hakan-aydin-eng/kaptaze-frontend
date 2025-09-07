@@ -172,7 +172,8 @@ async function loadOrders() {
 function updateOrdersUI(orders) {
     const ordersSection = document.getElementById('orders-content');
     if (!ordersSection) {
-        console.log('Orders section not found');
+        console.log('Orders section not found - will retry in 1 second');
+        setTimeout(() => updateOrdersUI(orders), 1000);
         return;
     }
     
@@ -326,14 +327,18 @@ function showToast(message, type = 'info') {
 
 // Global functions
 window.updateOrderStatus = updateOrderStatus;
+window.loadRestaurantOrders = loadOrders;
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    if (window.location.pathname.includes('restaurant-panel')) {
+    if (window.location.pathname.includes('restaurant-panel') || window.location.pathname.includes('restaurant')) {
+        console.log('🍽️ Initializing orders system for path:', window.location.pathname);
         initializeOrdersSystem();
         
         // Refresh orders every 30 seconds
         setInterval(loadOrders, 30000);
+    } else {
+        console.log('🍽️ Orders system not initialized - path:', window.location.pathname);
     }
 });
 
