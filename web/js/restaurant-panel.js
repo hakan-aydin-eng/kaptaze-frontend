@@ -108,6 +108,9 @@ class RestaurantPanel {
                 throw new Error('Backend service not available after waiting');
             }
             
+            // TEMPORARY: Force load papi culo data for testing
+            console.log('🧪 TEST MODE: Loading papi culo data directly...');
+            
             const response = await window.backendService.getRestaurantProfile();
             
             if (response.success && response.data) {
@@ -427,6 +430,11 @@ class RestaurantPanel {
         
         const profile = this.restaurantProfile;
         console.log('🔄 Updating profile display with:', profile);
+        console.log('🌐 Website data:', {
+            socialMedia: profile.socialMedia,
+            website: profile.website,
+            socialMediaWebsite: profile.socialMedia?.website
+        });
         
         // Basic info
         this.updateElement('profile-restaurant-name', profile.businessName);
