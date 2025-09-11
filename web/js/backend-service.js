@@ -53,13 +53,17 @@ class BackendService {
         };
 
         // Use instance token, sessionStorage, or localStorage fallback
-        const token = this.authToken || sessionStorage.getItem('kaptaze_session_token') || localStorage.getItem('kaptaze_token');
+        const token = this.authToken || 
+                     sessionStorage.getItem('kaptaze_session_token') || 
+                     localStorage.getItem('kaptaze_auth_token') ||  // Restaurant panel uses this
+                     localStorage.getItem('kaptaze_token');
         console.log('🔑 TOKEN DEBUG:', {
             instanceToken: !!this.authToken,
             sessionToken: !!sessionStorage.getItem('kaptaze_session_token'), 
+            authToken: !!localStorage.getItem('kaptaze_auth_token'),
             localToken: !!localStorage.getItem('kaptaze_token'),
             finalToken: !!token,
-            sessionStorage: sessionStorage.getItem('kaptaze_session_token')?.substring(0, 20) + '...'
+            tokenPreview: token?.substring(0, 20) + '...'
         });
         if (token) {
             defaultOptions.headers['Authorization'] = `Bearer ${token}`;
