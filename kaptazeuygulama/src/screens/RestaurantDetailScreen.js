@@ -10,10 +10,11 @@ import {
   Linking,
   Alert,
   TextInput,
+  Platform,
 } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useUserData } from '../context/UserDataContext';
 import apiService from '../services/apiService';
-import config from '../config/env';
 
 const RestaurantDetailScreen = ({ route, navigation }) => {
   const { restaurant: initialRestaurant } = route.params;
@@ -22,38 +23,6 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [mapError, setMapError] = useState(false);
-  const [mapLoaded, setMapLoaded] = useState(false);
-
-  // Google Maps API key from environment config
-  const GOOGLE_MAPS_API_KEY = config.GOOGLE_MAPS_API_KEY;
-  
-  const getMapUrl = (coordinates, fallback = false) => {
-    if (!coordinates || coordinates.length < 2) return '';
-    
-    const [lng, lat] = coordinates;
-    console.log('🗺️ Map coordinates:', { lat, lng, fallback });
-    
-    if (fallback || mapError) {
-      // Multiple fallback options for reliability
-      const fallbackOptions = [
-        // Option 1: ArcGIS World Street Map
-        `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/export?bbox=${lng-0.005},${lat-0.005},${lng+0.005},${lat+0.005}&bboxSR=4326&imageSR=4326&size=400,200&format=png&f=image`,
-        // Option 2: OpenStreetMap tile-based
-        `https://static-maps.yandex.ru/1.x/?lang=en_US&ll=${lng},${lat}&z=16&size=400,200&l=map&pt=${lng},${lat},pm2rdm`
-      ];
-      
-      const fallbackUrl = fallbackOptions[0];
-      console.log('🔄 Using reliable fallback map:', fallbackUrl);
-      return fallbackUrl;
-    }
-    
-    // Primary: Google Static Maps API
-    const googleMapsUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=16&size=400x200&maptype=roadmap&markers=color:red%7Clabel:R%7C${lat},${lng}&style=feature:poi%7Cvisibility:simplified&key=${GOOGLE_MAPS_API_KEY}`;
-    
-    console.log('🗺️ Using Google Maps URL:', googleMapsUrl);
-    return googleMapsUrl;
-  };
 
   useEffect(() => {
     loadRestaurantDetails();
@@ -123,12 +92,16 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
   };
 
   const openWebsite = () => {
-    if (restaurant.website) {
-      Linking.openURL(restaurant.website);
+    // Check both website field and socialMedia.website
+    const websiteUrl = restaurant.website || restaurant.socialMedia?.website;
+    
+    if (websiteUrl) {
+      Linking.openURL(websiteUrl);
     } else {
       Alert.alert('Bilgi', 'Bu restoran için website bilgisi bulunmuyor.');
     }
   };
+
 
   const getDirections = () => {
     if (restaurant.location?.coordinates) {
@@ -274,35 +247,57 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                   '18:00-21:00'}
               </Text>
             </View>
-            <Text style={styles.distanceText}>{restaurant.distance}km</Text>
+            <Text style={styles.distanceText}>📍 {restaurant.distance || '2.5'}km</Text>
           </View>
 
-          <Text style={styles.description}>
-            {restaurant.description}
-          </Text>
         </View>
 
-        {/* Ne alacaksınız? - Admin Alanı */}
+        {/* Ne alacaksınız? - İşletme Açıklaması */}
         <View style={styles.adminSection}>
           <Text style={styles.adminTitle}>🍽️ Ne alacaksınız?</Text>
           <View style={styles.adminNoteContainer}>
             <Text style={styles.adminNote}>
-              {restaurant.adminNote || 'Restoran sahibi henüz ürün açıklaması eklememiş.'}
+              {restaurant.description || 'Restoran sahibi henüz işletme açıklaması eklememiş.'}
             </Text>
           </View>
+          
+          {/* Paket Fiyatları ve Rezervasyon */}
+          {restaurant.packages && restaurant.packages.length > 0 && (
+            <View style={styles.packageContainer}>
+              {restaurant.packages.map((pkg, index) => (
+                <View key={pkg._id || index} style={styles.packageItem}>
+                  <View style={styles.packageInfo}>
+                    <Text style={styles.packageName}>
+                      {pkg.name || `Paket ${index + 1}`}
+                    </Text>
+                    {pkg.description && (
+                      <Text style={styles.packageDescription}>
+                        {pkg.description}
+                      </Text>
+                    )}
+                    <View style={styles.packagePricing}>
+                      <Text style={styles.packageOriginalPrice}>₺{pkg.originalPrice}</Text>
+                      <Text style={styles.packageSalePrice}>₺{pkg.salePrice}</Text>
+                      <View style={styles.packageDiscountBadge}>
+                        <Text style={styles.packageDiscountText}>%{pkg.discount} İndirim</Text>
+                      </View>
+                    </View>
+                  </View>
+                  
+                  <TouchableOpacity 
+                    style={styles.packageReserveButton}
+                    onPress={() => {
+                      setSelectedPackage(pkg);
+                      goToPurchase();
+                    }}
+                  >
+                    <Text style={styles.packageReserveText}>Rezerve Et</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
-
-        {/* Website */}
-        <View style={styles.websiteSection}>
-          <Text style={styles.sectionTitle}>🌐 Website</Text>
-          <TouchableOpacity style={styles.websiteButton} onPress={openWebsite}>
-            <Text style={styles.websiteButtonText}>
-              {restaurant.website || 'Website bilgisi yok'}
-            </Text>
-            <Text style={styles.websiteArrow}>→</Text>
-          </TouchableOpacity>
-        </View>
-
 
         {/* Harita Konumu */}
         <View style={styles.mapSection}>
@@ -310,46 +305,41 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           <View style={styles.mapContainer}>
             {restaurant.location?.coordinates ? (
               <View style={styles.mapViewContainer}>
-                <View style={styles.staticMap}>
-                  <Image
-                    source={{
-                      uri: getMapUrl(restaurant.location.coordinates)
+                <MapView
+                  provider={PROVIDER_GOOGLE}
+                  style={styles.mapImage}
+                  initialRegion={{
+                    latitude: restaurant.location.coordinates[1],
+                    longitude: restaurant.location.coordinates[0],
+                    latitudeDelta: 0.005,
+                    longitudeDelta: 0.005,
+                  }}
+                  region={{
+                    latitude: restaurant.location.coordinates[1],
+                    longitude: restaurant.location.coordinates[0],
+                    latitudeDelta: 0.005,
+                    longitudeDelta: 0.005,
+                  }}
+                  scrollEnabled={false}
+                  zoomEnabled={false}
+                  rotateEnabled={false}
+                  pitchEnabled={false}
+                  onError={(e) => console.error('Restaurant Map Error:', e)}
+                  onMapReady={() => console.log('✅ Restaurant map is ready')}
+                  loadingEnabled={true}
+                  loadingIndicatorColor="#16a34a"
+                  loadingBackgroundColor="#f8fafc"
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: restaurant.location.coordinates[1],
+                      longitude: restaurant.location.coordinates[0],
                     }}
-                    style={styles.mapImage}
-                    onLoad={() => {
-                      console.log('✅ Google Maps loaded successfully');
-                      setMapError(false);
-                      setMapLoaded(true);
-                    }}
-                    onError={(error) => {
-                      console.log('❌ Google Maps failed - API key not authorized for Static Maps API');
-                      console.log('💡 Solution: Go to Google Cloud Console → APIs & Services → Credentials');
-                      console.log('💡 Edit API key → API restrictions → Add "Maps Static API"');
-                      setMapError(true);
-                    }}
+                    title={restaurant.name}
+                    description={restaurant.category}
+                    pinColor="#16a34a"
                   />
-                  {mapError && (
-                    <Image
-                      source={{
-                        uri: getMapUrl(restaurant.location.coordinates, true)
-                      }}
-                      style={styles.mapImage}
-                      onLoad={() => {
-                        console.log('✅ Fallback map loaded');
-                        setMapLoaded(true);
-                      }}
-                      onError={() => console.log('❌ All maps failed')}
-                    />
-                  )}
-                  
-                  {/* Loading overlay - only show if no map loaded yet */}
-                  {!mapLoaded && (
-                    <View style={styles.mapFallbackOverlay}>
-                      <Text style={styles.mapFallbackText}>🗺️</Text>
-                      <Text style={styles.mapFallbackSubtext}>Harita Yükleniyor...</Text>
-                    </View>
-                  )}
-                </View>
+                </MapView>
               </View>
             ) : (
               <TouchableOpacity style={styles.mapPlaceholder} onPress={openMap}>
@@ -369,62 +359,17 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           </View>
         </View>
 
-        {/* Ürün Envanteri */}
-        {restaurant.packages && restaurant.packages.length > 0 && (
-          <View style={styles.inventorySection}>
-            
-            {restaurant.packages.map((pkg, index) => (
-              <View key={pkg._id || index} style={[
-                styles.inventoryItem,
-                selectedPackage?._id === pkg._id && styles.inventoryItemSelected
-              ]}>
-                <TouchableOpacity 
-                  style={styles.inventoryLeft}
-                  onPress={() => setSelectedPackage(pkg)}
-                >
-                  <Text style={styles.inventoryName}>
-                    {pkg.name || `Paket ${index + 1}`}
-                  </Text>
-                  <Text style={styles.inventoryDescription}>
-                    {pkg.description}
-                  </Text>
-                  <View style={styles.inventoryPricing}>
-                    <Text style={styles.inventoryOriginalPrice}>₺{pkg.originalPrice}</Text>
-                    <Text style={styles.inventorySalePrice}>₺{pkg.salePrice}</Text>
-                    <Text style={styles.inventoryDiscount}>%{pkg.discount} İndirim</Text>
-                  </View>
-                </TouchableOpacity>
-                
-                {selectedPackage?._id === pkg._id && (
-                  <View style={styles.inventoryRight}>
-                    <View style={styles.quantityContainer}>
-                      <TouchableOpacity 
-                        style={styles.quantityButton}
-                        onPress={decreaseQuantity}
-                      >
-                        <Text style={styles.quantityButtonText}>-</Text>
-                      </TouchableOpacity>
-                      <Text style={styles.quantityText}>{quantity}</Text>
-                      <TouchableOpacity 
-                        style={styles.quantityButton}
-                        onPress={increaseQuantity}
-                      >
-                        <Text style={styles.quantityButtonText}>+</Text>
-                      </TouchableOpacity>
-                    </View>
-                    
-                    <TouchableOpacity 
-                      style={styles.reserveButton}
-                      onPress={goToPurchase}
-                    >
-                      <Text style={styles.reserveButtonText}>Rezerve Et</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
+        {/* Website */}
+        <View style={styles.websiteSection}>
+          <Text style={styles.sectionTitle}>🌐 Website</Text>
+          <TouchableOpacity style={styles.websiteButton} onPress={openWebsite}>
+            <Text style={styles.websiteButtonText}>
+              {restaurant.website || restaurant.socialMedia?.website || 'Website bilgisi yok'}
+            </Text>
+            <Text style={styles.websiteArrow}>→</Text>
+          </TouchableOpacity>
+        </View>
+
 
         {/* Empty state for no packages */}
         {(!restaurant.packages || restaurant.packages.length === 0) && (
@@ -675,6 +620,72 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#15803d',
     lineHeight: 20,
+  },
+  packageContainer: {
+    marginTop: 16,
+  },
+  packageItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  packageInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  packageName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  packageDescription: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  packagePricing: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  packageOriginalPrice: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textDecorationLine: 'line-through',
+  },
+  packageSalePrice: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#16a34a',
+  },
+  packageDiscountBadge: {
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  packageDiscountText: {
+    fontSize: 12,
+    color: '#dc2626',
+    fontWeight: '600',
+  },
+  packageReserveButton: {
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  packageReserveText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 14,
   },
   websiteSection: {
     backgroundColor: '#ffffff',

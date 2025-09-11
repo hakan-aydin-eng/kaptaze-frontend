@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   ActivityIndicator,
   TextInput,
@@ -18,9 +17,9 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Slider from '@react-native-community/slider';
 import * as Location from 'expo-location';
 import apiService from '../services/apiService';
-import { antalyaRestaurants, categoryFilters } from '../data/antalyaRestaurants';
 import { useUserData } from '../context/UserDataContext';
 
 const getRestaurantIcon = (category) => {
@@ -84,9 +83,21 @@ const MainScreen = ({ navigation }) => {
   const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
-    loadRestaurants();
-    loadCategories();
-    loadUserLocation();
+    // Load data in parallel for faster loading
+    const loadInitialData = async () => {
+      try {
+        // Show screen immediately while data loads in background
+        await Promise.allSettled([
+          loadRestaurants(),
+          loadCategories(),
+          loadUserLocation()
+        ]);
+      } catch (error) {
+        console.error('❌ Failed to load initial data:', error);
+      }
+    };
+    
+    loadInitialData();
   }, []);
 
   // Load featured restaurants after main restaurants are loaded
@@ -203,7 +214,7 @@ const MainScreen = ({ navigation }) => {
 
   const loadRestaurants = async () => {
     try {
-      setLoading(true);
+      setLoading(false); // Don't block UI
       console.log('📱 Loading restaurants for mobile app...');
       
       // API'den gerçek restaurant verilerini çek
@@ -213,10 +224,20 @@ const MainScreen = ({ navigation }) => {
         const apiResponse = await apiService.getRestaurants();
         console.log('📊 API response:', apiResponse);
         
-        if (apiResponse.success && apiResponse.data.restaurants) {
-          apiRestaurants = apiResponse.data.restaurants;
+        if (apiResponse.success && apiResponse.data) {
+          apiRestaurants = apiResponse.data;
           console.log('✅ API restaurants loaded:', apiRestaurants.length);
           console.log('📋 Restaurant names:', apiRestaurants.map(r => r.name));
+          
+          // Find Papi Culo specifically
+          const papiCulo = apiRestaurants.find(r => r.name?.toLowerCase().includes('papi'));
+          if (papiCulo) {
+            console.log('🔥 Papi Culo RAW from API:', {
+              name: papiCulo.name,
+              packages: papiCulo.packages,
+              packageCount: papiCulo.packages?.length
+            });
+          }
         } else {
           console.log('⚠️ No restaurants in API response');
         }
@@ -226,8 +247,8 @@ const MainScreen = ({ navigation }) => {
       
       
       
-      // Use API data primarily, fallback to demo only if API completely fails
-      const allRestaurants = apiRestaurants.length > 0 ? apiRestaurants : antalyaRestaurants;
+      // Only use API data - no fallback
+      const allRestaurants = apiRestaurants;
       
       // Format API data to match expected structure
       const formattedRestaurants = allRestaurants.map((restaurant, index) => {
@@ -267,30 +288,30 @@ const MainScreen = ({ navigation }) => {
           rating: typeof restaurant.rating === 'object' ? restaurant.rating.average || 4.5 : restaurant.rating || 4.5,
           distance: calculatedDistance,
           distanceValue: parseFloat(calculatedDistance), // For sorting
-          packages: restaurant.packages || [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3 }],
           // Add isNew flag to first few restaurants for demo
           isNew: index < 2,
-        // Add image support for restaurant profile images
-        profileImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl,
-        restaurantImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl || restaurant.image,
-        // Ensure adminNote is available from backend data
-        adminNote: restaurant.adminNote || restaurant.description || 'Restoran sahibi henüz ürün açıklaması eklememiş.',
-        // Add working hours from restaurant profile
-        workingHours: restaurant.workingHours || {
-          weekday: { open: '09:00', close: '22:00' },
-          weekend: { open: '10:00', close: '23:00' }
-        },
-        // 🔄 PHASE 1: Enhanced Package Support for Mobile App
-        packages: restaurant.packages && restaurant.packages.length > 0 ? 
-          restaurant.packages.map(pkg => ({
-            ...pkg,
-            originalPrice: pkg.originalPrice || 50,
-            salePrice: pkg.discountPrice || pkg.salePrice || 25,
-            discount: pkg.discount || Math.round(((pkg.originalPrice - (pkg.discountPrice || pkg.salePrice)) / pkg.originalPrice) * 100),
-            quantity: pkg.availableQuantity || pkg.quantity || 3,
-            isAvailable: pkg.isAvailable !== undefined ? pkg.isAvailable : (pkg.quantity > 0)
-          })) : 
-          [{ originalPrice: 50, salePrice: 25, discount: 50, quantity: 3, isAvailable: true }] // Fallback package
+          // Add image support for restaurant profile images
+          profileImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl,
+          restaurantImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl || restaurant.image,
+          // Use description for business description
+          businessDescription: restaurant.description || '',
+          // Add working hours from restaurant profile
+          workingHours: restaurant.workingHours || {
+            weekday: { open: '09:00', close: '22:00' },
+            weekend: { open: '10:00', close: '23:00' }
+          },
+          // Format packages to match restaurant detail screen - only active packages
+          packages: restaurant.packages && restaurant.packages.length > 0 ? 
+            restaurant.packages
+              .filter(pkg => pkg.status === 'active') // Only active packages
+              .map(pkg => ({
+                ...pkg,
+                originalPrice: pkg.originalPrice || pkg.price * 2,
+                salePrice: pkg.discountedPrice || pkg.price,
+                discount: pkg.originalPrice ? Math.round((1 - (pkg.discountedPrice || pkg.price) / pkg.originalPrice) * 100) : 50,
+                quantity: pkg.quantity || 3,
+                isAvailable: true
+              })) : []
         };
       });
 
@@ -299,10 +320,18 @@ const MainScreen = ({ navigation }) => {
         index === self.findIndex(r => r._id === restaurant._id || r.name === restaurant.name)
       );
       
-      // Sort by distance (nearest first)
+      // Sort: nearest with packages first, then nearest without packages
       const sortedRestaurants = uniqueRestaurants.sort((a, b) => {
+        const aHasPackages = a.packages && a.packages.length > 0;
+        const bHasPackages = b.packages && b.packages.length > 0;
         const distanceA = a.distanceValue || parseFloat(a.distance) || 999;
         const distanceB = b.distanceValue || parseFloat(b.distance) || 999;
+        
+        // First priority: restaurants with packages
+        if (aHasPackages && !bHasPackages) return -1;
+        if (!aHasPackages && bHasPackages) return 1;
+        
+        // Second priority: distance (nearest first)
         return distanceA - distanceB;
       });
       
@@ -310,14 +339,14 @@ const MainScreen = ({ navigation }) => {
       setDisplayedRestaurants(sortedRestaurants.slice(0, ITEMS_PER_PAGE));
       setHasMore(sortedRestaurants.length > ITEMS_PER_PAGE);
       
-      console.log(`📱 Toplam ${uniqueRestaurants.length} restoran yüklendi (${apiRestaurants.length} API + ${antalyaRestaurants.length} fallback)`);
+      console.log(`📱 Toplam ${uniqueRestaurants.length} restoran API'den yüklendi`);
       
     } catch (error) {
       console.error('Restaurant loading error:', error);
-      // Hata durumunda fallback data kullan
-      setRestaurants(antalyaRestaurants);
-      setDisplayedRestaurants(antalyaRestaurants.slice(0, ITEMS_PER_PAGE));
-      setHasMore(antalyaRestaurants.length > ITEMS_PER_PAGE);
+      // No fallback - show empty state
+      setRestaurants([]);
+      setDisplayedRestaurants([]);
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
@@ -344,21 +373,21 @@ const MainScreen = ({ navigation }) => {
         // Fallback to API call if restaurants not loaded yet
         const response = await apiService.getRestaurants();
         
-        if (response.success && response.data.restaurants) {
-          const apiRestaurants = response.data.restaurants;
+        if (response.success && response.data) {
+          const apiRestaurants = response.data;
           setFeaturedRestaurants(apiRestaurants.filter(r => {
             const rating = typeof r.rating === 'object' ? r.rating.average : r.rating;
             return rating >= 4.0;
           }).slice(0, 8));
           console.log('Featured restaurants loaded from API:', apiRestaurants.length);
         } else {
-          setFeaturedRestaurants(antalyaRestaurants.filter(r => r.rating >= 4.0).slice(0, 8));
-          console.log('Featured restaurants loaded from fallback data');
+          setFeaturedRestaurants([]);
+          console.log('No featured restaurants available');
         }
       }
     } catch (error) {
       console.error('Featured restaurants error:', error);
-      setFeaturedRestaurants(antalyaRestaurants.filter(r => r.rating >= 4.0).slice(0, 8));
+      setFeaturedRestaurants([]);
     }
   };
 
@@ -384,7 +413,7 @@ const MainScreen = ({ navigation }) => {
         setCategories(allCategories);
         console.log('✅ Categories loaded:', allCategories);
       } else {
-        // Fallback to default categories
+        // No categories from API - use default categories
         setCategories([
           { id: 'all', name: 'Hepsi', emoji: '🍽️' },
           { id: 'turkish', name: 'Türk Mutfağı', emoji: '🇹🇷' },
@@ -400,7 +429,8 @@ const MainScreen = ({ navigation }) => {
         ]);
       }
     } catch (error) {
-      console.log('❌ Categories failed, using fallback');
+      console.log('❌ Categories failed');
+      // Error loading categories - use default categories
       setCategories([
         { id: 'all', name: 'Hepsi', emoji: '🍽️' },
         { id: 'turkish', name: 'Türk Mutfağı', emoji: '🇹🇷' },
@@ -543,19 +573,21 @@ const MainScreen = ({ navigation }) => {
           </View>
 
           {/* Price Badge */}
-          <View style={styles.priceBadge}>
-            <View style={styles.priceRow}>
-              <Text style={styles.originalPriceFeatured}>
-                ₺{mainPackage.originalPrice || 0}
-              </Text>
-              <Text style={styles.salePriceFeatured}>
-                ₺{mainPackage.salePrice || 0}
+          {item.packages && item.packages.length > 0 && item.packages[0].originalPrice && (
+            <View style={styles.priceBadge}>
+              <View style={styles.priceRow}>
+                <Text style={styles.originalPriceFeatured}>
+                  ₺{item.packages[0].originalPrice}
+                </Text>
+                <Text style={styles.salePriceFeatured}>
+                  ₺{item.packages[0].salePrice}
+                </Text>
+              </View>
+              <Text style={styles.discountText}>
+                %{item.packages[0].discount}
               </Text>
             </View>
-            <Text style={styles.discountText}>
-              %{mainPackage.discount || 0}
-            </Text>
-          </View>
+          )}
         </View>
         
         {/* Card Info */}
@@ -563,15 +595,6 @@ const MainScreen = ({ navigation }) => {
           <Text style={styles.featuredName} numberOfLines={1}>{item.name}</Text>
           <Text style={styles.featuredCategory}>{item.category}</Text>
           <View style={styles.featuredMeta}>
-            <View style={styles.ratingContainer}>
-              <Text style={styles.starIcon}>⭐</Text>
-              <Text style={styles.ratingText}>
-                {typeof item.rating === 'object' ? 
-                  (item.rating.average || 4.5).toFixed(1) : 
-                  (item.rating || 4.5).toFixed(1)
-                }
-              </Text>
-            </View>
             <View style={styles.pickupTimeContainer}>
               <Text style={styles.pickupTimeIcon}>⏰</Text>
               <Text style={styles.pickupTimeText}>
@@ -587,12 +610,12 @@ const MainScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#16a34a" />
           <Text style={styles.loadingText}>Restoranlar yükleniyor...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -601,7 +624,7 @@ const MainScreen = ({ navigation }) => {
       colors={['#f0fdf4', '#dcfce7']}
       style={styles.container}
     >
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.safeArea}>
       <ScrollView 
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
@@ -667,26 +690,6 @@ const MainScreen = ({ navigation }) => {
           </View>
         </LinearGradient>
 
-        {/* Special Offer Banner */}
-        <View style={styles.offerBanner}>
-          <LinearGradient
-            colors={['#f59e0b', '#d97706']}
-            style={styles.offerGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <View style={styles.offerContent}>
-              <Text style={styles.offerEmoji}>⚡</Text>
-              <View style={styles.offerText}>
-                <Text style={styles.offerTitle}>Sınırlı Süre!</Text>
-                <Text style={styles.offerSubtitle}>İlk siparişinizde %20 ekstra indirim</Text>
-              </View>
-              <TouchableOpacity style={styles.offerButton}>
-                <Text style={styles.offerButtonText}>Kullan</Text>
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
-        </View>
 
         {/* Featured Restaurants Section */}
         <View style={styles.featuredSection}>
@@ -731,30 +734,6 @@ const MainScreen = ({ navigation }) => {
           </ScrollView>
         </View>
 
-        {/* Stats Banner */}
-        <View style={styles.statsBanner}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{filteredRestaurants.length}</Text>
-            <Text style={styles.statLabel}>Restoran</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>
-              {filteredRestaurants.reduce((sum, r) => sum + (r.packages?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0)}
-            </Text>
-            <Text style={styles.statLabel}>Paket</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>
-              ₺{filteredRestaurants.reduce((sum, r) => {
-                const pkg = r.packages?.[0];
-                return sum + ((pkg?.originalPrice || 0) - (pkg?.salePrice || 0));
-              }, 0).toFixed(0)}
-            </Text>
-            <Text style={styles.statLabel}>Tasarruf</Text>
-          </View>
-        </View>
 
         {/* Restaurant List */}
         <View style={styles.restaurantList}>
@@ -767,6 +746,20 @@ const MainScreen = ({ navigation }) => {
               const statusInfo = getPackageStatus(restaurant);
               const mainPackage = restaurant.packages?.[0] || {};
               const totalPackages = restaurant.packages?.reduce((sum, pkg) => sum + pkg.quantity, 0) || 0;
+              
+              // Debug Papi Culo prices
+              if (restaurant.name?.toLowerCase().includes('papi')) {
+                console.log('🔴 Papi Culo FORMATTED banner data:', {
+                  name: restaurant.name,
+                  packagesLength: restaurant.packages?.length,
+                  firstPackage: restaurant.packages?.[0],
+                  showingPrice: restaurant.packages?.[0] ? {
+                    original: restaurant.packages[0].originalPrice,
+                    sale: restaurant.packages[0].salePrice,
+                    discount: restaurant.packages[0].discount
+                  } : 'NO PACKAGE'
+                });
+              }
 
               return (
                 <TouchableOpacity 
@@ -775,7 +768,10 @@ const MainScreen = ({ navigation }) => {
                   onPress={() => navigation.navigate('RestaurantDetail', { restaurant })}
                 >
                   {/* Restaurant Image Header */}
-                  <View style={styles.restaurantImageContainer}>
+                  <View style={[
+                    styles.restaurantImageContainer,
+                    totalPackages === 0 && styles.restaurantImageContainerNoPackages
+                  ]}>
                     {(restaurant.restaurantImage || restaurant.profileImage || restaurant.imageUrl) ? (
                       <Image 
                         source={{ uri: restaurant.restaurantImage || restaurant.profileImage || restaurant.imageUrl }} 
@@ -810,19 +806,35 @@ const MainScreen = ({ navigation }) => {
                       </View>
                     )}
 
-                    {/* Price Info - Real Package Prices */}
-                    <View style={styles.priceTagOverlay}>
-                      <Text style={styles.originalPrice}>₺{mainPackage.originalPrice || 50}</Text>
-                      <Text style={styles.salePrice}>₺{mainPackage.discountPrice || mainPackage.salePrice || 25}</Text>
-                      <View style={styles.discountBadge}>
-                        <Text style={styles.discountBadgeText}>-{Math.round(((mainPackage.originalPrice - (mainPackage.discountPrice || mainPackage.salePrice)) / mainPackage.originalPrice) * 100) || 50}%</Text>
+                    {/* Package Count Badge (Featured Style) */}
+                    {totalPackages > 0 && (
+                      <View style={styles.packageBadge}>
+                        <Text style={styles.packageBadgeText}>{totalPackages} paket</Text>
                       </View>
-                    </View>
+                    )}
+
+                    {/* Price Badge (Featured Style) */}
+                    {restaurant.packages && restaurant.packages.length > 0 && restaurant.packages[0].originalPrice && (
+                      <View style={styles.priceBadge}>
+                        <View style={styles.priceRow}>
+                          <Text style={styles.originalPriceFeatured}>
+                            ₺{restaurant.packages[0].originalPrice}
+                          </Text>
+                          <Text style={styles.salePriceFeatured}>
+                            ₺{restaurant.packages[0].salePrice}
+                          </Text>
+                        </View>
+                        <Text style={styles.discountText}>
+                          %{restaurant.packages[0].discount}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                   
                   {/* Restaurant Info - HTML Style Compact */}
                   <View style={styles.cardContent}>
                     <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                    <Text style={styles.restaurantCategory}>{restaurant.category}</Text>
                     <View style={styles.restaurantMeta}>
                       <View style={styles.ratingContainer}>
                         <Text style={styles.starIcon}>⭐</Text>
@@ -834,7 +846,7 @@ const MainScreen = ({ navigation }) => {
                         </Text>
                       </View>
                       <View style={styles.pickupTimeContainer}>
-                        <Text style={styles.pickupTimeIcon}>⏱️</Text>
+                        <Text style={styles.pickupTimeIcon}>⏰</Text>
                         <Text style={styles.pickupTimeText}>
                           {mainPackage.pickupTime || restaurant.pickupTime || '18:00-21:00'}
                         </Text>
@@ -887,13 +899,17 @@ const MainScreen = ({ navigation }) => {
             
             <View style={styles.sliderContainer}>
               {/* Distance Slider */}
-              <View style={styles.sliderTrack}>
-                <View style={styles.sliderProgress} />
-                <TouchableOpacity 
-                  style={[styles.sliderThumb, { left: `${((selectedDistance - 1) / 24) * 100}%` }]}
-                  onPanGesture={true}
-                />
-              </View>
+              <Slider
+                style={styles.slider}
+                minimumValue={1}
+                maximumValue={25}
+                step={1}
+                value={selectedDistance}
+                onValueChange={setSelectedDistance}
+                minimumTrackTintColor="#16a34a"
+                maximumTrackTintColor="#d1d5db"
+                thumbStyle={styles.sliderThumb}
+              />
               
               {/* Distance Controls */}
               <View style={styles.distanceControls}>
@@ -1007,7 +1023,7 @@ const MainScreen = ({ navigation }) => {
           <Text style={styles.navLabel}>Profil</Text>
         </TouchableOpacity>
       </View>
-      </SafeAreaView>
+      </View>
     </LinearGradient>
   );
 };
@@ -1031,7 +1047,8 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
@@ -1457,6 +1474,10 @@ const styles = StyleSheet.create({
     height: 160,
     position: 'relative',
   },
+  restaurantImageContainerNoPackages: {
+    opacity: 0.6,
+    backgroundColor: '#f3f4f6',
+  },
   restaurantImage: {
     width: '100%',
     height: '100%',
@@ -1561,6 +1582,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginRight: 4,
   },
+  distanceText: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  packageCountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  packageIcon: {
+    fontSize: 12,
+    marginRight: 4,
+  },
+  packageCountText: {
+    fontSize: 12,
+    color: '#16a34a',
+    fontWeight: '600',
+  },
   restaurantPackageBadge: {
     position: 'absolute',
     bottom: 12,
@@ -1625,7 +1664,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#111827',
-    marginBottom: 8,
+    marginBottom: 2,
+  },
+  restaurantCategory: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 6,
   },
   restaurantMeta: {
     flexDirection: 'row',
@@ -1635,18 +1679,16 @@ const styles = StyleSheet.create({
   },
   bottomNav: {
     position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.98)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(229, 231, 235, 0.3)',
     paddingVertical: 12,
-    paddingBottom: 16,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    paddingBottom: Platform.OS === 'ios' ? 25 : 12,
+    borderRadius: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
@@ -1735,22 +1777,12 @@ const styles = StyleSheet.create({
   sliderContainer: {
     marginBottom: 24,
   },
-  sliderTrack: {
-    height: 6,
-    backgroundColor: '#e5e7eb',
-    borderRadius: 3,
-    position: 'relative',
+  slider: {
+    width: '100%',
+    height: 40,
     marginBottom: 16,
   },
-  sliderProgress: {
-    height: '100%',
-    backgroundColor: '#16a34a',
-    borderRadius: 3,
-    width: '60%',
-  },
   sliderThumb: {
-    position: 'absolute',
-    top: -8,
     width: 22,
     height: 22,
     backgroundColor: '#16a34a',

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, SafeAreaView, View, Text, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator } from 'react-native';
 
 // Import screens
 import WelcomeScreen from './src/screens/WelcomeScreen';
@@ -16,6 +16,9 @@ import OrdersScreen from './src/screens/OrdersScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import PurchaseScreen from './src/screens/PurchaseScreen';
 import MapScreen from './src/screens/MapScreen';
+import PrivacyScreen from './src/screens/PrivacyScreen';
+import AboutScreen from './src/screens/AboutScreen';
+import SupportScreen from './src/screens/SupportScreen';
 import UserDataProvider from './src/context/UserDataContext';
 import AuthProvider from './src/context/AuthContext';
 
@@ -32,19 +35,23 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.log('Error caught by boundary:', error, errorInfo);
+    console.error('Error caught by boundary:', error, errorInfo);
+    // Reset state after 3 seconds
+    setTimeout(() => {
+      this.setState({ hasError: false });
+    }, 3000);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
           <View style={styles.errorContainer}>
             <Text style={styles.errorTitle}>🍽️ KapTaze</Text>
             <Text style={styles.errorText}>Uygulama başlatılıyor...</Text>
             <Text style={styles.errorSubText}>Lütfen bir kaç saniye bekleyin</Text>
           </View>
-        </SafeAreaView>
+        </View>
       );
     }
 
@@ -53,12 +60,36 @@ class ErrorBoundary extends React.Component {
 }
 
 export default function App() {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    // Wake up backend immediately (prevent cold start)
+    fetch('https://kaptaze-backend-api.onrender.com/health')
+      .then(() => console.log('✅ Backend warmed up'))
+      .catch(() => console.log('⚠️ Backend wake-up failed'));
+    
+    // Show UI immediately
+    setIsReady(true);
+  }, []);
+
+  if (!isReady) {
+    return (
+      <View style={styles.loadingContainer}>
+        <StatusBar style="light" />
+        <View style={styles.loadingContent}>
+          <Text style={styles.loadingTitle}>🌱 KapTaze</Text>
+          <Text style={styles.loadingText}>Yükleniyor...</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <ErrorBoundary>
       <UserDataProvider>
         <AuthProvider>
-          <SafeAreaView style={styles.container}>
-            <StatusBar style="dark" />
+          <View style={styles.container}>
+            <StatusBar style="auto" translucent backgroundColor="transparent" />
             <NavigationContainer>
               <Stack.Navigator 
                 initialRouteName="Welcome"
@@ -78,9 +109,12 @@ export default function App() {
                 <Stack.Screen name="Profile" component={ProfileScreen} />
                 <Stack.Screen name="Purchase" component={PurchaseScreen} />
                 <Stack.Screen name="Map" component={MapScreen} />
+                <Stack.Screen name="Privacy" component={PrivacyScreen} />
+                <Stack.Screen name="About" component={AboutScreen} />
+                <Stack.Screen name="Support" component={SupportScreen} />
               </Stack.Navigator>
             </NavigationContainer>
-          </SafeAreaView>
+          </View>
         </AuthProvider>
       </UserDataProvider>
     </ErrorBoundary>
@@ -128,7 +162,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#16a34a',
     justifyContent: 'center',
     alignItems: 'center',
   },

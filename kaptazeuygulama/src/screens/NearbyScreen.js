@@ -9,7 +9,6 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import { antalyaRestaurants } from '../data/antalyaRestaurants';
 import { useUserData } from '../context/UserDataContext';
 import apiService from '../services/apiService';
 
@@ -58,8 +57,8 @@ const NearbyScreen = ({ navigation }) => {
         const apiResponse = await apiService.getRestaurants();
         console.log('📊 API response:', apiResponse);
         
-        if (apiResponse.success && apiResponse.data.restaurants) {
-          apiRestaurants = apiResponse.data.restaurants;
+        if (apiResponse.success && apiResponse.data) {
+          apiRestaurants = Array.isArray(apiResponse.data) ? apiResponse.data : apiResponse.data.restaurants || [];
           console.log('✅ API restaurants loaded:', apiRestaurants.length);
           console.log('📋 Restaurant names:', apiRestaurants.map(r => r.name));
         } else {
@@ -70,10 +69,8 @@ const NearbyScreen = ({ navigation }) => {
       }
       
       // Tüm veri kaynaklarını birleştir
-      const allRestaurants = [
-        ...apiRestaurants, // Gerçek API verisi öncelikli
-        ...antalyaRestaurants // Fallback demo restoranlar
-      ];
+      // Only use API data - no fallback
+      const allRestaurants = apiRestaurants;
       
       // Format API data to match expected structure
       const formattedRestaurants = allRestaurants.map(restaurant => ({
@@ -125,9 +122,8 @@ const NearbyScreen = ({ navigation }) => {
       
     } catch (error) {
       console.error('Nearby restaurants loading error:', error);
-      // Hata durumunda fallback data kullan
-      const fallbackData = antalyaRestaurants.filter(r => parseFloat(r.distance) <= selectedDistance);
-      setNearbyRestaurants(fallbackData.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance)));
+      // No fallback - show empty state
+      setNearbyRestaurants([]);
     } finally {
       setLoading(false);
     }

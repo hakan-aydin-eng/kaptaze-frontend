@@ -7,6 +7,7 @@ import {
   Dimensions,
   SafeAreaView,
   ScrollView,
+  Image,
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -21,10 +22,10 @@ const WelcomeScreen = ({ navigation }) => {
       >
         {/* Logo and Title */}
         <View style={styles.header}>
-          <Text style={styles.logo}>🌱</Text>
+          <Image source={require('../../assets/icon.png')} style={styles.logo} />
           <Text style={styles.title}>KapTaze</Text>
           <Text style={styles.subtitle}>
-            Gıda israfına son ver, cüzdanını doldur!
+            Gıda israfını önleme platformu
           </Text>
         </View>
 
@@ -40,7 +41,7 @@ const WelcomeScreen = ({ navigation }) => {
           </View>
           <View style={styles.feature}>
             <Text style={styles.featureIcon}>🏪</Text>
-            <Text style={styles.featureText}>Yakındaki restoranlar</Text>
+            <Text style={styles.featureText}>Yakındaki fırsatları keşfet</Text>
           </View>
         </View>
 
@@ -92,8 +93,10 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   logo: {
-    fontSize: 80,
+    width: 80,
+    height: 80,
     marginBottom: 16,
+    borderRadius: 16,
   },
   title: {
     fontSize: 32,

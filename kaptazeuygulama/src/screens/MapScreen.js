@@ -3,15 +3,14 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   Dimensions,
+  Platform,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, PROVIDER_DEFAULT } from 'react-native-maps';
 import apiService from '../services/apiService';
-import { antalyaRestaurants } from '../data/antalyaRestaurants';
 
 const { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
@@ -53,8 +52,8 @@ const MapScreen = ({ navigation, route }) => {
         console.warn('⚠️ API failed, using local data:', error.message);
       }
 
-      // Use API data if available, otherwise fallback to local data
-      const finalRestaurants = apiRestaurants.length > 0 ? apiRestaurants : antalyaRestaurants;
+      // Only use API data - no fallback
+      const finalRestaurants = apiRestaurants;
       
       // Add coordinates to restaurants that don't have them
       const restaurantsWithCoords = finalRestaurants.map(restaurant => {
@@ -78,8 +77,8 @@ const MapScreen = ({ navigation, route }) => {
       
     } catch (error) {
       console.error('❌ Failed to load restaurants:', error);
-      // Use local data as ultimate fallback
-      setRestaurants(antalyaRestaurants);
+      // No fallback - show empty map
+      setRestaurants([]);
       setLoading(false);
     }
   };
@@ -110,7 +109,7 @@ const MapScreen = ({ navigation, route }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -125,12 +124,12 @@ const MapScreen = ({ navigation, route }) => {
           <ActivityIndicator size="large" color="#16a34a" />
           <Text style={styles.loadingText}>Harita yükleniyor...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -153,11 +152,24 @@ const MapScreen = ({ navigation, route }) => {
       <MapView
         provider={PROVIDER_GOOGLE}
         style={styles.map}
-        region={mapRegion}
-        onRegionChangeComplete={setMapRegion}
+        initialRegion={{
+          latitude: 36.8969,
+          longitude: 30.7133,
+          latitudeDelta: LATITUDE_DELTA,
+          longitudeDelta: LONGITUDE_DELTA,
+        }}
         showsUserLocation={true}
         showsMyLocationButton={true}
+        scrollEnabled={true}
+        zoomEnabled={true}
+        pitchEnabled={true}
+        rotateEnabled={true}
         toolbarEnabled={false}
+        onError={(e) => console.error('Map Error:', e)}
+        onMapReady={() => console.log('✅ Map is ready')}
+        loadingEnabled={true}
+        loadingIndicatorColor="#16a34a"
+        loadingBackgroundColor="#f8fafc"
       >
         {restaurants.map((restaurant) => {
           if (!restaurant.location?.coordinates) return null;
@@ -181,26 +193,7 @@ const MapScreen = ({ navigation, route }) => {
         })}
       </MapView>
 
-      {/* Stats Footer */}
-      <View style={styles.footer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{restaurants.length}</Text>
-          <Text style={styles.statLabel}>Restoran</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>
-            {restaurants.reduce((sum, r) => sum + (r.packages?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0)}
-          </Text>
-          <Text style={styles.statLabel}>Paket</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{selectedDistance} km</Text>
-          <Text style={styles.statLabel}>Çap</Text>
-        </View>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -214,7 +207,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: Platform.OS === 'ios' ? 50 : 16,
+    paddingBottom: 16,
     backgroundColor: '#16a34a',
     elevation: 4,
     shadowColor: '#000',

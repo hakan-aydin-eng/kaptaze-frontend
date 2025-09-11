@@ -4,13 +4,13 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Modal,
   TextInput,
   Alert,
   ActivityIndicator,
   Switch,
+  Platform,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../context/UserDataContext';
@@ -72,15 +72,14 @@ const ProfileScreen = ({ navigation }) => {
 
   const menuItems = [
     { id: 1, title: 'Hesap Bilgileri', icon: '👤', action: 'edit' },
-    { id: 2, title: 'Adreslerim', icon: '📍', action: 'address', badge: addresses.length },
-    { id: 3, title: 'Ödeme Yöntemleri', icon: '💳', action: 'payment', badge: paymentMethods.length },
-    { id: 4, title: 'Bildirim Ayarları', icon: '🔔', action: 'notifications' },
-    { id: 5, title: 'Tema', icon: darkMode ? '🌙' : '☀️', action: 'theme' },
-    { id: 6, title: 'Dil / Language', icon: '🌍', action: 'language', subtitle: language === 'tr' ? 'Türkçe' : 'English' },
-    { id: 7, title: 'Yardım & Destek', icon: '💬', screen: 'Support' },
-    { id: 8, title: 'Gizlilik Politikası', icon: '🔒', screen: 'Privacy' },
-    { id: 9, title: 'Hakkında', icon: 'ℹ️', screen: 'About' },
-    { id: 10, title: 'Çıkış Yap', icon: '🚪', action: 'logout', danger: true },
+    { id: 2, title: 'Ödeme Yöntemleri', icon: '💳', action: 'payment', badge: paymentMethods.length },
+    { id: 3, title: 'Bildirim Ayarları', icon: '🔔', action: 'notifications' },
+    { id: 4, title: 'Tema', icon: darkMode ? '🌙' : '☀️', action: 'theme' },
+    { id: 5, title: 'Dil / Language', icon: '🌍', action: 'language', subtitle: language === 'tr' ? 'Türkçe' : 'English' },
+    { id: 6, title: 'Yardım & Destek', icon: '💬', screen: 'Support' },
+    { id: 7, title: 'Gizlilik Politikası', icon: '🔒', screen: 'Privacy' },
+    { id: 8, title: 'Hakkında', icon: 'ℹ️', screen: 'About' },
+    { id: 9, title: 'Çıkış Yap', icon: '🚪', action: 'logout', danger: true },
   ];
 
   const handleMenuPress = async (item) => {
@@ -104,9 +103,6 @@ const ProfileScreen = ({ navigation }) => {
         break;
       case 'edit':
         openEditModal();
-        break;
-      case 'address':
-        setIsAddressModalVisible(true);
         break;
       case 'payment':
         setIsPaymentModalVisible(true);
@@ -255,7 +251,7 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, darkMode && styles.darkContainer]}>
+    <View style={[styles.container, darkMode && styles.darkContainer]}>
       <View style={[styles.header, darkMode && styles.darkHeader]}>
         <TouchableOpacity 
           style={styles.backButton}
@@ -264,9 +260,7 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, darkMode && styles.darkText]}>Profil</Text>
-        <TouchableOpacity style={styles.settingsButton}>
-          <Text style={styles.settingsIcon}>⚙️</Text>
-        </TouchableOpacity>
+        <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content}>
@@ -293,17 +287,6 @@ const ProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Premium Badge */}
-        <View style={styles.premiumBanner}>
-          <Text style={styles.premiumIcon}>⭐</Text>
-          <View style={styles.premiumContent}>
-            <Text style={styles.premiumTitle}>KapTaze Premium</Text>
-            <Text style={styles.premiumSubtitle}>Özel fırsatları kaçırma!</Text>
-          </View>
-          <TouchableOpacity style={styles.premiumButton}>
-            <Text style={styles.premiumButtonText}>Keşfet</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Stats Section */}
         <View style={[styles.statsSection, darkMode && styles.darkSection]}>
@@ -376,7 +359,7 @@ const ProfileScreen = ({ navigation }) => {
         {/* App Version */}
         <View style={styles.versionContainer}>
           <Text style={[styles.versionText, darkMode && styles.darkSubText]}>
-            KapTaze v2.0.0
+            KapTaze v1.0.4
           </Text>
           <Text style={[styles.versionText, darkMode && styles.darkSubText]}>
             Made with ❤️ in Antalya
@@ -491,7 +474,7 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, styles.largeModal, darkMode && styles.darkModalContent]}>
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, darkMode && styles.darkText]}>Adreslerim</Text>
+              <Text style={[styles.modalTitle, darkMode && styles.darkText]}>Adres Bilgileri</Text>
               <TouchableOpacity onPress={() => setIsAddressModalVisible(false)}>
                 <Text style={styles.closeButton}>✕</Text>
               </TouchableOpacity>
@@ -756,7 +739,7 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -773,7 +756,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: Platform.OS === 'ios' ? 50 : 16,
+    paddingBottom: 16,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
@@ -786,13 +770,20 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#16a34a',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff',
   },
   backIcon: {
     fontSize: 20,
-    color: '#374151',
+    color: '#ffffff',
+    fontWeight: 'bold',
+  },
+  placeholder: {
+    width: 40,
+    height: 40,
   },
   headerTitle: {
     fontSize: 18,

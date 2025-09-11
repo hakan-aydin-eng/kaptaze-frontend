@@ -4,9 +4,10 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
+  Platform,
+  Linking,
 } from 'react-native';
 import { useUserData } from '../context/UserDataContext';
 
@@ -22,6 +23,33 @@ const OrdersScreen = ({ navigation }) => {
       cancelled: { text: 'İptal Edildi', color: '#dc2626', bgColor: '#fee2e2' },
     };
     return statusMap[status] || statusMap.pending;
+  };
+
+  const openNavigation = (restaurant) => {
+    console.log('🗺️ Opening navigation for restaurant:', restaurant.name);
+    console.log('📍 Restaurant location:', restaurant.location);
+    
+    const restaurantCoords = restaurant.location?.coordinates || [30.7133, 36.8969]; // Default Antalya coordinates
+    const lat = restaurant.location?.coordinates ? restaurant.location.coordinates[1] : 36.8969;
+    const lng = restaurant.location?.coordinates ? restaurant.location.coordinates[0] : 30.7133;
+    
+    console.log('🎯 Navigation coordinates:', { lat, lng });
+    
+    // iOS ve Android her ikisi için de Google Maps kullan
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    
+    Linking.canOpenURL(googleMapsUrl).then(supported => {
+      if (supported) {
+        console.log('✅ Opening Google Maps with URL:', googleMapsUrl);
+        Linking.openURL(googleMapsUrl);
+      } else {
+        console.log('❌ Cannot open Google Maps');
+        Alert.alert('Hata', 'Harita uygulaması açılamadı.');
+      }
+    }).catch(error => {
+      console.log('❌ Navigation error:', error);
+      Alert.alert('Hata', 'Navigasyon açılırken bir hata oluştu.');
+    });
   };
 
   const handleOrderAction = (order) => {
@@ -54,7 +82,7 @@ const OrdersScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
@@ -159,19 +187,39 @@ const OrdersScreen = ({ navigation }) => {
                     </View>
                   </View>
 
-                  {/* Action Button */}
-                  {(order.status === 'ready' || order.status === 'pending') && (
-                    <TouchableOpacity 
-                      style={[
-                        styles.actionButton,
-                        order.status === 'ready' ? styles.readyButton : styles.cancelButton
-                      ]}
-                      onPress={() => handleOrderAction(order)}
-                    >
-                      <Text style={styles.actionButtonText}>
-                        {order.status === 'ready' ? 'Teslim Aldım' : 'İptal Et'}
-                      </Text>
-                    </TouchableOpacity>
+                  {/* Action Buttons */}
+                  {order.status !== 'cancelled' && (
+                    <View style={styles.actionButtonsContainer}>
+                      {/* Yol tarifi butonu - iptal edilmemiş siparişler için göster */}
+                      <TouchableOpacity 
+                        style={[styles.actionButton, styles.navigationButton]}
+                        onPress={() => openNavigation(order.restaurant)}
+                      >
+                        <Text style={styles.actionButtonText}>📍 Yol Tarifi Al</Text>
+                      </TouchableOpacity>
+                      
+                      {/* Durum butonları */}
+                      {(order.status === 'ready' || order.status === 'pending') && (
+                        <TouchableOpacity 
+                          style={[
+                            styles.actionButton,
+                            order.status === 'ready' ? styles.readyButton : styles.cancelButton
+                          ]}
+                          onPress={() => handleOrderAction(order)}
+                        >
+                          <Text style={styles.actionButtonText}>
+                            {order.status === 'ready' ? 'Teslim Aldım' : 'İptal Et'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+
+                  {/* İptal edilen siparişler için sadece durum göster */}
+                  {order.status === 'cancelled' && (
+                    <View style={styles.cancelledInfo}>
+                      <Text style={styles.cancelledText}>❌ Sipariş İptal Edildi</Text>
+                    </View>
                   )}
                 </View>
               );
@@ -179,7 +227,7 @@ const OrdersScreen = ({ navigation }) => {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -193,7 +241,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: Platform.OS === 'ios' ? 50 : 16,
+    paddingBottom: 16,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
@@ -202,13 +251,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#16a34a',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff',
   },
   backIcon: {
     fontSize: 20,
-    color: '#374151',
+    color: '#ffffff',
+    fontWeight: 'bold',
   },
   headerTitle: {
     fontSize: 18,
@@ -416,10 +468,15 @@ const styles = StyleSheet.create({
     color: '#111827',
     fontWeight: '500',
   },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   actionButton: {
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
+    flex: 1,
   },
   readyButton: {
     backgroundColor: '#16a34a',
@@ -427,8 +484,27 @@ const styles = StyleSheet.create({
   cancelButton: {
     backgroundColor: '#dc2626',
   },
+  navigationButton: {
+    backgroundColor: '#16a34a',
+  },
+  halfWidth: {
+    flex: 1,
+  },
   actionButtonText: {
     color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelledInfo: {
+    backgroundColor: '#fee2e2',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  cancelledText: {
+    color: '#dc2626',
     fontSize: 16,
     fontWeight: '600',
   },
