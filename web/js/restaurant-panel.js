@@ -436,14 +436,27 @@ class RestaurantPanel {
         this.updateElement('profile-phone', this.currentUser.phone);
         this.updateElement('profile-address', profile.address);
         
-        // Website
-        const websiteEl = document.getElementById('profile-website');
+        // Website in contact info section
+        const websiteItem = document.getElementById('profile-website-item');
+        const websiteLink = document.getElementById('profile-website-link');
+        const websiteDisplay = document.getElementById('profile-website-display');
         const websiteUrl = (profile.socialMedia && profile.socialMedia.website) || profile.website;
-        if (websiteEl && websiteUrl) {
-            websiteEl.href = websiteUrl;
-            websiteEl.style.display = 'block';
-        } else if (websiteEl) {
-            websiteEl.style.display = 'none';
+        
+        if (websiteUrl && websiteItem && websiteLink && websiteDisplay) {
+            websiteLink.href = websiteUrl;
+            websiteDisplay.textContent = websiteUrl.replace(/^https?:\/\//, ''); // Remove protocol for display
+            websiteItem.style.display = 'block';
+        } else if (websiteItem) {
+            websiteItem.style.display = 'none';
+        }
+        
+        // Also update the old website element if it exists (for backward compatibility)
+        const oldWebsiteEl = document.getElementById('profile-website');
+        if (oldWebsiteEl && websiteUrl) {
+            oldWebsiteEl.href = websiteUrl;
+            oldWebsiteEl.style.display = 'block';
+        } else if (oldWebsiteEl) {
+            oldWebsiteEl.style.display = 'none';
         }
         
         // Main image
