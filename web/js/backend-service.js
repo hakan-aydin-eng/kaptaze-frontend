@@ -166,7 +166,8 @@ class BackendService {
             });
             
             // Store token from login response - try different token field names
-            const token = response?.token || response?.accessToken || response?.data?.token || response?.data?.accessToken;
+            // Priority: data.token first (most common in our API), then top-level token
+            const token = response?.data?.token || response?.data?.accessToken || response?.token || response?.accessToken;
             if (token) {
                 this.authToken = token;
                 sessionStorage.setItem('kaptaze_session_token', token);
@@ -188,8 +189,9 @@ class BackendService {
             
             console.log('🔍 FALLBACK LOGIN RESPONSE DEBUG:', response);
             
-            // Store token from fallback response
-            const token = response?.token || response?.accessToken || response?.data?.token || response?.data?.accessToken;
+            // Store token from fallback response - try different token field names
+            // Priority: data.token first (most common in our API), then top-level token
+            const token = response?.data?.token || response?.data?.accessToken || response?.token || response?.accessToken;
             if (token) {
                 this.authToken = token;
                 sessionStorage.setItem('kaptaze_session_token', token);
