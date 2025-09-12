@@ -1,0 +1,6 @@
+# Restaurant routes
+/restaurant-login /restaurant-login.html 200
+/restaurant-panel /restaurant-panel.html 200
+
+# SPA fallback
+/* /index.html 200
