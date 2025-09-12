@@ -4,28 +4,38 @@ let restaurantId = null;
 
 // Initialize orders system
 async function initializeOrdersSystem() {
-    // TEMPORARY: Direct restaurant ID for papi culo testing
-    restaurantId = '68ab3655104be25030ca653d'; // papi culo ID
-    console.log('🧪 TEST MODE: Using papi culo restaurant ID:', restaurantId);
-    
     // Get restaurant info from login data
     const authToken = localStorage.getItem('kaptaze_auth_token');
     const userData = localStorage.getItem('kaptaze_user_data');
     
     if (!authToken || !userData) {
-        console.log('No authentication found, continuing with test mode');
-    } else {
-        try {
-            const user = JSON.parse(userData);
-            const loginRestaurantId = user.restaurantId || user._id;
-            
-            if (loginRestaurantId) {
-                restaurantId = loginRestaurantId;
-                console.log('✅ Using authenticated restaurant ID:', restaurantId);
-            }
-        } catch (error) {
-            console.error('Error parsing user data:', error);
+        console.error('❌ No authentication found! Please login first.');
+        alert('Lütfen önce giriş yapın.');
+        window.location.href = '/restaurant-login.html';
+        return;
+    }
+    
+    try {
+        const user = JSON.parse(userData);
+        restaurantId = user.restaurantId || user._id;
+        
+        if (!restaurantId) {
+            console.error('❌ No restaurant ID found in user data:', user);
+            alert('Restoran bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
+            localStorage.clear();
+            window.location.href = '/restaurant-login.html';
+            return;
         }
+        
+        console.log('✅ Using authenticated restaurant ID:', restaurantId);
+        console.log('👤 User data:', user);
+        
+    } catch (error) {
+        console.error('Error parsing user data:', error);
+        alert('Oturum bilgileri bozuk. Lütfen tekrar giriş yapın.');
+        localStorage.clear();
+        window.location.href = '/restaurant-login.html';
+        return;
     }
     
     // Request notification permission
@@ -68,6 +78,7 @@ function initializeSocket() {
         
         socket.on('connect', () => {
             console.log('✅ Socket.IO connected');
+            console.log('🏪 Connecting to restaurant room:', restaurantId);
             // Connect to restaurant room
             socket.emit('restaurant-connect', restaurantId);
         });
