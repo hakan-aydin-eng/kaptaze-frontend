@@ -12,11 +12,27 @@ async function initializeOrdersSystem() {
             throw new Error('Backend service not available');
         }
         
+        console.log('🔍 TOKEN ANALYSIS before /restaurant/me:', {
+            instanceToken: !!window.backendService.authToken,
+            sessionToken: !!sessionStorage.getItem('kaptaze_session_token'),
+            authToken: !!localStorage.getItem('kaptaze_auth_token'),
+            localToken: !!localStorage.getItem('kaptaze_token'),
+            backendServiceURL: window.backendService.baseURL
+        });
+        
         // Get current user from API (uses session/cookie)
+        console.log('📞 Calling /restaurant/me API...');
         const userResponse = await window.backendService.makeRequest('/restaurant/me');
+        console.log('📞 /restaurant/me Response:', userResponse);
         
         if (!userResponse || !userResponse.success) {
-            throw new Error('Not authenticated');
+            console.log('❌ /restaurant/me failed:', {
+                hasResponse: !!userResponse,
+                success: userResponse?.success,
+                error: userResponse?.error,
+                message: userResponse?.message
+            });
+            throw new Error(userResponse?.error || userResponse?.message || 'Not authenticated');
         }
         
         const user = userResponse.data.user;
