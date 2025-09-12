@@ -12,12 +12,26 @@ async function initializeOrdersSystem() {
             throw new Error('Backend service not available');
         }
         
+        // Update backendService token if it doesn't have one but localStorage does
+        if (!window.backendService.authToken) {
+            const localToken = localStorage.getItem('kaptaze_auth_token') || localStorage.getItem('kaptaze_token');
+            if (localToken) {
+                window.backendService.authToken = localToken;
+                console.log('🔄 Updated backendService token from localStorage');
+            }
+        }
+        
         console.log('🔍 TOKEN ANALYSIS before /restaurant/me:', {
             instanceToken: !!window.backendService.authToken,
             sessionToken: !!sessionStorage.getItem('kaptaze_session_token'),
             authToken: !!localStorage.getItem('kaptaze_auth_token'),
             localToken: !!localStorage.getItem('kaptaze_token'),
-            backendServiceURL: window.backendService.baseURL
+            backendServiceURL: window.backendService.baseURL,
+            // Show actual token previews for debugging
+            instanceTokenPreview: window.backendService.authToken?.substring(0, 20) + '...',
+            sessionTokenPreview: sessionStorage.getItem('kaptaze_session_token')?.substring(0, 20) + '...',
+            authTokenPreview: localStorage.getItem('kaptaze_auth_token')?.substring(0, 20) + '...',
+            localTokenPreview: localStorage.getItem('kaptaze_token')?.substring(0, 20) + '...'
         });
         
         // Get current user from API (uses session/cookie)
