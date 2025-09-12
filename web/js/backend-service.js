@@ -159,7 +159,10 @@ class BackendService {
                 hasToken: !!response?.token,
                 hasAccessToken: !!response?.accessToken, 
                 hasData: !!response?.data,
-                responseKeys: response ? Object.keys(response) : null
+                dataHasToken: !!response?.data?.token,
+                dataHasAccessToken: !!response?.data?.accessToken,
+                responseKeys: response ? Object.keys(response) : null,
+                dataKeys: response?.data ? Object.keys(response.data) : null
             });
             
             // Store token from login response - try different token field names
