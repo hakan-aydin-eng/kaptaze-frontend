@@ -5,8 +5,13 @@ let restaurantId = null;
 // Initialize orders system
 async function initializeOrdersSystem() {
     // Get restaurant info from login data
-    const authToken = localStorage.getItem('kaptaze_restaurant_token') || localStorage.getItem('kaptaze_auth_token');
-    const userData = localStorage.getItem('kaptaze_restaurant_user') || localStorage.getItem('kaptaze_user_data');
+    const authToken = localStorage.getItem('kaptaze_restaurant_token') || 
+                      localStorage.getItem('kaptaze_auth_token') ||
+                      localStorage.getItem('kaptaze_token') ||
+                      sessionStorage.getItem('kaptaze_session_token');
+    const userData = localStorage.getItem('kaptaze_restaurant_user') || 
+                     localStorage.getItem('kaptaze_user_data') ||
+                     localStorage.getItem('kaptaze_user');
     
     if (!authToken || !userData) {
         console.error('❌ No authentication found! Please login first.');
@@ -146,7 +151,10 @@ async function loadOrders() {
     if (!restaurantId) return;
     
     try {
-        const authToken = localStorage.getItem('kaptaze_restaurant_token') || localStorage.getItem('kaptaze_auth_token');
+        const authToken = localStorage.getItem('kaptaze_restaurant_token') || 
+                          localStorage.getItem('kaptaze_auth_token') ||
+                          localStorage.getItem('kaptaze_token') ||
+                          sessionStorage.getItem('kaptaze_session_token');
         const headers = {
             'Content-Type': 'application/json'
         };
@@ -282,7 +290,10 @@ function createOrderCard(order) {
 // Update order status
 async function updateOrderStatus(orderId, newStatus) {
     try {
-        const authToken = localStorage.getItem('kaptaze_restaurant_token') || localStorage.getItem('kaptaze_auth_token');
+        const authToken = localStorage.getItem('kaptaze_restaurant_token') || 
+                          localStorage.getItem('kaptaze_auth_token') ||
+                          localStorage.getItem('kaptaze_token') ||
+                          sessionStorage.getItem('kaptaze_session_token');
         const headers = { 'Content-Type': 'application/json' };
         
         if (authToken) {
