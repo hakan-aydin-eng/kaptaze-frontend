@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restoran Kayıt - KapTaze</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="./assets/favicon.png">
+    <link rel="apple-touch-icon" href="./assets/favicon.png">
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -14,20 +19,37 @@
     <script src="./js/api-config.js?v=2025.08.23"></script>
     <script src="./js/api-service.js?v=2025.08.23"></script>
     
-    <!-- Google Maps API - Key from environment -->
+    <!-- Google Maps API - Modern async loading -->
     <script>
-        // Wait for environment variables to load, then load Google Maps
-        document.addEventListener('DOMContentLoaded', function() {
+        // Modern Google Maps API loading with proper async pattern
+        function loadGoogleMaps() {
             if (window.GOOGLE_MAPS_API_KEY) {
+                // Use modern loading pattern recommended by Google
                 const script = document.createElement('script');
-                script.src = `https://maps.googleapis.com/maps/api/js?key=${window.GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${window.GOOGLE_MAPS_API_KEY}&libraries=places,marker&loading=async`;
                 script.async = true;
                 script.defer = true;
+                
+                script.onload = function() {
+                    console.log('🗺️ Google Maps API loaded successfully');
+                    initMap();
+                };
+                
+                script.onerror = function() {
+                    console.error('❌ Failed to load Google Maps API');
+                    showMapError();
+                };
+                
                 document.head.appendChild(script);
-                console.log('🗺️ Google Maps script loaded with environment key');
             } else {
                 console.error('❌ Google Maps API key not found in environment');
+                showMapError();
             }
+        }
+        
+        // Wait for environment variables to load, then load Google Maps
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGoogleMaps();
         });
     </script>
     
@@ -545,19 +567,47 @@
                 selectLocation(event.latLng);
             });
             
-            // Initialize places autocomplete for business address field
-            const businessAddressInput = document.getElementById('businessAddress');
-            const autocomplete = new google.maps.places.Autocomplete(businessAddressInput);
-            autocomplete.bindTo('bounds', map);
-            
-            autocomplete.addListener('place_changed', function() {
-                const place = autocomplete.getPlace();
-                if (place.geometry) {
-                    selectLocation(place.geometry.location);
-                    map.setCenter(place.geometry.location);
-                    map.setZoom(16);
+            // Initialize modern Place Autocomplete Element
+            try {
+                const businessAddressInput = document.getElementById('businessAddress');
+                
+                // Use new PlaceAutocompleteElement if available, fallback to old Autocomplete
+                if (google.maps.places.PlaceAutocompleteElement) {
+                    console.log('🆕 Using new PlaceAutocompleteElement');
+                    
+                    // Create autocomplete element
+                    const autocompleteElement = new google.maps.places.PlaceAutocompleteElement();
+                    autocompleteElement.id = 'place-autocomplete';
+                    
+                    // Replace input with autocomplete element
+                    const inputContainer = businessAddressInput.parentNode;
+                    inputContainer.replaceChild(autocompleteElement, businessAddressInput);
+                    
+                    autocompleteElement.addEventListener('gmp-placeselect', (event) => {
+                        const place = event.place;
+                        if (place.location) {
+                            selectLocation(place.location);
+                            map.setCenter(place.location);
+                            map.setZoom(16);
+                        }
+                    });
+                } else {
+                    console.log('⚠️ Using legacy Autocomplete API');
+                    const autocomplete = new google.maps.places.Autocomplete(businessAddressInput);
+                    autocomplete.bindTo('bounds', map);
+                    
+                    autocomplete.addListener('place_changed', function() {
+                        const place = autocomplete.getPlace();
+                        if (place.geometry) {
+                            selectLocation(place.geometry.location);
+                            map.setCenter(place.geometry.location);
+                            map.setZoom(16);
+                        }
+                    });
                 }
-            });
+            } catch (error) {
+                console.error('❌ Error initializing place autocomplete:', error);
+            }
         }
         
         function selectLocation(latLng) {
@@ -629,8 +679,27 @@
             });
         }
         
-        // Make initMap globally available
+        // Show error when Maps API fails to load
+        function showMapError() {
+            const mapContainer = document.getElementById('map');
+            if (mapContainer) {
+                mapContainer.innerHTML = `
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; background: #f3f4f6; border-radius: 8px; color: #6b7280; text-align: center; padding: 2rem;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+                        <h3 style="margin-bottom: 0.5rem; color: #374151;">Harita Yüklenemedi</h3>
+                        <p style="font-size: 0.875rem;">Google Maps servisi şu anda kullanılamıyor.</p>
+                        <p style="font-size: 0.875rem;">Adres bilgilerini manuel olarak girebilirsiniz.</p>
+                        <button onclick="loadGoogleMaps()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #16a34a; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Tekrar Dene
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Make functions globally available
         window.initMap = initMap;
+        window.showMapError = showMapError;
     </script>
 </body>
 </html>
