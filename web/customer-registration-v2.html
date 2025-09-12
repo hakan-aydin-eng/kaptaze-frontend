@@ -543,36 +543,61 @@
         let geocoder;
         window.selectedLocation = null;
         
-        function initMap() {
-            // Initialize map centered on Antalya
-            const antalya = { lat: 36.8969, lng: 30.7133 };
-            
-            map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 12,
-                center: antalya,
-                mapTypeId: 'roadmap',
-                styles: [
-                    {
-                        featureType: 'poi.business',
-                        elementType: 'labels',
-                        stylers: [{ visibility: 'on' }]
-                    }
-                ]
-            });
-            
-            geocoder = new google.maps.Geocoder();
-            
-            // Add click listener to map
-            map.addListener('click', function(event) {
-                selectLocation(event.latLng);
-            });
-            
-            // Initialize modern Place Autocomplete Element
+        async function initMap() {
             try {
+                console.log('🚀 Initializing Google Maps...');
+                
+                // Modern way: Import required libraries
+                const { Map } = await google.maps.importLibrary("maps");
+                const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+                const { Geocoder } = await google.maps.importLibrary("geocoding");
+                
+                console.log('📚 Google Maps libraries loaded');
+                
+                // Initialize map centered on Antalya
+                const antalya = { lat: 36.8969, lng: 30.7133 };
+                
+                map = new Map(document.getElementById('map'), {
+                    zoom: 12,
+                    center: antalya,
+                    mapTypeId: 'roadmap',
+                    mapId: 'DEMO_MAP_ID', // Required for AdvancedMarkerElement
+                    styles: [
+                        {
+                            featureType: 'poi.business',
+                            elementType: 'labels',
+                            stylers: [{ visibility: 'on' }]
+                        }
+                    ]
+                });
+                
+                geocoder = new Geocoder();
+                
+                // Add click listener to map
+                map.addListener('click', function(event) {
+                    selectLocation(event.latLng);
+                });
+                
+                console.log('🗺️ Map initialized successfully');
+                
+                // Initialize Place Autocomplete
+                await initPlaceAutocomplete();
+                
+            } catch (error) {
+                console.error('❌ Error initializing map:', error);
+                showMapError();
+            }
+        }
+        
+        async function initPlaceAutocomplete() {
+            try {
+                // Import Places library
+                const { PlacesService } = await google.maps.importLibrary("places");
+                
                 const businessAddressInput = document.getElementById('businessAddress');
                 
-                // Use new PlaceAutocompleteElement if available, fallback to old Autocomplete
-                if (google.maps.places.PlaceAutocompleteElement) {
+                // Check if new PlaceAutocompleteElement is available
+                if (typeof google.maps.places.PlaceAutocompleteElement !== 'undefined') {
                     console.log('🆕 Using new PlaceAutocompleteElement');
                     
                     // Create autocomplete element
@@ -593,7 +618,9 @@
                     });
                 } else {
                     console.log('⚠️ Using legacy Autocomplete API');
-                    const autocomplete = new google.maps.places.Autocomplete(businessAddressInput);
+                    // Fallback to legacy Autocomplete
+                    const { Autocomplete } = await google.maps.importLibrary("places");
+                    const autocomplete = new Autocomplete(businessAddressInput);
                     autocomplete.bindTo('bounds', map);
                     
                     autocomplete.addListener('place_changed', function() {
@@ -605,12 +632,16 @@
                         }
                     });
                 }
+                
+                console.log('✅ Place autocomplete initialized');
+                
             } catch (error) {
                 console.error('❌ Error initializing place autocomplete:', error);
+                // Continue without autocomplete
             }
         }
         
-        function selectLocation(latLng) {
+        async function selectLocation(latLng) {
             // Update selected location
             window.selectedLocation = {
                 lat: latLng.lat(),
@@ -619,24 +650,47 @@
             
             // Clear existing marker
             if (marker) {
-                marker.setMap(null);
+                marker.map = null;
             }
             
-            // Add new marker
-            marker = new google.maps.Marker({
-                position: latLng,
-                map: map,
-                title: 'İşletme Konumu',
-                animation: google.maps.Animation.DROP,
-                icon: {
-                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#16a34a"/>
-                        </svg>
-                    `),
-                    scaledSize: new google.maps.Size(32, 32)
+            try {
+                // Try to use modern AdvancedMarkerElement if available
+                if (window.google?.maps?.marker?.AdvancedMarkerElement) {
+                    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+                    
+                    // Create custom pin
+                    const pin = new PinElement({
+                        background: "#16a34a",
+                        borderColor: "#ffffff",
+                        glyphColor: "#ffffff",
+                    });
+                    
+                    marker = new AdvancedMarkerElement({
+                        position: latLng,
+                        map: map,
+                        title: 'İşletme Konumu',
+                        content: pin.element,
+                    });
+                } else {
+                    // Fallback to legacy Marker
+                    marker = new google.maps.Marker({
+                        position: latLng,
+                        map: map,
+                        title: 'İşletme Konumu',
+                        animation: google.maps.Animation.DROP,
+                        icon: {
+                            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#16a34a"/>
+                                </svg>
+                            `),
+                            scaledSize: new google.maps.Size(32, 32)
+                        }
+                    });
                 }
-            });
+            } catch (error) {
+                console.error('❌ Error creating marker:', error);
+            }
             
             // Reverse geocode to get address
             geocoder.geocode({ location: latLng }, function(results, status) {
