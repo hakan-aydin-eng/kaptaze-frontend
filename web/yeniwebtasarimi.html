@@ -682,7 +682,7 @@
                 <a href="#restaurants">Restoranlar</a>
                 <a href="#impact">Etkimiz</a>
                 <a href="#app">Uygulama</a>
-                <a href="#" class="cta-button">Hemen Başla</a>
+                <a href="https://kaptaze.com/customer-registration-v2.html" class="cta-button">Hemen Kayıt Ol</a>
             </div>
         </div>
     </nav>
@@ -965,8 +965,8 @@
                 </div>
             </div>
             <div class="footer-column">
-                <h3>Hızlı Linkler</h3>
-                <a href="#">Nasıl Çalışır?</a>
+                <h3>Paneller</h3>
+                <a href="https://kaptaze.com/restaurant-login.html">Esnaf Paneli - (kaptazem)</a>
                 <a href="#">Restoranlar</a>
                 <a href="#">Mobil Uygulama</a>
                 <a href="#">Blog</a>
@@ -1107,7 +1107,11 @@
         // Form submission simulation
         document.querySelectorAll('.cta-button, .app-button').forEach(button => {
             button.addEventListener('click', (e) => {
-                e.preventDefault();
+                // Only prevent default if href is "#" or empty
+                const href = button.getAttribute('href');
+                if (href === '#' || !href || href.trim() === '') {
+                    e.preventDefault();
+                }
                 // Add ripple effect
                 const ripple = document.createElement('span');
                 ripple.style.position = 'absolute';

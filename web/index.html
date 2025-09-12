@@ -4,413 +4,1141 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KapTaze - Gıda İsrafını Önleme Platformu</title>
-    <meta name="description" content="Gıda israfını önleme ve çevreyi koruma platformu. Restoranlardan uygun fiyatla yemek paketleri alın.">
-    <meta name="keywords" content="gıda israfı, yemek, restoran, çevre, tasarruf">
-    <link rel="icon" href="./assets/favicon.ico" type="image/x-icon">
+    <meta name="description" content="KapTaze ile restoranlardaki fazla yemekleri %50'ye varan indirimlerle satın alın. Gıda israfını önleyin, tasarruf edin!">
     
-    <!-- CSS -->
-    <link rel="stylesheet" href="./css/style.css">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="./assets/favicon.png">
+    <link rel="apple-touch-icon" href="./assets/favicon.png">
     
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Backend Integration -->
-    <script src="./js/backend-service.js"></script>
-    <script src="./js/github-integration.js"></script>
-    
-    <!-- Open Graph -->
-    <meta property="og:title" content="KapTaze - Gıda İsrafını Önleme Platformu">
-    <meta property="og:description" content="Restoranlardan uygun fiyatla yemek paketleri alın ve gıda israfına karşı durun.">
-    <meta property="og:image" content="./assets/social-share.jpg">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://kaptazeapp.com.tr">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #16a34a;
+            --dark-green: #0f7938;
+            --light-green: #22c55e;
+            --accent-orange: #fb923c;
+            --background: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background: var(--background);
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--white);
+            box-shadow: 0 2px 10px var(--shadow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-green);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            animation: bounce 2s infinite;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-green);
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, var(--primary-green), var(--light-green));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(22, 163, 74, 0.3);
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-content {
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: var(--accent-orange);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .app-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .app-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--text-dark);
+            color: white;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .app-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .app-button img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-green);
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .hero-visual {
+            position: relative;
+            animation: fadeInUp 1s ease 0.3s both;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: auto;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-food {
+            position: absolute;
+            font-size: 3rem;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .floating-food:nth-child(2) {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0.5s;
+        }
+
+        .floating-food:nth-child(3) {
+            top: 20%;
+            right: 15%;
+            animation-delay: 1s;
+        }
+
+        .floating-food:nth-child(4) {
+            bottom: 20%;
+            left: 5%;
+            animation-delay: 1.5s;
+        }
+
+        .floating-food:nth-child(5) {
+            bottom: 30%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 5rem 2rem;
+            background: var(--white);
+        }
+
+        .section-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .section-badge {
+            display: inline-block;
+            background: var(--primary-green);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .section-subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+        }
+
+        .step-card {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 20px;
+            background: var(--background);
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+            animation: bounce 3s infinite;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: var(--primary-green);
+            color: white;
+            border-radius: 50%;
+            line-height: 30px;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .step-description {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* Restaurant Showcase */
+        .restaurants {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .restaurant-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .restaurant-card {
+            background: var(--white);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .restaurant-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--primary-green), var(--light-green));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+
+        .restaurant-info {
+            padding: 1.5rem;
+        }
+
+        .restaurant-name {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .restaurant-category {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .restaurant-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .discount-badge {
+            background: var(--accent-orange);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        .available-packages {
+            background: var(--background);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            text-align: center;
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+
+        /* Statistics Section */
+        .statistics {
+            padding: 5rem 2rem;
+            background: var(--white);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--primary-green), var(--light-green));
+            border-radius: 20px;
+            color: white;
+            transition: transform 0.3s;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .stat-card:hover {
+            transform: scale(1.05);
+        }
+
+        .stat-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-description {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* App Download Section */
+        .app-download {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, var(--primary-green), var(--dark-green));
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-download-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .app-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .app-features {
+            list-style: none;
+            margin: 2rem 0;
+        }
+
+        .app-features li {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+        }
+
+        .qr-code {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: var(--background);
+            margin: 0 auto 1rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 3rem 2rem 1rem;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 1rem;
+            color: var(--light-green);
+        }
+
+        .footer-column a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .footer-column a:hover {
+            color: var(--light-green);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: background 0.3s;
+        }
+
+        .social-icon:hover {
+            background: var(--primary-green);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .steps-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .app-download-container {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-dots {
+            display: inline-flex;
+            gap: 0.3rem;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        .dot:nth-child(3) { animation-delay: 0; }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar">
+    <nav>
         <div class="nav-container">
-            <div class="nav-brand">
-                <div class="logo">
-                    <span class="logo-icon">🌱</span>
-                    <span class="logo-text">KapTaze</span>
-                </div>
-            </div>
-            
-            <div class="nav-menu" id="nav-menu">
-                <a href="#home" class="nav-link">Ana Sayfa</a>
-                <a href="#features" class="nav-link">Özellikler</a>
-                <a href="#about" class="nav-link">Hakkımızda</a>
-                <a href="#contact" class="nav-link">İletişim</a>
-            </div>
-            
-            <div class="nav-actions">
-                <button class="btn-secondary" id="customerRegistrationBtn" onclick="openPanel('customer')">
-                    <i class="fas fa-user-plus"></i> Müşteri Kayıt
-                </button>
-                <button class="btn-primary" onclick="openPanel('restaurant')">
-                    <i class="fas fa-store"></i> Restoran Girişi
-                </button>
-                <button class="btn-admin" onclick="openPanel('admin')">
-                    <i class="fas fa-cog"></i> Admin
-                </button>
-            </div>
-            
-            <div class="nav-toggle" id="nav-toggle">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
+            <a href="#" class="logo">
+                <img src="./assets/favicon.png" alt="KapTaze" class="logo-icon" style="width: 32px; height: 32px; border-radius: 50%;">
+                kaptaze
+            </a>
+            <div class="nav-links">
+                <a href="#how-it-works">Nasıl Çalışır?</a>
+                <a href="#restaurants">Restoranlar</a>
+                <a href="#impact">Etkimiz</a>
+                <a href="#app">Uygulama</a>
+                <a href="https://kaptaze.com/customer-registration-v2.html" class="cta-button">Hemen Kayıt Ol</a>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="hero-background">
-            <div class="hero-shape shape-1"></div>
-            <div class="hero-shape shape-2"></div>
-            <div class="hero-shape shape-3"></div>
-        </div>
-        
+    <section class="hero">
         <div class="hero-container">
             <div class="hero-content">
-                <h1 class="hero-title">
-                    Gıda İsrafını <span class="highlight">Birlikte</span> Önleyelim
-                </h1>
+                <div class="hero-badge">🎉 Yeni! 100+ Restoran Katıldı</div>
+                <h1>Gıda İsrafını Önleme Platformu</h1>
                 <p class="hero-subtitle">
-                    Restoranlardan uygun fiyatla kaliteli yemek paketleri alın, çevreyi koruyun ve tasarruf edin.
-                    Her paket ile gıda israfına karşı fark yaratın.
+                    Sevdiğin restoranlardaki fazla yemekleri %50'ye varan indirimlerle satın al. 
+                    Hem cüzdanına hem de gezegene katkı sağla!
                 </p>
-                
+                <div class="app-buttons">
+                    <a href="#" class="app-button">
+                        <span>📱</span>
+                        <div>
+                            <div style="font-size: 0.8rem;">İndir</div>
+                            <div>App Store</div>
+                        </div>
+                    </a>
+                    <a href="#" class="app-button">
+                        <span>📱</span>
+                        <div>
+                            <div style="font-size: 0.8rem;">İndir</div>
+                            <div>Google Play</div>
+                        </div>
+                    </a>
+                </div>
                 <div class="hero-stats">
                     <div class="stat-item">
-                        <div class="stat-number">2,847</div>
-                        <div class="stat-label">Kurtarılan Paket</div>
+                        <div class="stat-number">10K+</div>
+                        <div class="stat-label">Kurtarılan Yemek</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">1.2T</div>
-                        <div class="stat-label">CO₂ Tasarrufu</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">156</div>
+                        <div class="stat-number">150+</div>
                         <div class="stat-label">Partner Restoran</div>
                     </div>
-                </div>
-                
-                <div class="hero-actions">
-                    <button class="cta-button primary" id="heroCustomerRegistrationBtn" onclick="openPanel('customer')">
-                        <i class="fas fa-user-plus"></i>
-                        Müşteri Kayıt
-                    </button>
-                    <button class="cta-button secondary" onclick="scrollToSection('features')">
-                        <i class="fas fa-play"></i>
-                        Nasıl Çalışır?
-                    </button>
-                </div>
-            </div>
-            
-            <div class="hero-image">
-                <div class="phone-mockup">
-                    <div class="phone-screen">
-                        <div class="app-preview">
-                            <div class="app-header">
-                                <span class="app-logo">🌱</span>
-                                <span class="app-title">KapTaze</span>
-                            </div>
-                            <div class="app-content">
-                                <div class="food-card">
-                                    <div class="food-image"></div>
-                                    <div class="food-info">
-                                        <h4>Karma Menü</h4>
-                                        <p>Seraser Restaurant</p>
-                                        <div class="price">
-                                            <span class="old-price">₺45</span>
-                                            <span class="new-price">₺18</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="stat-item">
+                        <div class="stat-number">5K+</div>
+                        <div class="stat-label">Mutlu Kullanıcı</div>
                     </div>
                 </div>
+            </div>
+            <div class="hero-visual">
+                <div class="floating-food">🍕</div>
+                <div class="floating-food">🥗</div>
+                <div class="floating-food">🍰</div>
+                <div class="floating-food">🥙</div>
+                <div class="floating-food">🍜</div>
+                <div style="text-align: center; font-size: 10rem;">📱</div>
             </div>
         </div>
     </section>
 
-    <!-- Platform Access Section -->
-    <section id="platforms" class="platforms">
-        <div class="container">
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="section-container">
             <div class="section-header">
-                <h2 class="section-title">Platform Erişimi</h2>
-                <p class="section-subtitle">İhtiyacınıza göre doğru platforma yönlendiriyoruz</p>
+                <div class="section-badge">Çok Kolay!</div>
+                <h2 class="section-title">3 Adımda Yemek Kurtar</h2>
+                <p class="section-subtitle">Gıda israfını önlemek hiç bu kadar kolay olmamıştı</p>
             </div>
-            
-            <div class="platform-grid">
-                <!-- Customer Platform -->
-                <div class="platform-card customer-card" onclick="openPanel('customer')">
-                    <div class="card-icon customer-icon">
-                        <i class="fas fa-shopping-bag"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3>Müşteri Platformu</h3>
-                        <p>Yakınınızdaki restoranlardan uygun fiyatla yemek paketleri keşfedin ve sipariş verin.</p>
-                        <ul class="feature-list">
-                            <li><i class="fas fa-check"></i> Paket keşfi ve rezervasyon</li>
-                            <li><i class="fas fa-check"></i> Güvenli ödeme sistemi</li>
-                            <li><i class="fas fa-check"></i> Sipariş takibi</li>
-                            <li><i class="fas fa-check"></i> Puan ve yorum sistemi</li>
-                        </ul>
-                        <div class="card-action">
-                            <span class="action-text">Müşteri Paneline Git</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Restaurant Platform -->
-                <div class="platform-card restaurant-card" onclick="openPanel('restaurant')">
-                    <div class="card-icon restaurant-icon">
-                        <i class="fas fa-store"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3>Restoran Platformu</h3>
-                        <p>Fazla yemeklerinizi değerlendirin, yeni müşteriler kazanın ve gıda israfını azaltın.</p>
-                        <ul class="feature-list">
-                            <li><i class="fas fa-check"></i> Paket yönetimi</li>
-                            <li><i class="fas fa-check"></i> Sipariş takibi</li>
-                            <li><i class="fas fa-check"></i> Müşteri iletişimi</li>
-                            <li><i class="fas fa-check"></i> Analiz ve raporlama</li>
-                        </ul>
-                        <div class="card-action">
-                            <span class="action-text">Restoran Paneline Git</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Admin Platform -->
-                <div class="platform-card admin-card" onclick="openPanel('admin')">
-                    <div class="card-icon admin-icon">
-                        <i class="fas fa-cog"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3>Yönetim Platformu</h3>
-                        <p>Sistem yönetimi, kullanıcı yönetimi ve platform analizleri için admin kontrolü.</p>
-                        <ul class="feature-list">
-                            <li><i class="fas fa-check"></i> Kullanıcı yönetimi</li>
-                            <li><i class="fas fa-check"></i> Sistem monitöring</li>
-                            <li><i class="fas fa-check"></i> İçerik yönetimi</li>
-                            <li><i class="fas fa-check"></i> Raporlama</li>
-                        </ul>
-                        <div class="card-action">
-                            <span class="action-text">Admin Paneline Git</span>
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section id="features" class="features">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Nasıl Çalışır?</h2>
-                <p class="section-subtitle">Gıda israfını önlemek için üç basit adım</p>
-            </div>
-            
-            <div class="features-grid">
-                <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="fas fa-search"></i>
-                        <span class="step-number">1</span>
-                    </div>
-                    <h3>Keşfet</h3>
-                    <p>Yakınınızdaki restoranlardan indirimli paketleri keşfedin ve seçin.</p>
-                </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="fas fa-credit-card"></i>
-                        <span class="step-number">2</span>
-                    </div>
-                    <h3>Rezerve Et</h3>
-                    <p>Güvenli ödeme sistemi ile paketinizi rezerve edin ve ödeme yapın.</p>
-                </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon">
-                        <i class="fas fa-utensils"></i>
-                        <span class="step-number">3</span>
-                    </div>
-                    <h3>Teslim Al</h3>
-                    <p>Belirlenen saatte restorandan paketinizi teslim alın ve tadını çıkarın.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- About Section -->
-    <section id="about" class="about">
-        <div class="container">
-            <div class="about-content">
-                <div class="about-text">
-                    <h2>Misyonumuz</h2>
-                    <p class="about-description">
-                        KapTaze olarak, dünyada ciddi bir problem olan gıda israfını teknoloji ile çözmeyi hedefliyoruz. 
-                        Restoranların fazla yemeklerini uygun fiyatla müşterilerimizle buluşturarak hem çevreyi koruyoruz 
-                        hem de ekonomik fayda sağlıyoruz.
+            <div class="steps-container">
+                <div class="step-card">
+                    <span class="step-icon">📲</span>
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Uygulamayı İndir</h3>
+                    <p class="step-description">
+                        KapTaze uygulamasını App Store veya Google Play'den ücretsiz indir
                     </p>
-                    
-                    <div class="impact-stats">
-                        <div class="impact-item">
-                            <i class="fas fa-leaf"></i>
-                            <div>
-                                <h4>Çevre Etkisi</h4>
-                                <p>Her kurtardığımız paket ile CO₂ emisyonunu azaltıyoruz</p>
-                            </div>
+                </div>
+                <div class="step-card">
+                    <span class="step-icon">🔍</span>
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Yakındaki Fırsatları Keşfet</h3>
+                    <p class="step-description">
+                        Konumuna göre yakındaki restoranların sürpriz paketlerini görüntüle
+                    </p>
+                </div>
+                <div class="step-card">
+                    <span class="step-icon">🎁</span>
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">Rezerve Et ve Al</h3>
+                    <p class="step-description">
+                        Seçtiğin paketi rezerve et ve belirlenen saatte restorana git
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Restaurant Showcase -->
+    <section class="restaurants" id="restaurants">
+        <div class="section-container">
+            <div class="section-header">
+                <div class="section-badge">🍽️ Popüler</div>
+                <h2 class="section-title">Öne Çıkan Restoranlar</h2>
+                <p class="section-subtitle">Antalya'nın en sevilen restoranları KapTaze'de</p>
+            </div>
+            <div class="restaurant-grid">
+                <div class="restaurant-card">
+                    <div class="restaurant-image">🍕</div>
+                    <div class="restaurant-info">
+                        <h3 class="restaurant-name">Pizza Express</h3>
+                        <p class="restaurant-category">İtalyan Mutfağı</p>
+                        <div class="restaurant-stats">
+                            <div class="rating">⭐ 4.8</div>
+                            <div class="discount-badge">%50</div>
                         </div>
-                        <div class="impact-item">
-                            <i class="fas fa-heart"></i>
-                            <div>
-                                <h4>Sosyal Fayda</h4>
-                                <p>Kaliteli yemekleri herkes için ulaşılabilir kılıyoruz</p>
-                            </div>
-                        </div>
-                        <div class="impact-item">
-                            <i class="fas fa-chart-line"></i>
-                            <div>
-                                <h4>Ekonomik Değer</h4>
-                                <p>Restoranlara ek gelir, müşterilere tasarruf sağlıyoruz</p>
-                            </div>
-                        </div>
+                        <div class="available-packages">3 Paket Mevcut</div>
                     </div>
                 </div>
-                
-                <div class="about-image">
-                    <div class="about-visual">
-                        <div class="visual-element">
-                            <i class="fas fa-recycle"></i>
-                            <span>Gıda Döngüsü</span>
+                <div class="restaurant-card">
+                    <div class="restaurant-image">🥘</div>
+                    <div class="restaurant-info">
+                        <h3 class="restaurant-name">Anadolu Sofrası</h3>
+                        <p class="restaurant-category">Türk Mutfağı</p>
+                        <div class="restaurant-stats">
+                            <div class="rating">⭐ 4.9</div>
+                            <div class="discount-badge">%45</div>
                         </div>
+                        <div class="available-packages">5 Paket Mevcut</div>
+                    </div>
+                </div>
+                <div class="restaurant-card">
+                    <div class="restaurant-image">🍰</div>
+                    <div class="restaurant-info">
+                        <h3 class="restaurant-name">Sweet Dreams</h3>
+                        <p class="restaurant-category">Tatlı & Pasta</p>
+                        <div class="restaurant-stats">
+                            <div class="rating">⭐ 4.7</div>
+                            <div class="discount-badge">%60</div>
+                        </div>
+                        <div class="available-packages">8 Paket Mevcut</div>
+                    </div>
+                </div>
+                <div class="restaurant-card">
+                    <div class="restaurant-image">🍜</div>
+                    <div class="restaurant-info">
+                        <h3 class="restaurant-name">Asia Kitchen</h3>
+                        <p class="restaurant-category">Uzak Doğu</p>
+                        <div class="restaurant-stats">
+                            <div class="rating">⭐ 4.6</div>
+                            <div class="discount-badge">%55</div>
+                        </div>
+                        <div class="available-packages">4 Paket Mevcut</div>
+                    </div>
+                </div>
+                <div class="restaurant-card">
+                    <div class="restaurant-image">☕</div>
+                    <div class="restaurant-info">
+                        <h3 class="restaurant-name">Coffee Lab</h3>
+                        <p class="restaurant-category">Kahve & Atıştırmalık</p>
+                        <div class="restaurant-stats">
+                            <div class="rating">⭐ 4.8</div>
+                            <div class="discount-badge">%40</div>
+                        </div>
+                        <div class="available-packages">6 Paket Mevcut</div>
+                    </div>
+                </div>
+                <div class="restaurant-card">
+                    <div class="restaurant-image">🥗</div>
+                    <div class="restaurant-info">
+                        <h3 class="restaurant-name">Green Garden</h3>
+                        <p class="restaurant-category">Vegan & Sağlıklı</p>
+                        <div class="restaurant-stats">
+                            <div class="rating">⭐ 4.9</div>
+                            <div class="discount-badge">%50</div>
+                        </div>
+                        <div class="available-packages">2 Paket Mevcut</div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-        <div class="container">
+    <!-- Statistics Section -->
+    <section class="statistics" id="impact">
+        <div class="section-container">
             <div class="section-header">
-                <h2 class="section-title">İletişime Geçin</h2>
-                <p class="section-subtitle">Sorularınız için bizimle iletişime geçin</p>
+                <div class="section-badge">📊 Etkimiz</div>
+                <h2 class="section-title">Birlikte Yarattığımız Değer</h2>
+                <p class="section-subtitle">Her gün büyüyen topluluğumuzla gıda israfını önlüyoruz</p>
             </div>
-            
-            <div class="contact-content">
-                <div class="contact-info">
-                    <div class="contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <div>
-                            <h4>E-posta</h4>
-                            <p>info@kaptazeapp.com.tr</p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-phone"></i>
-                        <div>
-                            <h4>Telefon</h4>
-                            <p>+90 242 XXX XX XX</p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div>
-                            <h4>Adres</h4>
-                            <p>Antalya, Türkiye</p>
-                        </div>
-                    </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🍽️</div>
+                    <div class="stat-value">10,000+</div>
+                    <div class="stat-description">Kurtarılan Yemek</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🌍</div>
+                    <div class="stat-value">25 Ton</div>
+                    <div class="stat-description">CO2 Tasarrufu</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value">500K₺</div>
+                    <div class="stat-description">Kullanıcı Tasarrufu</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏪</div>
+                    <div class="stat-value">150+</div>
+                    <div class="stat-description">Partner Restoran</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Download Section -->
+    <section class="app-download" id="app">
+        <div class="app-download-container">
+            <div class="app-content">
+                <h2>📱 Hemen İndir, Tasarrufa Başla!</h2>
+                <p style="font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.95;">
+                    KapTaze mobil uygulaması ile her gün yüzlerce fırsatı keşfet
+                </p>
+                <ul class="app-features">
+                    <li>
+                        <span class="feature-icon">✅</span>
+                        Gerçek zamanlı bildirimler
+                    </li>
+                    <li>
+                        <span class="feature-icon">✅</span>
+                        Kolay rezervasyon sistemi
+                    </li>
+                    <li>
+                        <span class="feature-icon">✅</span>
+                        Güvenli ödeme altyapısı
+                    </li>
+                    <li>
+                        <span class="feature-icon">✅</span>
+                        Favori restoran takibi
+                    </li>
+                    <li>
+                        <span class="feature-icon">✅</span>
+                        Detaylı restoran bilgileri
+                    </li>
+                </ul>
+                <div class="app-buttons">
+                    <a href="#" class="app-button" style="background: white; color: var(--text-dark);">
+                        <span>🍎</span>
+                        <div>
+                            <div style="font-size: 0.8rem;">Download on</div>
+                            <div>App Store</div>
+                        </div>
+                    </a>
+                    <a href="#" class="app-button" style="background: white; color: var(--text-dark);">
+                        <span>🤖</span>
+                        <div>
+                            <div style="font-size: 0.8rem;">Get it on</div>
+                            <div>Google Play</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="qr-code">
+                <div class="qr-placeholder">📱</div>
+                <p style="color: var(--text-dark); font-weight: 600;">QR Kodu Tara</p>
+                <p style="color: var(--text-light); font-size: 0.9rem;">Hızlı indirme için</p>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <div class="logo">
-                        <span class="logo-icon">🌱</span>
-                        <span class="logo-text">KapTaze</span>
-                    </div>
-                    <p>Gıda israfını önleme ve sürdürülebilir bir gelecek için teknoloji çözümleri.</p>
-                </div>
-                
-                <div class="footer-links">
-                    <div class="link-group">
-                        <h4>Platform</h4>
-                        <ul>
-                            <li><a href="#" onclick="openPanel('customer')">Müşteri Paneli</a></li>
-                            <li><a href="#" onclick="openPanel('restaurant')">Restoran Paneli</a></li>
-                            <li><a href="#" onclick="openPanel('admin')">Admin Paneli</a></li>
-                        </ul>
-                    </div>
-                    <div class="link-group">
-                        <h4>Kurumsal</h4>
-                        <ul>
-                            <li><a href="#about">Hakkımızda</a></li>
-                            <li><a href="#contact">İletişim</a></li>
-                            <li><a href="#">Gizlilik Politikası</a></li>
-                            <li><a href="#">Kullanım Şartları</a></li>
-                        </ul>
-                    </div>
+    <footer>
+        <div class="footer-container">
+            <div class="footer-column">
+                <h3>KapTaze</h3>
+                <p style="margin-bottom: 1rem; opacity: 0.8;">
+                    Gıda israfını önleme platformu
+                </p>
+                <div class="social-links">
+                    <a href="#" class="social-icon">📘</a>
+                    <a href="#" class="social-icon">📷</a>
+                    <a href="#" class="social-icon">🐦</a>
+                    <a href="#" class="social-icon">💼</a>
                 </div>
             </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; 2024 KapTaze. Tüm hakları saklıdır.</p>
+            <div class="footer-column">
+                <h3>Paneller</h3>
+                <a href="https://kaptaze.com/restaurant-login.html">Esnaf Paneli - (kaptazem)</a>
+                <a href="#">Restoranlar</a>
+                <a href="#">Mobil Uygulama</a>
+                <a href="#">Blog</a>
             </div>
+            <div class="footer-column">
+                <h3>Kurumsal</h3>
+                <a href="#">Hakkımızda</a>
+                <a href="#">İletişim</a>
+                <a href="#">Kariyer</a>
+                <a href="#">Basın</a>
+            </div>
+            <div class="footer-column">
+                <h3>Destek</h3>
+                <a href="#">Sıkça Sorulan Sorular</a>
+                <a href="#">Kullanım Koşulları</a>
+                <a href="#">Gizlilik Politikası</a>
+                <a href="#">KVKK</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 KapTaze. Tüm hakları saklıdır. Made with 💚 in Antalya</p>
         </div>
     </footer>
 
-    <!-- Environment Configuration -->
     <script>
-        // Free hosting domain configuration - Netlify
-        window.KAPTAZE_DOMAIN = 'www.kaptaze.com';
-        window.KAPTAZE_ENVIRONMENT = 'free';
-        window.KAPTAZE_PROVIDER = 'netlify';
-        
-        // Initialize Backend Service
-        window.backendService = new BackendService();
-        console.log('🚀 Backend service initialized');
-        console.log('🔗 Backend URL:', window.backendService.baseURL);
-        
-        // API Connection Status Display
-        if (window.backendService.API_TEST_MODE) {
-            const statusDiv = document.createElement('div');
-            statusDiv.style.cssText = 'position:fixed;top:10px;right:10px;padding:10px 20px;background:#ff4444;color:white;border-radius:5px;z-index:9999;font-weight:bold;';
-            statusDiv.innerHTML = '🔴 API TEST MODE - No Fallbacks!';
-            document.body.appendChild(statusDiv);
-            
-            // Test real API connection
-            fetch(window.backendService.baseURL + '/health')
-                .then(res => {
-                    statusDiv.style.background = '#44ff44';
-                    statusDiv.innerHTML = '✅ API Connected: ' + window.backendService.baseURL;
-                })
-                .catch(err => {
-                    statusDiv.style.background = '#ff4444';
-                    statusDiv.innerHTML = '❌ API OFFLINE: ' + err.message;
-                });
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Animated counter for statistics
+        function animateValue(element, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                element.textContent = value.toLocaleString('tr-TR') + (element.dataset.suffix || '');
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
         }
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                    
+                    // Animate statistics
+                    if (entry.target.classList.contains('stat-value')) {
+                        const value = parseInt(entry.target.textContent.replace(/\D/g, ''));
+                        animateValue(entry.target, 0, value, 2000);
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements
+        document.querySelectorAll('.step-card, .restaurant-card, .stat-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+
+        // Dynamic restaurant data (simulated)
+        const restaurants = [
+            { name: 'Pizza Express', packages: 3, discount: 50 },
+            { name: 'Anadolu Sofrası', packages: 5, discount: 45 },
+            { name: 'Sweet Dreams', packages: 8, discount: 60 },
+            { name: 'Asia Kitchen', packages: 4, discount: 55 },
+            { name: 'Coffee Lab', packages: 6, discount: 40 },
+            { name: 'Green Garden', packages: 2, discount: 50 }
+        ];
+
+        // Update restaurant packages randomly (simulation)
+        setInterval(() => {
+            const cards = document.querySelectorAll('.available-packages');
+            cards.forEach((card, index) => {
+                if (restaurants[index]) {
+                    const currentPackages = restaurants[index].packages;
+                    const newPackages = Math.max(0, currentPackages + Math.floor(Math.random() * 3) - 1);
+                    restaurants[index].packages = newPackages;
+                    card.textContent = `${newPackages} Paket Mevcut`;
+                    
+                    // Add pulse animation when updated
+                    card.style.animation = 'pulse 0.5s ease';
+                    setTimeout(() => {
+                        card.style.animation = '';
+                    }, 500);
+                }
+            });
+        }, 5000);
+
+        // Navbar scroll effect
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('nav');
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 100) {
+                navbar.style.boxShadow = '0 5px 20px rgba(0,0,0,0.1)';
+            } else {
+                navbar.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+            }
+            
+            lastScroll = currentScroll;
+        });
+
+        // Add loading animation
+        window.addEventListener('load', () => {
+            document.body.style.opacity = '1';
+        });
+
+        // Mobile menu toggle (placeholder for future implementation)
+        function toggleMobileMenu() {
+            console.log('Mobile menu toggle');
+        }
+
+        // Form submission simulation
+        document.querySelectorAll('.cta-button, .app-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                // Only prevent default if href is "#" or empty
+                const href = button.getAttribute('href');
+                if (href === '#' || !href || href.trim() === '') {
+                    e.preventDefault();
+                }
+                // Add ripple effect
+                const ripple = document.createElement('span');
+                ripple.style.position = 'absolute';
+                ripple.style.width = ripple.style.height = '40px';
+                ripple.style.background = 'rgba(255,255,255,0.5)';
+                ripple.style.borderRadius = '50%';
+                ripple.style.transform = 'scale(0)';
+                ripple.style.animation = 'ripple 0.6s ease-out';
+                button.style.position = 'relative';
+                button.style.overflow = 'hidden';
+                button.appendChild(ripple);
+                
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // Add ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
-    
-    <!-- JavaScript -->
-    <script src="./js/shared.js?v=2025.08.22.18"></script>
-    <script src="./js/main-enhanced.js?v=2025.08.27.22"></script>
 </body>
 </html>
