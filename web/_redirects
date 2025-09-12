@@ -1,6 +1,12 @@
-# Restaurant routes
+# Restaurant routes (these take priority)
 /restaurant-login /restaurant-login.html 200
 /restaurant-panel /restaurant-panel.html 200
 
-# SPA fallback
+# Admin routes
+/admin-login /admin-login-v3.html 200
+
+# Root redirect
+/ /index.html 200
+
+# SPA fallback (only for unmatched routes)
 /* /index.html 200
