@@ -41,15 +41,13 @@
             if (window.GOOGLE_MAPS_API_KEY) {
                 // Use modern loading pattern recommended by Google
                 const script = document.createElement('script');
-                script.src = `https://maps.googleapis.com/maps/api/js?key=${window.GOOGLE_MAPS_API_KEY}&libraries=places&loading=async&v=weekly`;
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${window.GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
                 script.async = true;
                 script.defer = true;
                 script.id = 'google-maps-script';
                 
-                script.onload = function() {
-                    console.log('🗺️ Google Maps API loaded successfully');
-                    initMap();
-                };
+                // Remove onload handler since we use callback parameter
+                // Google Maps will call initMap() directly
                 
                 script.onerror = function() {
                     console.error('❌ Failed to load Google Maps API');
@@ -559,24 +557,17 @@
         let geocoder;
         window.selectedLocation = null;
         
-        async function initMap() {
+        function initMap() {
             try {
                 console.log('🚀 Initializing Google Maps...');
-                
-                // Modern way: Import required libraries
-                const { Map, Marker } = await google.maps.importLibrary("maps");
-                const { Geocoder } = await google.maps.importLibrary("geocoding");
-                
-                console.log('📚 Google Maps libraries loaded');
                 
                 // Initialize map centered on Antalya
                 const antalya = { lat: 36.8969, lng: 30.7133 };
                 
-                map = new Map(document.getElementById('map'), {
+                map = new google.maps.Map(document.getElementById('map'), {
                     zoom: 12,
                     center: antalya,
                     mapTypeId: 'roadmap',
-                    // Remove DEMO_MAP_ID to avoid CORS issues
                     styles: [
                         {
                             featureType: 'poi.business',
@@ -586,7 +577,7 @@
                     ]
                 });
                 
-                geocoder = new Geocoder();
+                geocoder = new google.maps.Geocoder();
                 
                 // Add click listener to map
                 map.addListener('click', function(event) {
@@ -596,7 +587,7 @@
                 console.log('🗺️ Map initialized successfully');
                 
                 // Initialize Place Autocomplete
-                await initPlaceAutocomplete();
+                initPlaceAutocomplete();
                 
             } catch (error) {
                 console.error('❌ Error initializing map:', error);
@@ -604,49 +595,23 @@
             }
         }
         
-        async function initPlaceAutocomplete() {
+        function initPlaceAutocomplete() {
             try {
-                // Import Places library
-                const { PlacesService } = await google.maps.importLibrary("places");
-                
                 const businessAddressInput = document.getElementById('businessAddress');
                 
-                // Check if new PlaceAutocompleteElement is available
-                if (typeof google.maps.places.PlaceAutocompleteElement !== 'undefined') {
-                    console.log('🆕 Using new PlaceAutocompleteElement');
-                    
-                    // Create autocomplete element
-                    const autocompleteElement = new google.maps.places.PlaceAutocompleteElement();
-                    autocompleteElement.id = 'place-autocomplete';
-                    
-                    // Replace input with autocomplete element
-                    const inputContainer = businessAddressInput.parentNode;
-                    inputContainer.replaceChild(autocompleteElement, businessAddressInput);
-                    
-                    autocompleteElement.addEventListener('gmp-placeselect', (event) => {
-                        const place = event.place;
-                        if (place.location) {
-                            selectLocation(place.location);
-                            map.setCenter(place.location);
-                            map.setZoom(16);
-                        }
-                    });
-                } else {
-                    console.log('⚠️ Using legacy Autocomplete API');
-                    // Fallback to legacy Autocomplete
-                    const { Autocomplete } = await google.maps.importLibrary("places");
-                    const autocomplete = new Autocomplete(businessAddressInput);
-                    autocomplete.bindTo('bounds', map);
-                    
-                    autocomplete.addListener('place_changed', function() {
-                        const place = autocomplete.getPlace();
-                        if (place.geometry) {
-                            selectLocation(place.geometry.location);
-                            map.setCenter(place.geometry.location);
-                            map.setZoom(16);
-                        }
-                    });
-                }
+                // Use legacy Autocomplete API (more stable)
+                console.log('⚠️ Using legacy Autocomplete API');
+                const autocomplete = new google.maps.places.Autocomplete(businessAddressInput);
+                autocomplete.bindTo('bounds', map);
+                
+                autocomplete.addListener('place_changed', function() {
+                    const place = autocomplete.getPlace();
+                    if (place.geometry) {
+                        selectLocation(place.geometry.location);
+                        map.setCenter(place.geometry.location);
+                        map.setZoom(16);
+                    }
+                });
                 
                 console.log('✅ Place autocomplete initialized');
                 
@@ -656,7 +621,7 @@
             }
         }
         
-        async function selectLocation(latLng) {
+        function selectLocation(latLng) {
             // Update selected location
             window.selectedLocation = {
                 lat: latLng.lat(),
@@ -668,9 +633,8 @@
                 marker.setMap(null);
             }
             
-            try {
-                // Use Marker from already imported maps library
-                marker = new google.maps.Marker({
+            // Use standard google.maps.Marker
+            marker = new google.maps.Marker({
                     position: latLng,
                     map: map,
                     title: 'İşletme Konumu',
@@ -684,9 +648,6 @@
                         scaledSize: new google.maps.Size(32, 32)
                     }
                 });
-            } catch (error) {
-                console.error('❌ Error creating marker:', error);
-            }
             
             // Reverse geocode to get address
             geocoder.geocode({ location: latLng }, function(results, status) {
