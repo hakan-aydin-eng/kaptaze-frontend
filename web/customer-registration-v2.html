@@ -21,14 +21,30 @@
     
     <!-- Google Maps API - Modern async loading -->
     <script>
-        // Modern Google Maps API loading with proper async pattern
+        // Modern Google Maps API loading with duplicate prevention
         function loadGoogleMaps() {
+            // Prevent duplicate loading
+            if (window.google && window.google.maps) {
+                console.log('🗺️ Google Maps already loaded, initializing...');
+                initMap();
+                return;
+            }
+            
+            // Check if script is already being loaded
+            const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+            if (existingScript) {
+                console.log('🔄 Google Maps script already exists, waiting for load...');
+                existingScript.addEventListener('load', initMap);
+                return;
+            }
+            
             if (window.GOOGLE_MAPS_API_KEY) {
                 // Use modern loading pattern recommended by Google
                 const script = document.createElement('script');
-                script.src = `https://maps.googleapis.com/maps/api/js?key=${window.GOOGLE_MAPS_API_KEY}&libraries=places,marker&loading=async`;
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${window.GOOGLE_MAPS_API_KEY}&libraries=places&loading=async&v=weekly`;
                 script.async = true;
                 script.defer = true;
+                script.id = 'google-maps-script';
                 
                 script.onload = function() {
                     console.log('🗺️ Google Maps API loaded successfully');
@@ -548,8 +564,7 @@
                 console.log('🚀 Initializing Google Maps...');
                 
                 // Modern way: Import required libraries
-                const { Map } = await google.maps.importLibrary("maps");
-                const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+                const { Map, Marker } = await google.maps.importLibrary("maps");
                 const { Geocoder } = await google.maps.importLibrary("geocoding");
                 
                 console.log('📚 Google Maps libraries loaded');
@@ -561,7 +576,7 @@
                     zoom: 12,
                     center: antalya,
                     mapTypeId: 'roadmap',
-                    mapId: 'DEMO_MAP_ID', // Required for AdvancedMarkerElement
+                    // Remove DEMO_MAP_ID to avoid CORS issues
                     styles: [
                         {
                             featureType: 'poi.business',
@@ -650,44 +665,25 @@
             
             // Clear existing marker
             if (marker) {
-                marker.map = null;
+                marker.setMap(null);
             }
             
             try {
-                // Try to use modern AdvancedMarkerElement if available
-                if (window.google?.maps?.marker?.AdvancedMarkerElement) {
-                    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
-                    
-                    // Create custom pin
-                    const pin = new PinElement({
-                        background: "#16a34a",
-                        borderColor: "#ffffff",
-                        glyphColor: "#ffffff",
-                    });
-                    
-                    marker = new AdvancedMarkerElement({
-                        position: latLng,
-                        map: map,
-                        title: 'İşletme Konumu',
-                        content: pin.element,
-                    });
-                } else {
-                    // Fallback to legacy Marker
-                    marker = new google.maps.Marker({
-                        position: latLng,
-                        map: map,
-                        title: 'İşletme Konumu',
-                        animation: google.maps.Animation.DROP,
-                        icon: {
-                            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#16a34a"/>
-                                </svg>
-                            `),
-                            scaledSize: new google.maps.Size(32, 32)
-                        }
-                    });
-                }
+                // Use Marker from already imported maps library
+                marker = new google.maps.Marker({
+                    position: latLng,
+                    map: map,
+                    title: 'İşletme Konumu',
+                    animation: google.maps.Animation.DROP,
+                    icon: {
+                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#16a34a"/>
+                            </svg>
+                        `),
+                        scaledSize: new google.maps.Size(32, 32)
+                    }
+                });
             } catch (error) {
                 console.error('❌ Error creating marker:', error);
             }
