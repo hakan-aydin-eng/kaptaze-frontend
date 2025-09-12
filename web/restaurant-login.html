@@ -353,10 +353,13 @@
 
             try {
                 console.log('🔐 Attempting restaurant login...');
+                console.log('🔍 Login credentials:', { username, passwordLength: password.length });
                 
                 // Debug API availability  
                 console.log('🔍 API Debug:', {
                     BackendService: !!window.backendService,
+                    backendServiceType: typeof window.backendService,
+                    restaurantLoginFunction: !!window.backendService?.restaurantLogin,
                     KapTazeAPI: !!window.KapTazeAPI
                 });
                 
@@ -364,8 +367,14 @@
                     throw new Error('Backend service not loaded. Please refresh the page.');
                 }
                 
+                if (!window.backendService.restaurantLogin) {
+                    throw new Error('RestaurantLogin function not found in backend service.');
+                }
+                
+                console.log('📞 Calling restaurantLogin function...');
                 // Call restaurant login API using BackendService - NO localStorage
                 const loginResponse = await window.backendService.restaurantLogin(username, password);
+                console.log('📞 RestaurantLogin function returned:', loginResponse);
                 
                 console.log('✅ Restaurant login successful - API session created:', loginResponse);
                 
@@ -386,6 +395,11 @@
                 
             } catch (error) {
                 console.error('❌ Restaurant login failed:', error);
+                console.error('❌ Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
                 
                 // NO DEMO FALLBACK - Real API only
                 
