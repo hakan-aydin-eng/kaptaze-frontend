@@ -111,6 +111,18 @@ class BackendService {
             
             const data = await response.json();
             console.log('✅ API Response data:', data);
+            
+            // Special logging for login responses
+            if (url.includes('/login')) {
+                console.log('🔐 LOGIN RESPONSE ANALYSIS:', {
+                    success: data.success,
+                    hasToken: !!(data.token || data.data?.token),
+                    hasUser: !!(data.user || data.data?.user),
+                    errorMessage: data.error || data.message,
+                    responseStructure: Object.keys(data)
+                });
+            }
+            
             return data;
         } catch (error) {
             // Detailed error handling
