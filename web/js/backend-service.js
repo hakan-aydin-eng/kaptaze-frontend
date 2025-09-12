@@ -235,13 +235,15 @@ class BackendService {
             });
             
             // If successful, create user object format expected by restaurant panel
-            if (response && response.data) {
+            if (response && response.data && response.data.user) {
                 return {
                     user: {
-                        username: response.data.username || response.data.name,
-                        firstName: response.data.ownerName || response.data.name,
-                        role: 'restaurant',
-                        ...response.data
+                        username: response.data.user.username,
+                        firstName: response.data.user.firstName,
+                        lastName: response.data.user.lastName,
+                        email: response.data.user.email,
+                        role: response.data.user.role,
+                        restaurantId: response.data.user.restaurantId
                     }
                 };
             }

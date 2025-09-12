@@ -351,17 +351,20 @@ function showToast(message, type = 'info') {
 window.updateOrderStatus = updateOrderStatus;
 window.loadRestaurantOrders = loadOrders;
 
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.location.pathname.includes('restaurant-panel') || window.location.pathname.includes('restaurant')) {
-        console.log('🍽️ Initializing orders system for path:', window.location.pathname);
-        initializeOrdersSystem();
+// Initialize when page loads - Only if called manually, not auto-init
+// document.addEventListener('DOMContentLoaded', () => {
+//     if (window.location.pathname.includes('restaurant-panel') || window.location.pathname.includes('restaurant')) {
+//         console.log('🍽️ Initializing orders system for path:', window.location.pathname);
+//         initializeOrdersSystem();
         
-        // Refresh orders every 30 seconds
-        setInterval(loadOrders, 30000);
-    } else {
-        console.log('🍽️ Orders system not initialized - path:', window.location.pathname);
-    }
-});
+//         // Refresh orders every 30 seconds
+//         setInterval(loadOrders, 30000);
+//     } else {
+//         console.log('🍽️ Orders system not initialized - path:', window.location.pathname);
+//     }
+// });
+
+// Manual initialization function - called by restaurant-panel.js
+window.initializeRestaurantOrders = initializeOrdersSystem;
 
 console.log('🍽️ Restaurant Orders System Loaded');

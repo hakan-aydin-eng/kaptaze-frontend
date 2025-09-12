@@ -744,6 +744,15 @@
             window.backendService = new BackendService();
             console.log('✅ Backend service initialized:', window.backendService.baseURL);
             
+            // Load token from localStorage for authentication
+            const token = localStorage.getItem('kaptaze_auth_token') || localStorage.getItem('kaptaze_token');
+            if (token) {
+                window.backendService.authToken = token;
+                console.log('🔐 Auth token loaded for panel access');
+            } else {
+                console.log('⚠️ No auth token found in localStorage');
+            }
+            
             // Then initialize panel
             window.restaurantPanel = new RestaurantPanel();
         });
