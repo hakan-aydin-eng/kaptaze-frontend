@@ -298,9 +298,9 @@
             
             try {
                 console.log('🔍 Checking API status...');
-                const response = await window.KapTazeAPIService.public.healthCheck();
+                const response = await fetch(window.backendService.baseURL + '/public/stats');
                 
-                if (response.status === 'OK') {
+                if (response.ok) {
                     isApiOnline = true;
                     statusElement.className = 'api-status online';
                     statusElement.innerHTML = '<i class="fas fa-check-circle"></i> <span>API Bağlantısı Aktif</span>';
