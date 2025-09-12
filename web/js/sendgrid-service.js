@@ -6,8 +6,8 @@
 
 class SendGridService {
     constructor() {
-        this.apiKey = null; // Will be set from environment or config
-        this.baseURL = 'https://api.sendgrid.com/v3';
+        // SECURITY: Frontend email service disabled - use backend API instead
+        this.backendEmailAPI = '/admin/send-email';
         this.fromEmail = 'admin@kaptaze.com';
         this.fromName = 'KapTaze Restaurant Platform';
         
@@ -30,81 +30,45 @@ class SendGridService {
     }
 
     async init() {
-        console.log('📧 SendGrid Email Service initializing...');
-        
-        // Try to get API key from various sources
-        await this.loadAPIKey();
-        
-        console.log('✅ SendGrid Email Service ready');
-    }
-
-    async loadAPIKey() {
-        // Try multiple sources for API key
-        this.apiKey = 
-            process.env.SENDGRID_API_KEY || 
-            window.SENDGRID_API_KEY ||
-            localStorage.getItem('sendgrid_api_key') ||
-            'SG.demo-key-for-development'; // Demo key for development
-            
-        // Ensure API key is never null/undefined
-        if (!this.apiKey) {
-            this.apiKey = 'SG.demo-key-for-development';
-            console.warn('⚠️ No SendGrid API key found, using demo key');
-        }
-            
-        if (this.apiKey && this.apiKey.startsWith('SG.demo')) {
-            console.warn('⚠️ Using demo SendGrid API key - emails will be simulated');
-        } else {
-            console.log('✅ Production SendGrid API key loaded');
-        }
+        console.log('📧 SendGrid Email Service initializing (Backend Mode)...');
+        console.log('✅ SendGrid Email Service ready - using backend API');
     }
 
     async sendApprovalEmail(application, credentials) {
-        console.log(`📧 Sending approval email to: ${application.email}`);
+        console.log(`📧 Sending approval email via backend API to: ${application.email}`);
         
         try {
-            const emailData = {
-                personalizations: [{
-                    to: [{
-                        email: application.email,
-                        name: `${application.firstName} ${application.lastName}`
-                    }],
-                    substitutions: {
-                        '-restaurantName-': application.businessName,
-                        '-ownerName-': `${application.firstName} ${application.lastName}`,
-                        '-username-': credentials.username,
-                        '-password-': credentials.password,
-                        '-loginUrl-': 'https://kaptaze.com/restaurant-panel.html',
-                        '-supportEmail-': 'destek@kaptaze.com',
-                        '-applicationId-': application.applicationId
-                    }
-                }],
-                from: {
-                    email: this.fromEmail,
-                    name: this.fromName
+            // Send email through backend API (secure)
+            const response = await fetch(this.backendEmailAPI, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}` // Admin authentication
                 },
-                subject: this.templates.approval.subject,
-                content: [{
-                    type: 'text/html',
-                    value: this.generateApprovalEmailHTML(application, credentials)
-                }]
-            };
+                body: JSON.stringify({
+                    type: 'approval',
+                    to: application.email,
+                    data: {
+                        restaurantName: application.businessName,
+                        ownerName: `${application.firstName} ${application.lastName}`,
+                        username: credentials.username,
+                        password: credentials.password,
+                        applicationId: application.applicationId
+                    }
+                })
+            });
 
-            const result = await this.sendEmail(emailData);
-            
-            if (result.success) {
-                console.log('✅ Approval email sent successfully');
-                
-                // Log email activity
-                this.logEmailActivity('approval', application.email, result);
-                
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Approval email sent successfully via backend');
                 return {
                     success: true,
-                    messageId: result.messageId,
+                    messageId: result.messageId || 'backend-' + Date.now(),
                     timestamp: new Date().toISOString()
                 };
             } else {
-                throw new Error(result.error);
+                const error = await response.text();
+                throw new Error(`Backend email API error: ${error}`);
             }
 
         } catch (error) {
