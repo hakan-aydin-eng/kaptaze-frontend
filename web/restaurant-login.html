@@ -369,15 +369,7 @@
                 
                 console.log('✅ Restaurant login successful - API session created:', loginResponse);
                 
-                // Store auth data for restaurant panel
-                if (loginResponse?.data?.token) {
-                    localStorage.setItem('kaptaze_restaurant_token', loginResponse.data.token);
-                    localStorage.setItem('kaptaze_token', loginResponse.data.token);
-                }
-                if (loginResponse?.data?.user) {
-                    localStorage.setItem('kaptaze_restaurant_user', JSON.stringify(loginResponse.data.user));
-                    localStorage.setItem('kaptaze_user', JSON.stringify(loginResponse.data.user));
-                }
+                // API-only authentication - no localStorage storing
                 
                 // Show success message
                 const userName = loginResponse.user?.firstName || loginResponse.user?.username || username;

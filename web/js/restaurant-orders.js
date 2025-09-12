@@ -4,41 +4,39 @@ let restaurantId = null;
 
 // Initialize orders system
 async function initializeOrdersSystem() {
-    // Get restaurant info from login data
-    const authToken = localStorage.getItem('kaptaze_restaurant_token') || 
-                      localStorage.getItem('kaptaze_auth_token') ||
-                      localStorage.getItem('kaptaze_token') ||
-                      sessionStorage.getItem('kaptaze_session_token');
-    const userData = localStorage.getItem('kaptaze_restaurant_user') || 
-                     localStorage.getItem('kaptaze_user_data') ||
-                     localStorage.getItem('kaptaze_user');
-    
-    if (!authToken || !userData) {
-        console.error('❌ No authentication found! Please login first.');
-        alert('Lütfen önce giriş yapın.');
-        window.location.href = '/restaurant-login.html';
-        return;
-    }
-    
     try {
-        const user = JSON.parse(userData);
-        restaurantId = user.restaurantId || user._id;
+        // Check authentication via API instead of localStorage
+        console.log('🔐 Checking authentication via API...');
         
-        if (!restaurantId) {
-            console.error('❌ No restaurant ID found in user data:', user);
-            alert('Restoran bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
-            localStorage.clear();
-            window.location.href = '/restaurant-login.html';
-            return;
+        if (!window.backendService) {
+            throw new Error('Backend service not available');
         }
         
-        console.log('✅ Using authenticated restaurant ID:', restaurantId);
-        console.log('👤 User data:', user);
+        // Get current user from API (uses session/cookie)
+        const userResponse = await window.backendService.makeRequest('/restaurant/me');
+        
+        if (!userResponse || !userResponse.success) {
+            throw new Error('Not authenticated');
+        }
+        
+        const user = userResponse.data.user;
+        const restaurant = userResponse.data.restaurant;
+        
+        restaurantId = user.restaurantId || restaurant?.id;
+        
+        console.log('✅ Authentication verified:', {
+            user: user.username,
+            restaurant: restaurant?.name,
+            restaurantId: restaurantId
+        });
+        
+        if (!restaurantId) {
+            throw new Error('No restaurant ID found');
+        }
         
     } catch (error) {
-        console.error('Error parsing user data:', error);
-        alert('Oturum bilgileri bozuk. Lütfen tekrar giriş yapın.');
-        localStorage.clear();
+        console.error('❌ Authentication check failed:', error);
+        alert('Lütfen önce giriş yapın.');
         window.location.href = '/restaurant-login.html';
         return;
     }
@@ -151,39 +149,21 @@ async function loadOrders() {
     if (!restaurantId) return;
     
     try {
-        const authToken = localStorage.getItem('kaptaze_restaurant_token') || 
-                          localStorage.getItem('kaptaze_auth_token') ||
-                          localStorage.getItem('kaptaze_token') ||
-                          sessionStorage.getItem('kaptaze_session_token');
-        const headers = {
-            'Content-Type': 'application/json'
-        };
-        
-        if (authToken) {
-            headers['Authorization'] = `Bearer ${authToken}`;
-        }
-        
         console.log('Loading orders for restaurant:', restaurantId);
-        console.log('Auth headers:', headers);
         
-        const response = await fetch(`https://kaptaze-backend-api.onrender.com/orders/restaurant/${restaurantId}`, {
-            headers: headers
-        });
+        // Use backend service (handles auth automatically)
+        const orders = await window.backendService.makeRequest(`/orders/restaurant/${restaurantId}`);
         
-        console.log('Response status:', response.status, response.statusText);
-        
-        if (response.ok) {
-            const orders = await response.json();
+        if (orders && Array.isArray(orders)) {
             console.log('Orders loaded:', orders.length);
             updateOrdersUI(orders);
         } else {
-            console.error('Failed to load orders:', response.status, response.statusText);
-            
-            // If auth failed, show no orders message
+            console.log('No orders found or invalid response');
             updateOrdersUI([]);
         }
     } catch (error) {
         console.error('Error loading orders:', error);
+        updateOrdersUI([]);
     }
 }
 
@@ -290,23 +270,13 @@ function createOrderCard(order) {
 // Update order status
 async function updateOrderStatus(orderId, newStatus) {
     try {
-        const authToken = localStorage.getItem('kaptaze_restaurant_token') || 
-                          localStorage.getItem('kaptaze_auth_token') ||
-                          localStorage.getItem('kaptaze_token') ||
-                          sessionStorage.getItem('kaptaze_session_token');
-        const headers = { 'Content-Type': 'application/json' };
-        
-        if (authToken) {
-            headers['Authorization'] = `Bearer ${authToken}`;
-        }
-        
-        const response = await fetch(`https://kaptaze-backend-api.onrender.com/orders/${orderId}/status`, {
+        // Use backend service for API calls
+        const response = await window.backendService.makeRequest(`/orders/${orderId}/status`, {
             method: 'PUT',
-            headers: headers,
             body: JSON.stringify({ status: newStatus })
         });
         
-        if (response.ok) {
+        if (response && response.success) {
             showToast('Sipariş durumu güncellendi', 'success');
             loadOrders();
         } else {
