@@ -285,10 +285,20 @@ class RestaurantPanel {
             }
         }
 
-        // Update header restaurant name
+        // Update header restaurant name with debug
+        console.log('🏪 Dashboard data for restaurant name:', {
+            name: data.name,
+            businessName: data.businessName,
+            username: data.username
+        });
+        
         const headerName = document.getElementById('restaurant-name');
         if (headerName) {
-            headerName.textContent = data.name || data.businessName || 'Restaurant';
+            const displayName = data.name || data.businessName || data.username || 'Restaurant';
+            headerName.textContent = displayName;
+            console.log('✅ Updated restaurant name in header:', displayName);
+        } else {
+            console.log('❌ #restaurant-name element not found');
         }
 
         // Update all profile section fields with real admin approval data
@@ -373,26 +383,48 @@ class RestaurantPanel {
                 profileSpecialties.innerHTML = `<span class="specialty-tag">${this.currentUser.businessCategory}</span>`;
             }
 
-            // Update restaurant avatar if restaurantProfile has mainImage
+            // Update restaurant avatar and website - FIX RANDOM DISPLAY ISSUE
             const avatarEl = document.getElementById('restaurant-avatar');
-            console.log('🔍 Avatar element found:', !!avatarEl);
-            console.log('🔍 Restaurant profile exists:', !!this.restaurantProfile);
-            console.log('🔍 MainImage exists:', !!(this.restaurantProfile?.mainImage));
+            const websiteEl = document.getElementById('profile-website');
             
-            if (avatarEl && this.restaurantProfile && this.restaurantProfile.mainImage) {
-                console.log('🖼️ Updating restaurant avatar:', this.restaurantProfile.mainImage.substring(0, 50) + '...');
-                console.log('🖼️ Avatar element before update:', avatarEl.src);
-                
-                avatarEl.src = this.restaurantProfile.mainImage;
-                
-                console.log('🖼️ Avatar element after update:', avatarEl.src.substring(0, 50) + '...');
-                console.log('🖼️ Avatar element visible:', avatarEl.offsetWidth > 0 && avatarEl.offsetHeight > 0);
-            } else {
-                console.warn('⚠️ Avatar update skipped:', {
-                    avatarFound: !!avatarEl,
-                    profileExists: !!this.restaurantProfile,
-                    imageExists: !!(this.restaurantProfile?.mainImage)
-                });
+            console.log('🔍 Profile data sources:', {
+                restaurantProfile: !!this.restaurantProfile,
+                currentUser: !!this.currentUser,
+                restaurantImageUrl: this.restaurantProfile?.imageUrl,
+                restaurantMainImage: this.restaurantProfile?.mainImage,
+                currentUserImageUrl: this.currentUser?.imageUrl,
+                websiteData: this.restaurantProfile?.socialMedia?.website || this.currentUser?.website
+            });
+            
+            // Priority: restaurantProfile.imageUrl > restaurantProfile.mainImage > currentUser.imageUrl
+            let imageUrl = null;
+            if (this.restaurantProfile?.imageUrl) {
+                imageUrl = this.restaurantProfile.imageUrl;
+            } else if (this.restaurantProfile?.mainImage) {
+                imageUrl = this.restaurantProfile.mainImage;
+            } else if (this.currentUser?.imageUrl) {
+                imageUrl = this.currentUser.imageUrl;
+            }
+            
+            if (avatarEl && imageUrl) {
+                console.log('🖼️ Setting restaurant image:', imageUrl);
+                avatarEl.src = imageUrl;
+                avatarEl.style.display = 'block';
+            }
+            
+            // Update website info - CONSISTENT DISPLAY
+            if (websiteEl) {
+                const websiteUrl = this.restaurantProfile?.socialMedia?.website || 
+                                  this.currentUser?.website || 
+                                  this.currentUser?.socialMedia?.website;
+                if (websiteUrl) {
+                    websiteEl.textContent = websiteUrl;
+                    websiteEl.href = websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`;
+                    console.log('🌐 Updated website:', websiteUrl);
+                } else {
+                    websiteEl.textContent = 'Website bilgisi yok';
+                    websiteEl.removeAttribute('href');
+                }
             }
 
             console.log('📊 Restaurant profile updated with real admin approval data:', {

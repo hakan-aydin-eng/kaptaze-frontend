@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Restaurant Login Test</title>
+    <script src="js/backend-service.js?v=20250913"></script>
+</head>
+<body>
+    <h1>Nurtekin Şah Burger Login Test</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            try {
+                console.log('🔐 Starting login test...');
+                
+                if (!window.BackendService) {
+                    throw new Error('BackendService not available');
+                }
+                
+                const backendService = new window.BackendService();
+                
+                const result = await backendService.restaurantLogin('nurtekin594', '0YEVj329');
+                console.log('✅ Login result:', result);
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>Login Success!</h2>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+                
+                // Test /restaurant/me endpoint
+                const profileResult = await backendService.getRestaurantProfile();
+                console.log('✅ Profile result:', profileResult);
+                
+                document.getElementById('result').innerHTML += `
+                    <h2>Profile Data:</h2>
+                    <pre>${JSON.stringify(profileResult, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Login failed:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2>Login Failed!</h2>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

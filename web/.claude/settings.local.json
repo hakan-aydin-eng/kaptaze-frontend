@@ -106,7 +106,10 @@
       "Bash(git -C /c/Users/hakan/KapTazeApp/web add restaurant-panel.html)",
       "Bash(git -C /c/Users/hakan/KapTazeApp/web commit -m \"FIX: Clean restaurant panel script conflicts\n\n- Remove conflicting api-config.js and api-service.js imports  \n- Keep only backend-service.js for API communication\n- Update script version cache busters\n- Fix script loading order issues\n- Enable proper restaurant authentication flow\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
       "Bash(git -C /c/Users/hakan/KapTazeApp/web add js/restaurant-orders.js js/backend-service.js restaurant-panel.html)",
-      "Bash(git -C /c/Users/hakan/KapTazeApp/web commit -m \"FIX: Restaurant panel authentication and orders integration\n\n- Fix checkSession method to use correct response structure  \n- Add token loading from localStorage to panel initialization\n- Disable auto-init in restaurant-orders.js to prevent conflicts\n- Enable manual orders initialization by restaurant-panel.js\n- Fix authentication flow: login -> token storage -> panel access\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")"
+      "Bash(git -C /c/Users/hakan/KapTazeApp/web commit -m \"FIX: Restaurant panel authentication and orders integration\n\n- Fix checkSession method to use correct response structure  \n- Add token loading from localStorage to panel initialization\n- Disable auto-init in restaurant-orders.js to prevent conflicts\n- Enable manual orders initialization by restaurant-panel.js\n- Fix authentication flow: login -> token storage -> panel access\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
+      "Bash(npm uninstall:*)",
+      "WebFetch(domain:expo.dev)",
+      "WebFetch(domain:appstoreconnect.apple.com)"
     ],
     "deny": [],
     "ask": [],
