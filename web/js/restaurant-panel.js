@@ -114,8 +114,15 @@ class RestaurantPanel {
             const response = await window.backendService.getRestaurantProfile();
             
             if (response.success && response.data) {
-                this.restaurantProfile = response.data;
-                console.log('✅ Restaurant profile loaded:', this.restaurantProfile);
+                // Parse the nested response structure correctly
+                this.currentUser = response.data.user;
+                this.restaurantProfile = response.data.restaurant;
+                
+                console.log('✅ Restaurant profile loaded:', {
+                    user: this.currentUser,
+                    restaurant: this.restaurantProfile
+                });
+                
                 this.updateRestaurantInfoDisplay();
             } else {
                 console.warn('⚠️ No restaurant profile found - creating new profile in backend');
@@ -293,16 +300,23 @@ class RestaurantPanel {
             });
         }
 
-        // Update header restaurant name with debug
+        // Update header restaurant name with debug - FIXED DATA STRUCTURE
         console.log('🏪 Dashboard data for restaurant name:', {
-            name: data.name,
-            businessName: data.businessName,
-            username: data.username
+            restaurantName: this.restaurantProfile?.name,
+            restaurantBusinessName: this.restaurantProfile?.businessName,
+            userBusinessName: this.currentUser?.businessName,
+            userName: this.currentUser?.firstName,
+            username: this.currentUser?.username
         });
         
         const headerName = document.getElementById('restaurant-name');
         if (headerName) {
-            const displayName = data.name || data.businessName || data.username || 'Restaurant';
+            const displayName = this.restaurantProfile?.name || 
+                              this.restaurantProfile?.businessName ||
+                              this.currentUser?.businessName ||
+                              `${this.currentUser?.firstName || ''} ${this.currentUser?.lastName || ''}`.trim() ||
+                              this.currentUser?.username ||
+                              'Restaurant';
             headerName.textContent = displayName;
             console.log('✅ Updated restaurant name in header:', displayName);
         } else {
@@ -313,15 +327,27 @@ class RestaurantPanel {
         if (this.restaurantProfile || this.currentUser) {
             const profileData = this.restaurantProfile || this.currentUser;
             
-            // Restaurant name and category
+            // Restaurant name and category - ENHANCED DATA PARSING
             const profileName = document.getElementById('profile-restaurant-name');
             if (profileName) {
-                profileName.textContent = profileData.businessName || profileData.name || 'Restaurant Adı';
+                const displayName = this.restaurantProfile?.name ||
+                                  this.restaurantProfile?.businessName ||
+                                  this.currentUser?.businessName ||
+                                  `${this.currentUser?.firstName || ''} ${this.currentUser?.lastName || ''}`.trim() ||
+                                  'Restaurant Adı';
+                profileName.textContent = displayName;
+                console.log('🏷️ Profile name set:', displayName);
             }
 
             const categoryEl = document.getElementById('profile-restaurant-category');
             if (categoryEl) {
-                categoryEl.textContent = profileData.businessType || profileData.businessCategory || 'Restaurant';
+                const category = this.restaurantProfile?.category ||
+                               this.restaurantProfile?.businessType ||
+                               this.currentUser?.businessCategory ||
+                               this.currentUser?.businessType ||
+                               'Restaurant';
+                categoryEl.textContent = category;
+                console.log('🏷️ Profile category set:', category);
             }
 
             // Contact information in profile - ENHANCED with restaurant profile priority
