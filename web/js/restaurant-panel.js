@@ -251,38 +251,46 @@ class RestaurantPanel {
         // Use restaurant profile or current user data
         const data = this.restaurantProfile || this.currentUser;
         
-        // Update restaurant image from backend
+        // Update restaurant image from backend - COMPREHENSIVE IMAGE LOADING
         const restaurantAvatar = document.getElementById('restaurant-avatar');
         const mainImagePreview = document.getElementById('mainImagePreview');
         const uploadPlaceholder = document.getElementById('imageUploadPlaceholder');
         
+        // Try multiple image sources with priority
+        let imageUrl = null;
         if (data.imageUrl) {
-            // Restaurant has a saved image in backend
-            if (restaurantAvatar) {
-                restaurantAvatar.src = data.imageUrl;
-                restaurantAvatar.style.display = 'block';
-            }
-            if (mainImagePreview) {
-                mainImagePreview.src = data.imageUrl;
-                mainImagePreview.style.display = 'block';
-            }
-            if (uploadPlaceholder) {
-                uploadPlaceholder.style.display = 'none';
-            }
-            console.log('✅ Loaded restaurant image from backend:', data.imageUrl);
+            imageUrl = data.imageUrl;
+            console.log('🖼️ Using imageUrl:', imageUrl);
         } else if (data.mainImage) {
-            // Fallback to mainImage field if exists
+            imageUrl = data.mainImage;
+            console.log('🖼️ Using mainImage:', imageUrl);
+        } else if (this.currentUser?.imageUrl) {
+            imageUrl = this.currentUser.imageUrl;
+            console.log('🖼️ Using currentUser.imageUrl:', imageUrl);
+        }
+        
+        if (imageUrl) {
+            // Restaurant has a saved image - update all image elements
             if (restaurantAvatar) {
-                restaurantAvatar.src = data.mainImage;
+                restaurantAvatar.src = imageUrl;
                 restaurantAvatar.style.display = 'block';
+                console.log('✅ Updated restaurant-avatar element');
             }
             if (mainImagePreview) {
-                mainImagePreview.src = data.mainImage;
+                mainImagePreview.src = imageUrl;
                 mainImagePreview.style.display = 'block';
+                console.log('✅ Updated mainImagePreview element');
             }
             if (uploadPlaceholder) {
                 uploadPlaceholder.style.display = 'none';
             }
+            console.log('✅ Loaded restaurant image from backend:', imageUrl.substring(0, 50) + '...');
+        } else {
+            console.log('⚠️ No image URL found in data:', {
+                hasImageUrl: !!data.imageUrl,
+                hasMainImage: !!data.mainImage,
+                hasCurrentUserImage: !!this.currentUser?.imageUrl
+            });
         }
 
         // Update header restaurant name with debug
@@ -316,27 +324,38 @@ class RestaurantPanel {
                 categoryEl.textContent = profileData.businessType || profileData.businessCategory || 'Restaurant';
             }
 
-            // Contact information in profile - with null safety
+            // Contact information in profile - ENHANCED with restaurant profile priority
             const profileEmail = document.getElementById('profile-email');
-            if (profileEmail && this.currentUser && this.currentUser.email) {
-                profileEmail.textContent = this.currentUser.email;
+            if (profileEmail) {
+                const email = this.restaurantProfile?.email || 
+                             this.restaurantProfile?.contact?.email ||
+                             this.currentUser?.email || 
+                             'Email bilgisi yok';
+                profileEmail.textContent = email;
+                console.log('📧 Profile email set:', email);
             }
 
             const profilePhone = document.getElementById('profile-phone');
-            if (profilePhone && this.currentUser && this.currentUser.phone) {
-                profilePhone.textContent = this.currentUser.phone;
+            if (profilePhone) {
+                const phone = this.restaurantProfile?.phone || 
+                             this.restaurantProfile?.contact?.phone ||
+                             this.currentUser?.phone || 
+                             this.currentUser?.businessPhone ||
+                             'Telefon bilgisi yok';
+                profilePhone.textContent = phone;
+                console.log('📱 Profile phone set:', phone);
             }
 
-            // Business address - try restaurant profile first, then user data
+            // Business address - ENHANCED with multiple data sources
             const profileAddress = document.getElementById('profile-address');
             if (profileAddress) {
-                let addressText = 'Adres bilgisi';
+                let addressText = 'Adres bilgisi yok';
                 
-                if (this.restaurantProfile && this.restaurantProfile.address) {
-                    // Get address from restaurant profile (from approved application)
+                // Try restaurant profile address (from approved application)
+                if (this.restaurantProfile?.address) {
                     const addr = this.restaurantProfile.address;
                     const addressParts = [
-                        addr.street,
+                        addr.street || addr.address,
                         addr.district,
                         addr.city
                     ].filter(part => part && part.trim());
@@ -344,10 +363,15 @@ class RestaurantPanel {
                     if (addressParts.length > 0) {
                         addressText = addressParts.join(', ');
                     }
-                } else if (this.currentUser) {
-                    // Fallback to user data
+                }
+                // Try restaurant profile location
+                else if (this.restaurantProfile?.location?.address) {
+                    addressText = this.restaurantProfile.location.address;
+                }
+                // Try current user business address
+                else if (this.currentUser) {
                     const addressParts = [
-                        this.currentUser.businessAddress,
+                        this.currentUser.businessAddress || this.currentUser.address,
                         this.currentUser.district,
                         this.currentUser.city
                     ].filter(part => part && part.trim());
@@ -358,6 +382,7 @@ class RestaurantPanel {
                 }
                 
                 profileAddress.textContent = addressText;
+                console.log('🏠 Profile address set:', addressText);
             }
 
             // Add description from restaurantProfile or currentUser
@@ -452,6 +477,16 @@ class RestaurantPanel {
             statusEl.textContent = this.restaurantProfile.status === 'active' ? 'Aktif' : 'Pasif';
             statusEl.className = `restaurant-status ${this.restaurantProfile.status}`;
         }
+    }
+
+    updateRestaurantProfile(profileData) {
+        console.log('📊 Updating restaurant profile display with:', profileData);
+        
+        // Update profile data
+        this.restaurantProfile = profileData;
+        
+        // Update all profile fields with the data from backend
+        this.loadDashboardData();
     }
 
     updateProfileDisplay() {
@@ -1662,8 +1697,20 @@ window.loadDashboardData = async function() {
 // Profile data loader - LIVE BACKEND DATA
 window.loadProfileData = async function() {
     console.log('👤 Loading profile data from API...');
-    if (window.restaurantPanel && window.restaurantPanel.restaurantProfile) {
-        window.restaurantPanel.updateRestaurantProfile(window.restaurantPanel.restaurantProfile);
+    try {
+        if (window.restaurantPanel) {
+            // Reload fresh data from backend
+            await window.restaurantPanel.loadRestaurantProfile();
+            
+            // Update the display with current data
+            window.restaurantPanel.loadDashboardData();
+            
+            console.log('✅ Profile data refreshed from API');
+        } else {
+            console.log('❌ Restaurant panel not available');
+        }
+    } catch (error) {
+        console.error('❌ Error loading profile data:', error);
     }
 };
 
