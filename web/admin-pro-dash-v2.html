@@ -734,6 +734,395 @@
             font-size: 0.875rem;
             color: var(--gray-600);
         }
+
+        /* ==== MODERN PACKAGE CARDS GRID SYSTEM ==== */
+        
+        /* Modern Stats Cards */
+        .packages-stats-modern {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+        }
+
+        .stat-content .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            line-height: 1;
+        }
+
+        .stat-content .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.25rem;
+        }
+
+        .stat-card.pending { border-left: 4px solid #f59e0b; }
+        .stat-card.approved { border-left: 4px solid #10b981; }
+        .stat-card.rejected { border-left: 4px solid #ef4444; }
+        .stat-card.out-of-stock { border-left: 4px solid #8b5cf6; }
+
+        /* Toolbar */
+        .packages-toolbar {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 0.875rem;
+            background: white;
+            min-width: 150px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Package Cards Grid */
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .package-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .package-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .package-card.pending { border-top: 4px solid #f59e0b; }
+        .package-card.approved { border-top: 4px solid #10b981; }
+        .package-card.rejected { border-top: 4px solid #ef4444; }
+
+        .package-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .package-status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .package-status-badge.pending { background: #fef3c7; color: #92400e; }
+        .package-status-badge.approved { background: #d1fae5; color: #065f46; }
+        .package-status-badge.rejected { background: #fee2e2; color: #991b1b; }
+
+        .package-date {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+
+        .package-image {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .package-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .package-card:hover .package-image img {
+            transform: scale(1.05);
+        }
+
+        .package-category-overlay {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .package-content {
+            padding: 1.5rem;
+        }
+
+        .restaurant-info {
+            margin-bottom: 1rem;
+        }
+
+        .restaurant-name {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+        }
+
+        .restaurant-id {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            background: var(--gray-100);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .package-details {
+            margin-bottom: 1rem;
+        }
+
+        .package-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+
+        .package-description {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            line-height: 1.5;
+        }
+
+        .package-pricing {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--gray-50);
+            border-radius: 12px;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .original-price {
+            font-size: 1rem;
+            color: var(--gray-500);
+            text-decoration: line-through;
+        }
+
+        .discounted-price {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .discount-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+        }
+
+        .discount-percentage {
+            background: #dc2626;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .savings {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .package-stock {
+            margin-bottom: 1.5rem;
+        }
+
+        .stock-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .stock-info.in-stock { background: #d1fae5; color: #065f46; }
+        .stock-info.low-stock { background: #fef3c7; color: #92400e; }
+        .stock-info.out-of-stock { background: #fee2e2; color: #991b1b; }
+
+        .package-actions {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            background: var(--gray-50);
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .approve-btn {
+            background: #10b981;
+            color: white;
+        }
+
+        .approve-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .reject-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .reject-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .detail-btn {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .detail-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .packages-grid {
+                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .packages-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .packages-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-container {
+                min-width: auto;
+            }
+            
+            .filter-container {
+                flex-direction: column;
+            }
+            
+            .filter-select {
+                min-width: auto;
+            }
+            
+            .package-actions {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>

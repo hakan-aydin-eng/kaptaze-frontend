@@ -2326,100 +2326,125 @@ class AdminProDashboardV2 {
         }
 
         const tableHTML = `
-            <div class="packages-stats">
-                <div class="stat-item">
-                    <span class="stat-number">${packages.filter(p => p.status === 'pending').length}</span>
-                    <span class="stat-label">Bekleyen</span>
+            <!-- Modern Stats Dashboard -->
+            <div class="packages-stats-modern">
+                <div class="stat-card pending">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-content">
+                        <div class="stat-number">${packages.filter(p => p.status === 'pending').length}</div>
+                        <div class="stat-label">Bekleyen</div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">${packages.filter(p => p.status === 'approved').length}</span>
-                    <span class="stat-label">Onaylı</span>
+                <div class="stat-card approved">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <div class="stat-number">${packages.filter(p => p.status === 'approved').length}</div>
+                        <div class="stat-label">Onaylı</div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">${packages.filter(p => p.status === 'rejected').length}</span>
-                    <span class="stat-label">Reddedilen</span>
+                <div class="stat-card rejected">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-content">
+                        <div class="stat-number">${packages.filter(p => p.status === 'rejected').length}</div>
+                        <div class="stat-label">Reddedilen</div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number">${packages.filter(p => p.quantity === 0).length}</span>
-                    <span class="stat-label">Tükenen</span>
+                <div class="stat-card out-of-stock">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-content">
+                        <div class="stat-number">${packages.filter(p => p.quantity === 0).length}</div>
+                        <div class="stat-label">Tükenen</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="table-responsive">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Restoran Adı</th>
-                            <th>Paket İçeriği</th>
-                            <th>Fiyat</th>
-                            <th>İndirimli Fiyat</th>
-                            <th>Stok</th>
-                            <th>Oluşturulma Tarihi</th>
-                            <th>Durum</th>
-                            <th>İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${packages.map(pkg => `
-                            <tr class="package-row ${pkg.status}">
-                                <td>
-                                    <div class="restaurant-info">
-                                        <div class="restaurant-name"><strong>${pkg.restaurantName || 'Restoran Adı'}</strong></div>
-                                        <div class="restaurant-id">ID: ${pkg.restaurantId}</div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="package-info">
-                                        <div class="package-name"><strong>${pkg.packageName}</strong></div>
-                                        <div class="package-description">${pkg.description}</div>
-                                        <div class="package-category"><span class="badge">${pkg.category}</span></div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="price-info">
-                                        <div class="original-price" style="text-decoration: line-through; color: #999;">₺${pkg.originalPrice}</div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="discount-price" style="color: #28a745; font-weight: bold;">₺${pkg.discountPrice}</div>
-                                    <small class="discount-badge">${pkg.discount}% indirim</small>
-                                </td>
-                                <td>
-                                    <div class="quantity-info">
-                                        <span class="quantity ${pkg.quantity === 0 ? 'out-of-stock' : pkg.quantity <= 3 ? 'low-stock' : ''}">${pkg.quantity}</span>
-                                        ${pkg.quantity === 0 ? '<br><span class="stock-status out">Tükendi</span>' : pkg.quantity <= 3 ? '<br><span class="stock-status low">Az stok</span>' : ''}
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="date-info">
-                                        <div class="created-date">${new Date(pkg.createdAt).toLocaleDateString('tr-TR')}</div>
-                                        <div class="created-time">${new Date(pkg.createdAt).toLocaleTimeString('tr-TR')}</div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="status-badge ${pkg.status}">
-                                        ${this.getPackageStatusText(pkg.status)}
+            <!-- Filter & Search Bar -->
+            <div class="packages-toolbar">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Restoran veya paket ara..." class="search-input" id="packageSearch">
+                </div>
+                <div class="filter-container">
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">Tüm Durumlar</option>
+                        <option value="pending">Bekleyen</option>
+                        <option value="approved">Onaylı</option>
+                        <option value="rejected">Reddedilen</option>
+                    </select>
+                    <select class="filter-select" id="categoryFilter">
+                        <option value="">Tüm Kategoriler</option>
+                        <option value="Ana Yemek">Ana Yemek</option>
+                        <option value="Tatlı & İçecek">Tatlı & İçecek</option>
+                        <option value="Kahvaltı">Kahvaltı</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Modern Package Cards Grid -->
+            <div class="packages-grid">
+                ${packages.map(pkg => `
+                    <div class="package-card ${pkg.status}" data-package-id="${pkg.id}">
+                        <div class="package-header">
+                            <div class="package-status-badge ${pkg.status}">
+                                ${this.getPackageStatusIcon(pkg.status)} ${this.getPackageStatusText(pkg.status)}
+                            </div>
+                            <div class="package-date">
+                                ${new Date(pkg.createdAt).toLocaleDateString('tr-TR')}
+                            </div>
+                        </div>
+                        
+                        <div class="package-image">
+                            <img src="${pkg.image || 'https://via.placeholder.com/300x200?text=Paket'}" alt="${pkg.packageName}" loading="lazy">
+                            <div class="package-category-overlay">${pkg.category}</div>
+                        </div>
+                        
+                        <div class="package-content">
+                            <div class="restaurant-info">
+                                <h3 class="restaurant-name">${pkg.restaurantName || 'Restoran Adı'}</h3>
+                                <span class="restaurant-id">ID: ${pkg.restaurantId}</span>
+                            </div>
+                            
+                            <div class="package-details">
+                                <h4 class="package-name">${pkg.packageName}</h4>
+                                <p class="package-description">${pkg.description}</p>
+                            </div>
+                            
+                            <div class="package-pricing">
+                                <div class="price-row">
+                                    <span class="original-price">₺${pkg.originalPrice}</span>
+                                    <span class="discounted-price">₺${pkg.discountPrice}</span>
+                                </div>
+                                <div class="discount-info">
+                                    <span class="discount-percentage">${pkg.discount}% İndirim</span>
+                                    <span class="savings">₺${pkg.originalPrice - pkg.discountPrice} Tasarruf</span>
+                                </div>
+                            </div>
+                            
+                            <div class="package-stock">
+                                <div class="stock-info ${pkg.quantity === 0 ? 'out-of-stock' : pkg.quantity <= 3 ? 'low-stock' : 'in-stock'}">
+                                    <span class="stock-icon">${pkg.quantity === 0 ? '🚫' : pkg.quantity <= 3 ? '⚠️' : '✅'}</span>
+                                    <span class="stock-text">
+                                        ${pkg.quantity === 0 ? 'Tükendi' : pkg.quantity <= 3 ? `Sadece ${pkg.quantity} kaldı` : `${pkg.quantity} adet stokta`}
                                     </span>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        ${pkg.status === 'pending' ? `
-                                            <button class="btn btn-success btn-sm" onclick="adminDashboard.approvePackage('${pkg.id}')">
-                                                <i class="fas fa-check"></i> Onayla
-                                            </button>
-                                            <button class="btn btn-danger btn-sm" onclick="adminDashboard.rejectPackage('${pkg.id}')">
-                                                <i class="fas fa-times"></i> Reddet
-                                            </button>
-                                        ` : ''}
-                                        <button class="btn btn-info btn-sm" onclick="adminDashboard.viewPackageDetails('${pkg.id}')">
-                                            <i class="fas fa-eye"></i> Detay
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="package-actions">
+                            ${pkg.status === 'pending' ? `
+                                <button class="action-btn approve-btn" onclick="adminDashboard.approvePackage('${pkg.id}')" title="Paketi Onayla">
+                                    <i class="fas fa-check"></i> Onayla
+                                </button>
+                                <button class="action-btn reject-btn" onclick="adminDashboard.rejectPackage('${pkg.id}')" title="Paketi Reddet">
+                                    <i class="fas fa-times"></i> Reddet
+                                </button>
+                            ` : ''}
+                            <button class="action-btn detail-btn" onclick="adminDashboard.viewPackageDetails('${pkg.id}')" title="Paket Detayları">
+                                <i class="fas fa-eye"></i> Detay
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
             </div>
         `;
 
@@ -2434,6 +2459,16 @@ class AdminProDashboardV2 {
             'expired': 'Süresi Doldu'
         };
         return statusMap[status] || status;
+    }
+
+    getPackageStatusIcon(status) {
+        const iconMap = {
+            'pending': '⏳',
+            'approved': '✅',
+            'rejected': '❌',
+            'expired': '⏰'
+        };
+        return iconMap[status] || '❓';
     }
 
     async approvePackage(packageId) {
