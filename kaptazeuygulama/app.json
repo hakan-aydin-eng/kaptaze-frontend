@@ -2,7 +2,7 @@
   "expo": {
     "name": "KapTaze",
     "slug": "kaptaze",
-    "version": "1.0.3",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -31,7 +31,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kaptaze.app",
-      "buildNumber": "8",
+      "buildNumber": "10",
       "jsEngine": "hermes",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",

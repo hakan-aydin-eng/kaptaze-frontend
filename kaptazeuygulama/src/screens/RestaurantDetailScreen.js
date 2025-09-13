@@ -55,6 +55,11 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
         
         console.log('📍 Restaurant details loaded:', apiRestaurant.name);
         console.log('📦 Packages found:', apiRestaurant.packages?.length || 0);
+        console.log('🌐 Website data:', {
+          website: apiRestaurant.website,
+          socialMedia: apiRestaurant.socialMedia,
+          socialMediaWebsite: apiRestaurant.socialMedia?.website
+        });
       }
     } catch (error) {
       console.error('Restaurant details loading error:', error);

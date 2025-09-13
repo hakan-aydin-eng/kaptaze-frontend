@@ -17,7 +17,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Slider from '@react-native-community/slider';
+// Slider removed for build compatibility
 import * as Location from 'expo-location';
 import apiService from '../services/apiService';
 import { useUserData } from '../context/UserDataContext';
@@ -898,18 +898,7 @@ const MainScreen = ({ navigation }) => {
             </Text>
             
             <View style={styles.sliderContainer}>
-              {/* Distance Slider */}
-              <Slider
-                style={styles.slider}
-                minimumValue={1}
-                maximumValue={25}
-                step={1}
-                value={selectedDistance}
-                onValueChange={setSelectedDistance}
-                minimumTrackTintColor="#16a34a"
-                maximumTrackTintColor="#d1d5db"
-                thumbStyle={styles.sliderThumb}
-              />
+              {/* Distance controls replaced slider for build compatibility */}
               
               {/* Distance Controls */}
               <View style={styles.distanceControls}>
