@@ -598,7 +598,11 @@ const MainScreen = ({ navigation }) => {
             <View style={styles.pickupTimeContainer}>
               <Text style={styles.pickupTimeIcon}>⏰</Text>
               <Text style={styles.pickupTimeText}>
-                {item.packages?.[0]?.pickupTime || item.pickupTime || '18:00-21:00'}
+                {item.operatingHours ? 
+                  `${item.operatingHours.open}-${item.operatingHours.close}` : 
+                  item.workingHours?.weekday ? 
+                    `${item.workingHours.weekday.open}-${item.workingHours.weekday.close}` : 
+                    '09:00-22:00'}
               </Text>
             </View>
             <Text style={styles.distanceText}>{item.distance}</Text>
@@ -848,7 +852,11 @@ const MainScreen = ({ navigation }) => {
                       <View style={styles.pickupTimeContainer}>
                         <Text style={styles.pickupTimeIcon}>⏰</Text>
                         <Text style={styles.pickupTimeText}>
-                          {mainPackage.pickupTime || restaurant.pickupTime || '18:00-21:00'}
+                          {restaurant.operatingHours ? 
+                            `${restaurant.operatingHours.open}-${restaurant.operatingHours.close}` : 
+                            restaurant.workingHours?.weekday ? 
+                              `${restaurant.workingHours.weekday.open}-${restaurant.workingHours.weekday.close}` : 
+                              '09:00-22:00'}
                         </Text>
                       </View>
                       <View style={styles.distanceContainer}>

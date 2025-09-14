@@ -248,9 +248,11 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             <View style={styles.pickupTimeContainer}>
               <Text style={styles.pickupTimeIcon}>⏰</Text>
               <Text style={styles.pickupTimeText}>
-                {restaurant.workingHours?.weekday ? 
-                  `${restaurant.workingHours.weekday.open}-${restaurant.workingHours.weekday.close}` : 
-                  '18:00-21:00'}
+                {restaurant.operatingHours ? 
+                  `${restaurant.operatingHours.open}-${restaurant.operatingHours.close}` : 
+                  restaurant.workingHours?.weekday ? 
+                    `${restaurant.workingHours.weekday.open}-${restaurant.workingHours.weekday.close}` : 
+                    '09:00-22:00'}
               </Text>
             </View>
             <Text style={styles.distanceText}>📍 {restaurant.distance || '2.5'}km</Text>
@@ -288,20 +290,6 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                         <Text style={styles.packageDiscountText}>%{pkg.discount} İndirim</Text>
                       </View>
                     </View>
-                    {pkg.availableUntil && (
-                      <View style={styles.packageDeadline}>
-                        <Text style={styles.packageDeadlineIcon}>⏰</Text>
-                        <Text style={styles.packageDeadlineText}>
-                          Son teslim: {new Date(pkg.availableUntil).toLocaleString('tr-TR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </Text>
-                      </View>
-                    )}
                   </View>
                   
                   <TouchableOpacity 
@@ -696,26 +684,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#dc2626',
     fontWeight: '600',
-  },
-  packageDeadline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-    backgroundColor: '#fef3c7',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: '#f59e0b',
-  },
-  packageDeadlineIcon: {
-    fontSize: 12,
-    marginRight: 6,
-  },
-  packageDeadlineText: {
-    fontSize: 12,
-    color: '#92400e',
-    fontWeight: '500',
   },
   packageReserveButton: {
     backgroundColor: '#16a34a',

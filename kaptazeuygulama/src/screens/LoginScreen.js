@@ -5,10 +5,11 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import apiService from '../services/apiService';
 
@@ -81,7 +82,8 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -96,16 +98,10 @@ const LoginScreen = ({ navigation }) => {
       <View style={styles.content}>
         {/* Logo */}
         <View style={styles.logoContainer}>
-          <Text style={styles.logo}>🌱</Text>
+          <Image source={require('../../assets/icon.png')} style={styles.logo} />
           <Text style={styles.brandName}>KapTaze</Text>
         </View>
 
-        {/* Demo Account Info */}
-        <View style={styles.demoInfo}>
-          <Text style={styles.demoTitle}>🎯 Demo Hesap Bilgileri</Text>
-          <Text style={styles.demoText}>Email: demo@kaptaze.com</Text>
-          <Text style={styles.demoText}>Şifre: 123456</Text>
-        </View>
 
         {/* Form */}
         <View style={styles.form}>
@@ -157,14 +153,15 @@ const LoginScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#D2E0D5',
   },
   header: {
     flexDirection: 'row',
@@ -201,33 +198,15 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    fontSize: 60,
+    width: 60,
+    height: 60,
     marginBottom: 8,
+    borderRadius: 12,
   },
   brandName: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#111827',
-  },
-  demoInfo: {
-    backgroundColor: '#f0f9ff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
-    borderLeftWidth: 4,
-    borderLeftColor: '#16a34a',
-  },
-  demoTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#16a34a',
-    marginBottom: 8,
-  },
-  demoText: {
-    fontSize: 13,
-    color: '#374151',
-    fontFamily: 'monospace',
-    marginBottom: 2,
   },
   form: {
     marginBottom: 40,

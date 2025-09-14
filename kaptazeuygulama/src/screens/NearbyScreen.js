@@ -4,11 +4,11 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Image,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useUserData } from '../context/UserDataContext';
 import apiService from '../services/apiService';
 
@@ -146,7 +146,8 @@ const NearbyScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
@@ -161,12 +162,14 @@ const NearbyScreen = ({ navigation }) => {
           <ActivityIndicator size="large" color="#16a34a" />
           <Text style={styles.loadingText}>Yakın restoranlar yükleniyor...</Text>
         </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </SafeAreaProvider>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
@@ -289,7 +292,8 @@ const NearbyScreen = ({ navigation }) => {
           })}
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 
