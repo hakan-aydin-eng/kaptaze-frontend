@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Image,
   Linking,
@@ -12,6 +11,7 @@ import {
   TextInput,
   Platform,
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useUserData } from '../context/UserDataContext';
 import apiService from '../services/apiService';
@@ -163,7 +163,8 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
   const totalPackages = restaurant.packages?.reduce((sum, pkg) => sum + pkg.quantity, 0) || 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity 
@@ -287,6 +288,20 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                         <Text style={styles.packageDiscountText}>%{pkg.discount} İndirim</Text>
                       </View>
                     </View>
+                    {pkg.availableUntil && (
+                      <View style={styles.packageDeadline}>
+                        <Text style={styles.packageDeadlineIcon}>⏰</Text>
+                        <Text style={styles.packageDeadlineText}>
+                          Son teslim: {new Date(pkg.availableUntil).toLocaleString('tr-TR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                   
                   <TouchableOpacity 
@@ -396,7 +411,8 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 
@@ -680,6 +696,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#dc2626',
     fontWeight: '600',
+  },
+  packageDeadline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#f59e0b',
+  },
+  packageDeadlineIcon: {
+    fontSize: 12,
+    marginRight: 6,
+  },
+  packageDeadlineText: {
+    fontSize: 12,
+    color: '#92400e',
+    fontWeight: '500',
   },
   packageReserveButton: {
     backgroundColor: '#16a34a',
