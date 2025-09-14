@@ -106,7 +106,19 @@ const PurchaseScreen = ({ route, navigation }) => {
                   ]
                 );
               } else {
-                Alert.alert('Hata', result.error || 'Rezervasyon oluşturulurken bir hata oluştu.');
+                // Handle stock errors specifically
+                if (result.stockError && result.details) {
+                  const stockMessage = result.details.join('\n\n');
+                  Alert.alert(
+                    '📦 Stok Yetersiz',
+                    `Üzgünüz, aşağıdaki paketlerde stok sorunu var:\n\n${stockMessage}\n\nLütfen farklı miktarlarda tekrar deneyin.`,
+                    [
+                      { text: 'Tamam', onPress: () => navigation.goBack() }
+                    ]
+                  );
+                } else {
+                  Alert.alert('Hata', result.error || 'Rezervasyon oluşturulurken bir hata oluştu.');
+                }
               }
             } catch (error) {
               console.error('Order creation error:', error);
