@@ -108,8 +108,8 @@ class RestaurantPanel {
                 throw new Error('Backend service not available after waiting');
             }
             
-            // TEMPORARY: Force load papi culo data for testing
-            console.log('🧪 TEST MODE: Loading papi culo data directly...');
+            // Load restaurant profile from backend API
+            console.log('📋 Loading restaurant profile from backend API...');
             
             const response = await window.backendService.getRestaurantProfile();
             
@@ -570,7 +570,7 @@ class RestaurantPanel {
         this.updateSpecialties(profile.specialties);
         
         // Working hours
-        this.updateWorkingHours(profile.businessHours);
+        this.updateWorkingHours(profile.operatingHours, profile.businessHours);
     }
 
     updateElement(elementId, value) {
@@ -598,19 +598,21 @@ class RestaurantPanel {
         }
     }
 
-    updateWorkingHours(businessHours) {
-        const container = document.getElementById('working-hours');
-        if (!container || !businessHours) return;
+    updateWorkingHours(operatingHours, businessHours) {
+        const display = document.getElementById('operating-hours-display');
+        if (!display) return;
         
-        container.innerHTML = '';
-        
-        if (businessHours.weekday && businessHours.weekend) {
-            container.innerHTML = `
-                <div class="day">Hafta İçi: ${businessHours.weekday.open} - ${businessHours.weekday.close}</div>
-                <div class="day">Hafta Sonu: ${businessHours.weekend.open} - ${businessHours.weekend.close}</div>
-            `;
-        } else {
-            container.innerHTML = '<div class="day">Çalışma saatleri belirtilmemiş</div>';
+        // Use new operatingHours system if available
+        if (operatingHours && operatingHours.open && operatingHours.close) {
+            display.textContent = `${operatingHours.open} - ${operatingHours.close}`;
+        }
+        // Fallback to old businessHours system
+        else if (businessHours && businessHours.weekday && businessHours.weekday.open) {
+            display.textContent = `${businessHours.weekday.open} - ${businessHours.weekday.close}`;
+        }
+        // Default display
+        else {
+            display.textContent = '09:00 - 22:00';
         }
     }
 
@@ -684,15 +686,10 @@ class RestaurantPanel {
                     .split(',')
                     .map(s => s.trim())
                     .filter(s => s.length > 0),
-                businessHours: {
-                    weekday: {
-                        open: document.getElementById('weekdayOpen').value,
-                        close: document.getElementById('weekdayClose').value
-                    },
-                    weekend: {
-                        open: document.getElementById('weekendOpen').value,
-                        close: document.getElementById('weekendClose').value
-                    }
+                operatingHours: {
+                    open: document.getElementById('operatingOpen').value,
+                    close: document.getElementById('operatingClose').value,
+                    closed: false
                 }
             };
             
@@ -864,8 +861,7 @@ class RestaurantPanel {
         const discountPercent = originalPrice > 0 ? 
             Math.round((1 - discountedPrice / originalPrice) * 100) : 0;
         const isLowStock = quantity <= 3;
-        const isExpiringSoon = pkg.availableUntil ? 
-            (new Date(pkg.availableUntil) - new Date()) < (24 * 60 * 60 * 1000) : false;
+        const isExpiringSoon = false; // Removed availableUntil system
         
         return `
             <div class="package-card ${isLowStock ? 'low-stock' : ''}" data-package-id="${pkg.id}">
@@ -894,18 +890,6 @@ class RestaurantPanel {
                         <i class="fas fa-cubes"></i>
                         <span>Stok: ${quantity} adet</span>
                         ${isLowStock ? '<i class="fas fa-exclamation-triangle warning-icon"></i>' : ''}
-                    </div>
-                    <div class="detail-item ${isExpiringSoon ? 'warning' : ''}">
-                        <i class="fas fa-clock"></i>
-                        <span>${pkg.availableUntil ? 
-                            new Date(pkg.availableUntil).toLocaleString('tr-TR', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            }) : 'Süresiz'}</span>
-                        ${isExpiringSoon ? '<i class="fas fa-exclamation-triangle warning-icon"></i>' : ''}
                     </div>
                     <div class="detail-item">
                         <i class="fas fa-calendar-plus"></i>
@@ -1015,11 +999,15 @@ class RestaurantPanel {
         document.getElementById('editSpecialties').value = 
             profile.specialties ? profile.specialties.join(', ') : '';
         
-        if (profile.businessHours) {
-            document.getElementById('weekdayOpen').value = profile.businessHours.weekday?.open || '';
-            document.getElementById('weekdayClose').value = profile.businessHours.weekday?.close || '';
-            document.getElementById('weekendOpen').value = profile.businessHours.weekend?.open || '';
-            document.getElementById('weekendClose').value = profile.businessHours.weekend?.close || '';
+        // Load operating hours (new simple system)
+        if (profile.operatingHours) {
+            document.getElementById('operatingOpen').value = profile.operatingHours.open || '09:00';
+            document.getElementById('operatingClose').value = profile.operatingHours.close || '22:00';
+        }
+        // Fallback to old businessHours for backward compatibility
+        else if (profile.businessHours && profile.businessHours.weekday) {
+            document.getElementById('operatingOpen').value = profile.businessHours.weekday.open || '09:00';
+            document.getElementById('operatingClose').value = profile.businessHours.weekday.close || '22:00';
         }
         
         // Show current main image
@@ -1291,7 +1279,7 @@ class RestaurantPanel {
 
     async deletePackageById(packageId) {
         try {
-            const success = await this.updatePackageAPI(packageId, { status: 'deleted' });
+            const success = await this.updatePackageAPI(packageId, { status: 'inactive' });
             
             if (success) {
                 // Remove from local array
@@ -1364,10 +1352,7 @@ class RestaurantPanel {
         
         modal.style.display = 'flex';
         
-        // Set default datetime to 1 hour from now
-        const defaultDate = new Date();
-        defaultDate.setHours(defaultDate.getHours() + 1);
-        document.getElementById('availableUntil').value = defaultDate.toISOString().slice(0, 16);
+        // availableUntil field removed from system
     }
 
     hideAddPackageModal() {
@@ -1389,10 +1374,7 @@ class RestaurantPanel {
         document.getElementById('packageTags').value = packageData.tags ? packageData.tags.join(', ') : '';
         document.getElementById('specialInstructions').value = packageData.specialInstructions || '';
         
-        if (packageData.availableUntil) {
-            const date = new Date(packageData.availableUntil);
-            document.getElementById('availableUntil').value = date.toISOString().slice(0, 16);
-        }
+        // availableUntil removed from system
         
         // Update discount calculation
         this.calculateDiscount();
@@ -1407,7 +1389,7 @@ class RestaurantPanel {
         document.getElementById('quantity').value = '';
         document.getElementById('packageTags').value = '';
         document.getElementById('specialInstructions').value = '';
-        document.getElementById('availableUntil').value = '';
+        // availableUntil field removed
         
         // Reset discount indicator
         document.getElementById('discountBadge').textContent = '0% İndirim';
@@ -1433,7 +1415,7 @@ class RestaurantPanel {
             // Additional frontend fields (stored but not validated by backend)
             originalPrice: parseFloat(document.getElementById('originalPrice').value),
             quantity: parseInt(document.getElementById('quantity').value),
-            availableUntil: document.getElementById('availableUntil').value || null,
+            // availableUntil field removed from system
             tags: document.getElementById('packageTags').value
                 .split(',')
                 .map(tag => tag.trim())
