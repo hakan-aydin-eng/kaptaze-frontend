@@ -135,14 +135,14 @@ function handleNewOrder(order) {
     // Show browser notification
     showBrowserNotification(order);
     
-    // Play notification sound
+    // Play notification sound (enhanced)
     playNotificationSound();
     
     // Reload orders list
     loadOrders();
     
-    // Show toast notification
-    showToast(`🔔 Yeni Sipariş: ${order.customer.name} - ₺${order.totalAmount}`, 'success');
+    // Show PERSISTENT toast notification (doesn't auto-close)
+    showPersistentOrderNotification(order);
 }
 
 // Show browser notification
@@ -164,14 +164,206 @@ function showBrowserNotification(order) {
     }
 }
 
-// Play notification sound
+// Play enhanced notification sound
 function playNotificationSound() {
     try {
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBi+Gy/LTgTAGKnjG8OGRQAoUXrTr7KlVFApGn+DxvmshBTCHzPLSgjEGJ3fH8OGRQAoUXrTq66hVFApGnuDyvmwiBTCGy/LTgjAGKXfH8OGQQAEIZO3kn0wQClatyuLa0bFc');
-        audio.play().catch(e => console.log('Sound play failed:', e));
+        // Yumuşak bildirim sesi - 3 kez çalar
+        const playSound = (count = 0) => {
+            if (count < 3) {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBi+Gy/LTgTAGKnjG8OGRQAoUXrTr7KlVFApGn+DxvmshBTCHzPLSgjEGJ3fH8OGRQAoUXrTq66hVFApGnuDyvmwiBTCGy/LTgjAGKXfH8OGQQAEIZO3kn0wQClatyuLa0bFc');
+                audio.volume = 0.3; // Yumuşak ses seviyesi
+                audio.play().catch(e => console.log('Sound play failed:', e));
+                
+                // 800ms sonra tekrar çal
+                setTimeout(() => playSound(count + 1), 800);
+            }
+        };
+        
+        playSound();
     } catch (e) {
-        console.log('Sound not supported');
+        console.log('Enhanced sound not supported');
     }
+}
+
+// Kalıcı sipariş bildirimi (otomatik kapanmaz)
+function showPersistentOrderNotification(order) {
+    // Mevcut bildirimleri temizle
+    const existingNotifications = document.querySelectorAll('.persistent-order-notification');
+    existingNotifications.forEach(notification => notification.remove());
+    
+    const notification = document.createElement('div');
+    notification.className = 'persistent-order-notification';
+    notification.innerHTML = `
+        <div class="notification-header">
+            <div class="notification-icon">🔔</div>
+            <div class="notification-title">YENİ SİPARİŞ!</div>
+            <div class="notification-close" onclick="this.parentElement.parentElement.remove()">×</div>
+        </div>
+        <div class="notification-content">
+            <div class="customer-info">
+                <strong>${order.customer.name}</strong>
+                <div class="phone">📞 ${order.customer.phone}</div>
+            </div>
+            <div class="order-total">₺${order.totalAmount.toFixed(2)}</div>
+        </div>
+        <div class="notification-actions">
+            <button class="accept-btn" onclick="handleOrderAcceptance('${order._id}', this.parentElement.parentElement)">
+                ✅ Siparişi Onayla
+            </button>
+            <button class="details-btn" onclick="showOrderDetails('${order._id}')">
+                📋 Detaylar
+            </button>
+        </div>
+    `;
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 350px;
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        color: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(22, 163, 74, 0.4);
+        z-index: 10000;
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+        animation: slideIn 0.5s ease-out, pulse 2s infinite;
+        border: 2px solid #22c55e;
+    `;
+    
+    // Animasyon stilleri ekle
+    if (!document.getElementById('notification-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'notification-styles';
+        styles.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+            @keyframes pulse {
+                0%, 100% { box-shadow: 0 8px 32px rgba(22, 163, 74, 0.4); }
+                50% { box-shadow: 0 8px 32px rgba(22, 163, 74, 0.8); }
+            }
+            .persistent-order-notification .notification-header {
+                display: flex;
+                align-items: center;
+                padding: 15px;
+                background: rgba(0, 0, 0, 0.1);
+                font-weight: bold;
+            }
+            .persistent-order-notification .notification-icon {
+                font-size: 24px;
+                margin-right: 10px;
+            }
+            .persistent-order-notification .notification-title {
+                flex: 1;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            .persistent-order-notification .notification-close {
+                font-size: 24px;
+                cursor: pointer;
+                padding: 0 5px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.2);
+            }
+            .persistent-order-notification .notification-close:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+            .persistent-order-notification .notification-content {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px;
+            }
+            .persistent-order-notification .customer-info {
+                flex: 1;
+            }
+            .persistent-order-notification .customer-info strong {
+                font-size: 16px;
+                display: block;
+                margin-bottom: 5px;
+            }
+            .persistent-order-notification .phone {
+                font-size: 14px;
+                opacity: 0.9;
+            }
+            .persistent-order-notification .order-total {
+                font-size: 24px;
+                font-weight: bold;
+                text-align: right;
+            }
+            .persistent-order-notification .notification-actions {
+                padding: 15px;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+                display: flex;
+                gap: 10px;
+            }
+            .persistent-order-notification .accept-btn {
+                flex: 1;
+                padding: 12px;
+                background: #ffffff;
+                color: #16a34a;
+                border: none;
+                border-radius: 8px;
+                font-weight: bold;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.3s ease;
+            }
+            .persistent-order-notification .accept-btn:hover {
+                background: #f0f9ff;
+                transform: translateY(-2px);
+            }
+            .persistent-order-notification .details-btn {
+                padding: 12px 20px;
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.3s ease;
+            }
+            .persistent-order-notification .details-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
+    document.body.appendChild(notification);
+    
+    console.log('🔔 Persistent notification created for order:', order._id);
+}
+
+// Sipariş onaylama işlemi
+function handleOrderAcceptance(orderId, notificationElement) {
+    console.log('✅ Accepting order:', orderId);
+    
+    // Siparişi onayla (mevcut fonksiyonu kullan)
+    updateOrderStatus(orderId, 'preparing');
+    
+    // Bildirimi kapat
+    notificationElement.style.animation = 'slideOut 0.3s ease-in';
+    setTimeout(() => {
+        notificationElement.remove();
+    }, 300);
+    
+    // Başarı mesajı
+    showToast('✅ Sipariş onaylandı ve hazırlanmaya başlandı!', 'success');
+}
+
+// Sipariş detaylarını göster
+function showOrderDetails(orderId) {
+    console.log('📋 Showing order details:', orderId);
+    // Mevcut sipariş detay sistemini kullan
+    showSection('orders', null);
 }
 
 // Load orders from API
