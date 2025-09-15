@@ -53,7 +53,6 @@ const LoginScreen = ({ navigation }) => {
           await login(result.data.consumer, result.data.token);
           // Direkt ana sayfaya yönlendir
           navigation.navigate('Main');
-          Alert.alert('✅ Başarılı!', 'Giriş başarılı!');
         } else {
           console.log('Login error details:', result);
           Alert.alert('❌ Hata', result.message || 'Giriş işlemi sırasında bir hata oluştu.');
@@ -191,7 +190,8 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 40,
   },
   logoContainer: {
     alignItems: 'center',
