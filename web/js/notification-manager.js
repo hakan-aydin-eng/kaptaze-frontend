@@ -12,20 +12,42 @@ const notificationManager = {
     // Load notification statistics
     async loadNotificationStats() {
         try {
-            // Mock data for now - will be replaced with API call
-            const stats = {
-                total: 1247,
-                delivered: 1156,
-                favorites: 234,
-                proximity: 89
-            };
+            const response = await fetch('/admin/notifications/stats', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
 
-            document.getElementById('totalNotifications').textContent = stats.total;
-            document.getElementById('deliveredNotifications').textContent = stats.delivered;
-            document.getElementById('favoriteNotifications').textContent = stats.favorites;
-            document.getElementById('proximityNotifications').textContent = stats.proximity;
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    const data = result.data;
+
+                    // Update statistics display
+                    document.getElementById('totalConsumers').textContent = data.consumers.total || 0;
+                    document.getElementById('activeDevices').textContent = data.pushTokens.total || 0;
+                    document.getElementById('iosDevices').textContent = data.pushTokens.byPlatform.ios || 0;
+                    document.getElementById('androidDevices').textContent = data.pushTokens.byPlatform.android || 0;
+
+                    // Update configuration status
+                    const configStatus = document.getElementById('firebaseStatus');
+                    if (configStatus) {
+                        configStatus.innerHTML = data.firebase.configured
+                            ? '✅ Firebase yapılandırıldı'
+                            : '⚠️ Firebase yapılandırılması gerekiyor (Mock mode)';
+                        configStatus.className = data.firebase.configured ? 'status-success' : 'status-warning';
+                    }
+
+                    console.log('✅ Notification stats loaded:', data);
+                }
+            } else {
+                throw new Error('Failed to fetch notification stats');
+            }
         } catch (error) {
             console.error('Failed to load notification stats:', error);
+            // Fallback to mock data
+            document.getElementById('totalConsumers').textContent = '---';
+            document.getElementById('activeDevices').textContent = '---';
         }
     },
 
@@ -195,13 +217,13 @@ const notificationManager = {
                 return;
             }
 
-            if (title.length > 50) {
-                alert('Başlık 50 karakterden uzun olamaz');
+            if (title.length > 100) {
+                alert('Başlık 100 karakterden uzun olamaz');
                 return;
             }
 
-            if (message.length > 200) {
-                alert('Mesaj 200 karakterden uzun olamaz');
+            if (message.length > 500) {
+                alert('Mesaj 500 karakterden uzun olamaz');
                 return;
             }
 
@@ -211,8 +233,25 @@ const notificationManager = {
                 priority,
                 title,
                 message,
-                timestamp: new Date().toISOString()
+                targetData: {}
             };
+
+            // Add specific target data based on notification type
+            if (type === 'şehir') {
+                // For city-based notifications, you might want to add location data
+                notificationData.targetData = {
+                    latitude: 41.0082, // Istanbul coordinates as example
+                    longitude: 28.9784,
+                    radiusKm: 5
+                };
+            } else if (type === 'restoran') {
+                // For restaurant-based notifications, you might want to add restaurant selection
+                // This would require additional UI elements
+                const restaurantId = document.getElementById('targetRestaurant')?.value;
+                if (restaurantId) {
+                    notificationData.targetData.restaurantId = restaurantId;
+                }
+            }
 
             console.log('Sending notification:', notificationData);
 
@@ -222,19 +261,32 @@ const notificationManager = {
             sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gönderiliyor...';
             sendButton.disabled = true;
 
-            // Here you would make API call to backend
-            // For now, simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Make API call to backend
+            const response = await fetch('/admin/notifications/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                },
+                body: JSON.stringify(notificationData)
+            });
 
-            // Show success message
-            alert('Bildirim başarıyla gönderildi!');
+            const result = await response.json();
 
-            // Reset form
-            this.resetForm();
+            if (response.ok && result.success) {
+                // Show success message with details
+                const successMsg = `✅ Bildirim başarıyla gönderildi!\n\nTür: ${type}\nUlaşan: ${result.data.successCount || 'Bilinmiyor'}\nToplam token: ${result.data.tokenCount || 'Bilinmiyor'}`;
+                alert(successMsg);
 
-            // Refresh history
-            this.loadNotificationHistory();
-            this.loadNotificationStats();
+                // Reset form
+                this.resetForm();
+
+                // Refresh data
+                this.loadNotificationHistory();
+                this.loadNotificationStats();
+            } else {
+                throw new Error(result.error || 'Bildirim gönderilemedi');
+            }
 
             // Restore button
             sendButton.innerHTML = originalText;
@@ -242,7 +294,7 @@ const notificationManager = {
 
         } catch (error) {
             console.error('Failed to send notification:', error);
-            alert('Bildirim gönderilemedi. Lütfen tekrar deneyin.');
+            alert(`❌ Bildirim gönderilemedi: ${error.message}`);
 
             // Restore button
             const sendButton = document.querySelector('button[onclick="notificationManager.sendNotification()"]');
@@ -250,6 +302,36 @@ const notificationManager = {
                 sendButton.innerHTML = '<i class="fas fa-paper-plane"></i> Gönder';
                 sendButton.disabled = false;
             }
+        }
+    },
+
+    // Send test notification
+    async sendTestNotification() {
+        try {
+            console.log('Sending test notification...');
+
+            const response = await fetch('/admin/notifications/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                },
+                body: JSON.stringify({
+                    email: 'test@kaptaze.com'
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert('✅ Test bildirimi gönderildi!');
+            } else {
+                throw new Error(result.error || 'Test bildirimi gönderilemedi');
+            }
+
+        } catch (error) {
+            console.error('Failed to send test notification:', error);
+            alert(`❌ Test bildirimi gönderilemedi: ${error.message}`);
         }
     },
 
