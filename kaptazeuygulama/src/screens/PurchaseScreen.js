@@ -21,6 +21,14 @@ const PurchaseScreen = ({ route, navigation }) => {
   const originalTotal = selectedPackage.originalPrice * quantity;
   const totalSavings = originalTotal - totalPrice;
 
+  // Get restaurant operating hours
+  const getPickupHours = () => {
+    if (restaurant?.operatingHours?.open && restaurant?.operatingHours?.close) {
+      return `${restaurant.operatingHours.open} - ${restaurant.operatingHours.close}`;
+    }
+    return '18:00 - 21:00'; // fallback
+  };
+
   const paymentMethods = [
     { id: 'cash', name: 'Nakit', icon: '💵' },
     { id: 'card', name: 'Kredi/Banka Kartı', icon: '💳' },
@@ -93,7 +101,7 @@ const PurchaseScreen = ({ route, navigation }) => {
 
                 Alert.alert(
                   'Başarılı! 🎉',
-                  `Rezervasyonunuz alındı. Rezervasyon No: #${result.orderId.slice(-6)}\n\nPaketinizi ${restaurant.name} restoranına giderek teslim alabilirsiniz.\n\nTeslim saatleri: 18:00 - 21:00`,
+                  `Rezervasyonunuz alındı. Rezervasyon No: #${result.orderId.slice(-6)}\n\nPaketinizi ${restaurant.name} restoranına giderek teslim alabilirsiniz.\n\nTeslim saatleri: ${getPickupHours()}`,
                   [
                     { 
                       text: 'Siparişlerim', 
@@ -199,7 +207,7 @@ const PurchaseScreen = ({ route, navigation }) => {
               <Text style={styles.pickupIcon}>⏰</Text>
               <View>
                 <Text style={styles.pickupLabel}>Teslim Saatleri</Text>
-                <Text style={styles.pickupValue}>18:00 - 21:00</Text>
+                <Text style={styles.pickupValue}>{getPickupHours()}</Text>
               </View>
             </View>
             
