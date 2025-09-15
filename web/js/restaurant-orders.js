@@ -347,7 +347,7 @@ function handleOrderAcceptance(orderId, notificationElement) {
     console.log('✅ Accepting order:', orderId);
     
     // Siparişi onayla (mevcut fonksiyonu kullan)
-    updateOrderStatus(orderId, 'preparing');
+    updateOrderStatus(orderId, 'confirmed');
     
     // Bildirimi kapat
     notificationElement.style.animation = 'slideOut 0.3s ease-in';
@@ -362,8 +362,29 @@ function handleOrderAcceptance(orderId, notificationElement) {
 // Sipariş detaylarını göster
 function showOrderDetails(orderId) {
     console.log('📋 Showing order details:', orderId);
-    // Mevcut sipariş detay sistemini kullan
-    showSection('orders', null);
+    
+    // Orders sekmesini aktif yap (restaurant panel'de)
+    if (typeof showSection === 'function') {
+        showSection('orders', null);
+    } else {
+        // Alternative: orders sayfasına scroll et
+        const ordersSection = document.getElementById('orders-content');
+        if (ordersSection) {
+            ordersSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Specific order'ı highlight et
+        setTimeout(() => {
+            const orderCards = document.querySelectorAll('.order-card');
+            orderCards.forEach(card => {
+                if (card.innerHTML.includes(orderId.slice(-6))) {
+                    card.style.border = '3px solid #16a34a';
+                    card.style.backgroundColor = '#f0fdf4';
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }, 500);
+    }
 }
 
 // Load orders from API
@@ -399,7 +420,7 @@ function updateOrdersUI(orders) {
     }
     
     const pendingOrders = orders.filter(o => o.status === 'pending');
-    const processingOrders = orders.filter(o => ['preparing', 'ready'].includes(o.status));
+    const processingOrders = orders.filter(o => ['confirmed', 'ready'].includes(o.status));
     
     ordersSection.innerHTML = `
         <div class="orders-summary">
@@ -430,17 +451,17 @@ function updateOrdersUI(orders) {
 function createOrderCard(order) {
     const statusColors = {
         pending: '#ff9800',
-        preparing: '#2196f3', 
+        confirmed: '#2196f3',
         ready: '#4caf50',
-        delivered: '#607d8b',
+        completed: '#607d8b',
         cancelled: '#f44336'
     };
     
     const statusTexts = {
         pending: 'Bekliyor',
-        preparing: 'Hazırlanıyor',
+        confirmed: 'Onaylandı',
         ready: 'Hazır',
-        delivered: 'Teslim Edildi',
+        completed: 'Teslim Edildi',
         cancelled: 'İptal'
     };
     
@@ -472,14 +493,14 @@ function createOrderCard(order) {
                     <strong>Toplam: ₺${order.totalAmount.toFixed(2)}</strong>
                 </div>
                 <div class="order-actions">
-                    ${order.status === 'pending' ? 
-                        `<button onclick="updateOrderStatus('${order._id}', 'preparing')" class="btn-orange">Hazırla</button>` : ''
+                    ${order.status === 'pending' ?
+                        `<button onclick="updateOrderStatus('${order._id}', 'confirmed')" class="btn-orange">Onayla</button>` : ''
                     }
-                    ${order.status === 'preparing' ? 
+                    ${order.status === 'confirmed' ?
                         `<button onclick="updateOrderStatus('${order._id}', 'ready')" class="btn-green">Hazır</button>` : ''
                     }
-                    ${order.status === 'ready' ? 
-                        `<button onclick="updateOrderStatus('${order._id}', 'delivered')" class="btn-blue">Teslim</button>` : ''
+                    ${order.status === 'ready' ?
+                        `<button onclick="updateOrderStatus('${order._id}', 'completed')" class="btn-blue">Teslim</button>` : ''
                     }
                 </div>
             </div>
