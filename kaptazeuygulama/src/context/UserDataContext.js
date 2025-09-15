@@ -68,19 +68,29 @@ export const UserDataProvider = ({ children }) => {
 
     try {
       const userKeys = getUserSpecificKeys(userId);
+      console.log('🔍 Loading data for user:', userId);
+      console.log('📍 Storage keys:', userKeys);
+
       const [savedFavorites, savedOrders] = await Promise.all([
         AsyncStorage.getItem(userKeys.FAVORITES),
         AsyncStorage.getItem(userKeys.ORDERS),
       ]);
 
+      console.log('❤️ Saved favorites found:', !!savedFavorites);
+      console.log('📦 Saved orders found:', !!savedOrders);
+
       if (savedFavorites) {
-        setFavorites(JSON.parse(savedFavorites));
+        const favoritesData = JSON.parse(savedFavorites);
+        console.log('❤️ Parsed favorites count:', favoritesData.length);
+        setFavorites(favoritesData);
       } else {
         setFavorites([]);
       }
 
       if (savedOrders) {
-        setOrders(JSON.parse(savedOrders));
+        const ordersData = JSON.parse(savedOrders);
+        console.log('📦 Parsed orders count:', ordersData.length);
+        setOrders(ordersData);
       } else {
         setOrders([]);
       }
@@ -103,13 +113,15 @@ export const UserDataProvider = ({ children }) => {
     if (token) {
       setUserToken(token);
     }
-    
+
     if (user) {
       await saveUserData(STORAGE_KEYS.CURRENT_USER, user);
+      // Load user-specific data when user logs in
+      await loadUserSpecificData(user.email || user.id);
     } else {
       await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     }
-    
+
     if (token) {
       await AsyncStorage.setItem(STORAGE_KEYS.USER_TOKEN, token);
     } else if (user === null) {
@@ -155,8 +167,13 @@ export const UserDataProvider = ({ children }) => {
       userId: currentUser.id || currentUser.email,
     }];
 
+    console.log('➕ Adding to favorites:', restaurant.name);
+    console.log('❤️ User:', currentUser.email || currentUser.id);
+    console.log('📍 New favorites count:', updatedFavorites.length);
+
     setFavorites(updatedFavorites);
     const userKeys = getUserSpecificKeys(currentUser.id || currentUser.email);
+    console.log('💾 Saving to key:', userKeys.FAVORITES);
     await saveUserData(userKeys.FAVORITES, updatedFavorites);
     return true;
   };
