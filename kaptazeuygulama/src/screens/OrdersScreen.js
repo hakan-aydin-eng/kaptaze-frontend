@@ -18,8 +18,10 @@ const OrdersScreen = ({ navigation }) => {
     const statusMap = {
       pending: { text: 'Onay Bekliyor', color: '#f59e0b', bgColor: '#fef3c7' },
       confirmed: { text: 'Onaylandı', color: '#1d4ed8', bgColor: '#dbeafe' },
+      preparing: { text: 'Onaylandı', color: '#1d4ed8', bgColor: '#dbeafe' }, // Backward compatibility
       ready: { text: 'Hazır', color: '#16a34a', bgColor: '#dcfce7' },
       completed: { text: 'Tamamlandı', color: '#059669', bgColor: '#d1fae5' },
+      delivered: { text: 'Tamamlandı', color: '#059669', bgColor: '#d1fae5' }, // Backward compatibility
       cancelled: { text: 'İptal Edildi', color: '#dc2626', bgColor: '#fee2e2' },
     };
     return statusMap[status] || statusMap.pending;
