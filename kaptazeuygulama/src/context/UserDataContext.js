@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import io from 'socket.io-client';
+import apiService from '../services/apiService';
 
 const UserDataContext = createContext();
 
@@ -17,6 +19,7 @@ export const UserDataProvider = ({ children }) => {
   const [favorites, setFavorites] = useState([]);
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const socketRef = useRef(null);
 
   // AsyncStorage keys
   const STORAGE_KEYS = {
@@ -36,6 +39,113 @@ export const UserDataProvider = ({ children }) => {
   useEffect(() => {
     loadUserData();
   }, []);
+
+  // Socket.IO connection management
+  useEffect(() => {
+    if (currentUser) {
+      // Initialize Socket.IO connection
+      initializeSocket();
+    } else {
+      // Disconnect socket when user logs out
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [currentUser]);
+
+  // Update Socket.IO listeners when orders change
+  useEffect(() => {
+    if (socketRef.current && currentUser && orders.length > 0) {
+      console.log('🔄 Orders changed, updating Socket.IO listeners');
+      updateSocketListeners();
+    }
+  }, [orders, currentUser]);
+
+  const initializeSocket = () => {
+    if (!currentUser || socketRef.current) return;
+
+    console.log('🔌 Initializing Socket.IO connection for mobile app');
+
+    try {
+      const socket = io('https://kaptaze-backend-api.onrender.com', {
+        transports: ['websocket', 'polling'],
+        timeout: 20000,
+      });
+
+      socket.on('connect', () => {
+        console.log('✅ Mobile Socket.IO connected');
+        // Update listeners when socket connects
+        setTimeout(() => updateSocketListeners(), 1000);
+      });
+
+      socket.on('disconnect', () => {
+        console.log('❌ Mobile Socket.IO disconnected');
+      });
+
+      socket.on('connect_error', (error) => {
+        console.log('❌ Mobile Socket.IO connection error:', error);
+      });
+
+      socketRef.current = socket;
+    } catch (error) {
+      console.error('❌ Socket.IO initialization failed:', error);
+    }
+  };
+
+  const handleOrderStatusUpdate = (backendOrderId, newStatus) => {
+    console.log(`📲 Updating order ${backendOrderId} to status: ${newStatus}`);
+
+    const updatedOrders = orders.map(order => {
+      if (order.backendOrderId === backendOrderId) {
+        return { ...order, status: newStatus };
+      }
+      return order;
+    });
+
+    setOrders(updatedOrders);
+
+    // Save to AsyncStorage
+    const userId = currentUser?.email || currentUser?.id;
+    if (userId) {
+      const userKeys = getUserSpecificKeys(userId);
+      saveUserData(userKeys.ORDERS, updatedOrders);
+    }
+  };
+
+  const updateSocketListeners = () => {
+    if (!socketRef.current || !currentUser) return;
+
+    console.log('🔄 Updating Socket.IO listeners for orders');
+
+    // Get current user's orders
+    const userOrders = getUserOrders();
+    console.log(`📱 Setting up listeners for ${userOrders.length} orders`);
+
+    userOrders.forEach(order => {
+      if (order.backendOrderId) {
+        const orderEventName = `order-update-${order.backendOrderId}`;
+        console.log(`📱 Listening for: ${orderEventName}`);
+
+        // Remove existing listener first to prevent duplicates
+        socketRef.current.off(orderEventName);
+
+        // Add new listener
+        socketRef.current.on(orderEventName, (updateData) => {
+          console.log(`🔔 Order status update received for ${order.backendOrderId}:`, updateData);
+          handleOrderStatusUpdate(order.backendOrderId, updateData.status);
+        });
+      }
+    });
+  };
 
   const loadUserData = async () => {
     try {
@@ -220,28 +330,92 @@ export const UserDataProvider = ({ children }) => {
       pickupTime = `${restaurant.operatingHours.open}-${restaurant.operatingHours.close}`;
     }
 
-    const newOrder = {
-      id: `order_${Date.now()}`,
-      userId: userId,
-      restaurant: orderData.restaurant,
-      package: orderData.package,
-      quantity: orderData.quantity,
-      totalPrice: orderData.totalPrice,
-      originalPrice: orderData.originalPrice,
-      savings: orderData.originalPrice - orderData.totalPrice,
-      status: 'pending', // pending, confirmed, ready, completed, cancelled
-      pickupCode: `KB${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-      orderDate: new Date().toISOString(),
-      pickupTime: pickupTime,
-      paymentMethod: orderData.paymentMethod || 'credit_card',
-    };
+    // Generate pickup code
+    const pickupCode = `KB${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
 
-    const updatedOrders = [newOrder, ...orders];
-    setOrders(updatedOrders);
-    const userKeys = getUserSpecificKeys(userId);
-    await saveUserData(userKeys.ORDERS, updatedOrders);
+    try {
+      // First, send order to backend
+      console.log('📤 Sending order to backend...');
+      const backendOrderData = {
+        customer: {
+          id: currentUser.id || currentUser._id,
+          name: currentUser.name || currentUser.firstName || 'Müşteri',
+          phone: currentUser.phone || '05XX XXX XX XX',
+          address: 'Restorana gelip alacak' // For pickup orders
+        },
+        restaurantId: restaurant._id,
+        items: [{
+          productId: orderData.package._id || orderData.package.id,
+          name: orderData.package.name,
+          price: orderData.package.price || orderData.package.salePrice,
+          quantity: orderData.quantity,
+          total: orderData.totalPrice
+        }],
+        totalAmount: orderData.totalPrice,
+        paymentMethod: orderData.paymentMethod === 'credit_card' ? 'cash' : orderData.paymentMethod,
+        notes: `Mobil uygulama rezervasyonu - Kod: ${pickupCode}`
+      };
 
-    return newOrder;
+      console.log('📦 Backend order data:', backendOrderData);
+      const backendResponse = await apiService.createOrder(backendOrderData);
+      console.log('✅ Backend response:', backendResponse);
+
+      // Create local order object with backend response data
+      const newOrder = {
+        id: backendResponse.data?._id || `order_${Date.now()}`, // Use backend ID if available
+        userId: userId,
+        restaurant: orderData.restaurant,
+        package: orderData.package,
+        quantity: orderData.quantity,
+        totalPrice: orderData.totalPrice,
+        originalPrice: orderData.originalPrice,
+        savings: orderData.originalPrice - orderData.totalPrice,
+        status: 'pending', // pending, confirmed, ready, completed, cancelled
+        pickupCode: pickupCode,
+        orderDate: new Date().toISOString(),
+        pickupTime: pickupTime,
+        paymentMethod: orderData.paymentMethod || 'credit_card',
+        backendOrderId: backendResponse.data?._id, // Store backend ID for sync
+      };
+
+      // Save to local storage
+      const updatedOrders = [newOrder, ...orders];
+      setOrders(updatedOrders);
+      const userKeys = getUserSpecificKeys(userId);
+      await saveUserData(userKeys.ORDERS, updatedOrders);
+
+      console.log('💾 Order saved locally and sent to backend successfully');
+      return newOrder;
+
+    } catch (error) {
+      console.error('❌ Error creating order:', error);
+
+      // If backend fails, still create local order for user experience
+      console.log('⚠️ Backend failed, creating local-only order');
+      const newOrder = {
+        id: `order_${Date.now()}`,
+        userId: userId,
+        restaurant: orderData.restaurant,
+        package: orderData.package,
+        quantity: orderData.quantity,
+        totalPrice: orderData.totalPrice,
+        originalPrice: orderData.originalPrice,
+        savings: orderData.originalPrice - orderData.totalPrice,
+        status: 'pending',
+        pickupCode: pickupCode,
+        orderDate: new Date().toISOString(),
+        pickupTime: pickupTime,
+        paymentMethod: orderData.paymentMethod || 'credit_card',
+        localOnly: true, // Mark as local-only for later sync
+      };
+
+      const updatedOrders = [newOrder, ...orders];
+      setOrders(updatedOrders);
+      const userKeys = getUserSpecificKeys(userId);
+      await saveUserData(userKeys.ORDERS, updatedOrders);
+
+      return newOrder;
+    }
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {
