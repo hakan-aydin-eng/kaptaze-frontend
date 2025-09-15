@@ -49,8 +49,9 @@ export const UserDataProvider = ({ children }) => {
       if (savedUser) {
         const userData = JSON.parse(savedUser);
         setCurrentUser(userData);
-        // Load user-specific data
-        await loadUserSpecificData(userData.email || userData.id);
+        // Load user-specific data - prioritize email
+        const userId = userData.email || userData.id;
+        await loadUserSpecificData(userId);
       }
 
       if (savedToken) {
@@ -116,8 +117,9 @@ export const UserDataProvider = ({ children }) => {
 
     if (user) {
       await saveUserData(STORAGE_KEYS.CURRENT_USER, user);
-      // Load user-specific data when user logs in
-      await loadUserSpecificData(user.email || user.id);
+      // Load user-specific data when user logs in - prioritize email
+      const userId = user.email || user.id;
+      await loadUserSpecificData(userId);
     } else {
       await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     }
@@ -161,18 +163,19 @@ export const UserDataProvider = ({ children }) => {
     const isAlreadyFavorite = favorites.some(fav => fav._id === restaurant._id);
     if (isAlreadyFavorite) return false;
 
+    const userId = currentUser.email || currentUser.id;
     const updatedFavorites = [...favorites, {
       ...restaurant,
       addedAt: new Date().toISOString(),
-      userId: currentUser.id || currentUser.email,
+      userId: userId,
     }];
 
     console.log('➕ Adding to favorites:', restaurant.name);
-    console.log('❤️ User:', currentUser.email || currentUser.id);
+    console.log('❤️ User:', userId);
     console.log('📍 New favorites count:', updatedFavorites.length);
 
     setFavorites(updatedFavorites);
-    const userKeys = getUserSpecificKeys(currentUser.id || currentUser.email);
+    const userKeys = getUserSpecificKeys(userId);
     console.log('💾 Saving to key:', userKeys.FAVORITES);
     await saveUserData(userKeys.FAVORITES, updatedFavorites);
     return true;
@@ -181,9 +184,10 @@ export const UserDataProvider = ({ children }) => {
   const removeFromFavorites = async (restaurantId) => {
     if (!currentUser) return false;
 
+    const userId = currentUser.email || currentUser.id;
     const updatedFavorites = favorites.filter(fav => fav._id !== restaurantId);
     setFavorites(updatedFavorites);
-    const userKeys = getUserSpecificKeys(currentUser.id || currentUser.email);
+    const userKeys = getUserSpecificKeys(userId);
     await saveUserData(userKeys.FAVORITES, updatedFavorites);
     return true;
   };
@@ -206,9 +210,19 @@ export const UserDataProvider = ({ children }) => {
   const addOrder = async (orderData) => {
     if (!currentUser) return false;
 
+    const userId = currentUser.email || currentUser.id;
+
+    // Get restaurant operating hours for pickup time
+    const restaurant = orderData.restaurant;
+    let pickupTime = '18:00-21:00'; // fallback
+
+    if (restaurant?.operatingHours?.open && restaurant?.operatingHours?.close) {
+      pickupTime = `${restaurant.operatingHours.open}-${restaurant.operatingHours.close}`;
+    }
+
     const newOrder = {
       id: `order_${Date.now()}`,
-      userId: currentUser.id || currentUser.email,
+      userId: userId,
       restaurant: orderData.restaurant,
       package: orderData.package,
       quantity: orderData.quantity,
@@ -218,13 +232,13 @@ export const UserDataProvider = ({ children }) => {
       status: 'pending', // pending, confirmed, ready, completed, cancelled
       pickupCode: `KB${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
       orderDate: new Date().toISOString(),
-      pickupTime: '18:00-21:00',
+      pickupTime: pickupTime,
       paymentMethod: orderData.paymentMethod || 'credit_card',
     };
 
     const updatedOrders = [newOrder, ...orders];
     setOrders(updatedOrders);
-    const userKeys = getUserSpecificKeys(currentUser.id || currentUser.email);
+    const userKeys = getUserSpecificKeys(userId);
     await saveUserData(userKeys.ORDERS, updatedOrders);
 
     return newOrder;
@@ -236,18 +250,23 @@ export const UserDataProvider = ({ children }) => {
     );
 
     setOrders(updatedOrders);
-    const userKeys = getUserSpecificKeys(currentUser.id || currentUser.email);
-    await saveUserData(userKeys.ORDERS, updatedOrders);
+    const userId = currentUser?.email || currentUser?.id;
+    if (userId) {
+      const userKeys = getUserSpecificKeys(userId);
+      await saveUserData(userKeys.ORDERS, updatedOrders);
+    }
   };
 
   const getUserOrders = () => {
     if (!currentUser) return [];
-    return orders.filter(order => order.userId === (currentUser.id || currentUser.email));
+    const userId = currentUser.email || currentUser.id;
+    return orders.filter(order => order.userId === userId);
   };
 
   const getUserFavorites = () => {
     if (!currentUser) return [];
-    return favorites.filter(fav => fav.userId === (currentUser.id || currentUser.email));
+    const userId = currentUser.email || currentUser.id;
+    return favorites.filter(fav => fav.userId === userId);
   };
 
   // Statistics
