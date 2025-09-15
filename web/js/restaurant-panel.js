@@ -909,12 +909,18 @@ class RestaurantPanel {
                 </div>
                 
                 <div class="package-actions">
-                    <button class="btn-sm btn-secondary" onclick="editPackage('${pkg.id}')" title="Paketi Düzenle">
-                        <i class="fas fa-edit"></i> Düzenle
-                    </button>
-                    <button class="btn-sm btn-warning" onclick="duplicatePackage('${pkg.id}')" title="Paketi Kopyala">
-                        <i class="fas fa-copy"></i> Kopyala
-                    </button>
+                    ${pkg.status === 'inactive' ? `
+                        <button class="btn-sm btn-success" onclick="reactivatePackage('${pkg.id}')" title="Paketi Yeniden Aktifleştir">
+                            <i class="fas fa-play"></i> Yeniden Yayına Al
+                        </button>
+                    ` : `
+                        <button class="btn-sm btn-secondary" onclick="editPackage('${pkg.id}')" title="Paketi Düzenle">
+                            <i class="fas fa-edit"></i> Düzenle
+                        </button>
+                        <button class="btn-sm btn-warning" onclick="duplicatePackage('${pkg.id}')" title="Paketi Kopyala">
+                            <i class="fas fa-copy"></i> Kopyala
+                        </button>
+                    `}
                     <button class="btn-sm btn-danger" onclick="deletePackage('${pkg.id}')" title="Paketi Sil">
                         <i class="fas fa-trash"></i> Sil
                     </button>
@@ -1278,7 +1284,7 @@ class RestaurantPanel {
     async deletePackageById(packageId) {
         try {
             const success = await this.updatePackageAPI(packageId, { status: 'inactive' });
-            
+
             if (success) {
                 // Remove from local array
                 this.packages = this.packages.filter(pkg => pkg.id !== packageId);
@@ -1287,11 +1293,54 @@ class RestaurantPanel {
                 this.showSuccessMessage('Paket başarıyla silindi!');
                 return true;
             }
-            
+
             return false;
         } catch (error) {
             console.error('❌ Package delete error:', error);
             this.showErrorMessage('Paket silinirken hata oluştu.');
+            return false;
+        }
+    }
+
+    async reactivatePackage(packageId) {
+        try {
+            console.log('🔄 Reactivating package:', packageId);
+
+            // Prompt for stock quantity
+            const stockQuantity = prompt('Bu paket için stok miktarını girin:', '5');
+            if (!stockQuantity || isNaN(stockQuantity) || stockQuantity < 0) {
+                this.showErrorMessage('Geçerli bir stok miktarı giriniz.');
+                return false;
+            }
+
+            const updateData = {
+                status: 'active',
+                quantity: parseInt(stockQuantity),
+                updatedAt: new Date().toISOString()
+            };
+
+            const success = await this.updatePackageAPI(packageId, updateData);
+
+            if (success) {
+                // Update package in local array
+                const packageIndex = this.packages.findIndex(pkg => pkg.id === packageId);
+                if (packageIndex !== -1) {
+                    this.packages[packageIndex] = {
+                        ...this.packages[packageIndex],
+                        ...updateData
+                    };
+                }
+
+                this.renderPackages();
+                this.updateStatistics();
+                this.showSuccessMessage(`Paket başarıyla yeniden yayına alındı! Stok: ${stockQuantity} adet`);
+                return true;
+            }
+
+            return false;
+        } catch (error) {
+            console.error('❌ Package reactivate error:', error);
+            this.showErrorMessage('Paket yeniden aktifleştirilirken hata oluştu.');
             return false;
         }
     }
@@ -1752,6 +1801,29 @@ window.loadPackagesData = async function() {
 window.loadPaymentsData = async function() {
     console.log('💳 Loading payments data from API...');
     // TODO: Implement payment history
+};
+
+// Reactivate package global function
+window.reactivatePackage = async function(packageId) {
+    console.log('🔄 Reactivating package:', packageId);
+
+    if (!confirm('Bu paketi yeniden yayına almak istediğinizden emin misiniz?')) {
+        return;
+    }
+
+    try {
+        if (window.restaurantPanel && window.restaurantPanel.reactivatePackage) {
+            const success = await window.restaurantPanel.reactivatePackage(packageId);
+            if (success) {
+                console.log('✅ Package reactivated successfully');
+            }
+        } else {
+            console.error('❌ Restaurant panel reactivatePackage method not found');
+        }
+    } catch (error) {
+        console.error('❌ Error reactivating package:', error);
+        alert('Paket yeniden aktifleştirilirken hata oluştu.');
+    }
 };
 
 console.log('🏪 Restaurant Panel JS loaded - v2025.09.13 - FULL BACKEND API INTEGRATION!');
