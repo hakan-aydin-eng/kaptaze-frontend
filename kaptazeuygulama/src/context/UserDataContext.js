@@ -26,6 +26,12 @@ export const UserDataProvider = ({ children }) => {
     ORDERS: '@kaptaze_orders',
   };
 
+  // Get user-specific storage keys
+  const getUserSpecificKeys = (userId) => ({
+    FAVORITES: `@kaptaze_favorites_${userId}`,
+    ORDERS: `@kaptaze_orders_${userId}`,
+  });
+
   // Load user data on app start
   useEffect(() => {
     loadUserData();
@@ -34,33 +40,52 @@ export const UserDataProvider = ({ children }) => {
   const loadUserData = async () => {
     try {
       setIsLoading(true);
-      
-      const [savedUser, savedToken, savedFavorites, savedOrders] = await Promise.all([
+
+      const [savedUser, savedToken] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.CURRENT_USER),
         AsyncStorage.getItem(STORAGE_KEYS.USER_TOKEN),
-        AsyncStorage.getItem(STORAGE_KEYS.FAVORITES),
-        AsyncStorage.getItem(STORAGE_KEYS.ORDERS),
       ]);
 
       if (savedUser) {
-        setCurrentUser(JSON.parse(savedUser));
+        const userData = JSON.parse(savedUser);
+        setCurrentUser(userData);
+        // Load user-specific data
+        await loadUserSpecificData(userData.email || userData.id);
       }
 
       if (savedToken) {
         setUserToken(savedToken);
       }
-
-      if (savedFavorites) {
-        setFavorites(JSON.parse(savedFavorites));
-      }
-
-      if (savedOrders) {
-        setOrders(JSON.parse(savedOrders));
-      }
     } catch (error) {
       console.error('Error loading user data:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadUserSpecificData = async (userId) => {
+    if (!userId) return;
+
+    try {
+      const userKeys = getUserSpecificKeys(userId);
+      const [savedFavorites, savedOrders] = await Promise.all([
+        AsyncStorage.getItem(userKeys.FAVORITES),
+        AsyncStorage.getItem(userKeys.ORDERS),
+      ]);
+
+      if (savedFavorites) {
+        setFavorites(JSON.parse(savedFavorites));
+      } else {
+        setFavorites([]);
+      }
+
+      if (savedOrders) {
+        setOrders(JSON.parse(savedOrders));
+      } else {
+        setOrders([]);
+      }
+    } catch (error) {
+      console.error('Error loading user-specific data:', error);
     }
   };
 
@@ -93,22 +118,34 @@ export const UserDataProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    const userId = currentUser?.id || currentUser?.email;
+
     setCurrentUser(null);
     setUserToken(null);
     setFavorites([]);
     setOrders([]);
-    await Promise.all([
+
+    const removalPromises = [
       AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_USER),
       AsyncStorage.removeItem(STORAGE_KEYS.USER_TOKEN),
-      AsyncStorage.removeItem(STORAGE_KEYS.FAVORITES),
-      AsyncStorage.removeItem(STORAGE_KEYS.ORDERS),
-    ]);
+    ];
+
+    // Clear user-specific data if user was logged in
+    if (userId) {
+      const userKeys = getUserSpecificKeys(userId);
+      removalPromises.push(
+        AsyncStorage.removeItem(userKeys.FAVORITES),
+        AsyncStorage.removeItem(userKeys.ORDERS)
+      );
+    }
+
+    await Promise.all(removalPromises);
   };
 
   // Favorites management
   const addToFavorites = async (restaurant) => {
     if (!currentUser) return false;
-    
+
     const isAlreadyFavorite = favorites.some(fav => fav._id === restaurant._id);
     if (isAlreadyFavorite) return false;
 
@@ -119,7 +156,8 @@ export const UserDataProvider = ({ children }) => {
     }];
 
     setFavorites(updatedFavorites);
-    await saveUserData(STORAGE_KEYS.FAVORITES, updatedFavorites);
+    const userKeys = getUserSpecificKeys(currentUser.id || currentUser.email);
+    await saveUserData(userKeys.FAVORITES, updatedFavorites);
     return true;
   };
 
@@ -128,7 +166,8 @@ export const UserDataProvider = ({ children }) => {
 
     const updatedFavorites = favorites.filter(fav => fav._id !== restaurantId);
     setFavorites(updatedFavorites);
-    await saveUserData(STORAGE_KEYS.FAVORITES, updatedFavorites);
+    const userKeys = getUserSpecificKeys(currentUser.id || currentUser.email);
+    await saveUserData(userKeys.FAVORITES, updatedFavorites);
     return true;
   };
 
@@ -168,8 +207,9 @@ export const UserDataProvider = ({ children }) => {
 
     const updatedOrders = [newOrder, ...orders];
     setOrders(updatedOrders);
-    await saveUserData(STORAGE_KEYS.ORDERS, updatedOrders);
-    
+    const userKeys = getUserSpecificKeys(currentUser.id || currentUser.email);
+    await saveUserData(userKeys.ORDERS, updatedOrders);
+
     return newOrder;
   };
 
@@ -177,9 +217,10 @@ export const UserDataProvider = ({ children }) => {
     const updatedOrders = orders.map(order =>
       order.id === orderId ? { ...order, status: newStatus } : order
     );
-    
+
     setOrders(updatedOrders);
-    await saveUserData(STORAGE_KEYS.ORDERS, updatedOrders);
+    const userKeys = getUserSpecificKeys(currentUser.id || currentUser.email);
+    await saveUserData(userKeys.ORDERS, updatedOrders);
   };
 
   const getUserOrders = () => {
