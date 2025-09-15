@@ -1179,6 +1179,12 @@
                             <span class="nav-text">Tüketiciler</span>
                         </a>
                     </div>
+                    <div class="nav-item">
+                        <a href="#notifications" class="nav-link" data-section="notifications">
+                            <i class="fas fa-bell nav-icon"></i>
+                            <span class="nav-text">Bildirimler</span>
+                        </a>
+                    </div>
                 </div>
 
                 <div class="nav-section">
@@ -1454,6 +1460,123 @@
                     </div>
                 </section>
 
+                <!-- Notifications Section -->
+                <section id="notifications" class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Bildirim Yönetimi</h2>
+                        <div class="table-actions">
+                            <button class="btn btn-primary" onclick="notificationManager.sendNotification()">
+                                <i class="fas fa-paper-plane"></i>
+                                Bildirim Gönder
+                            </button>
+                            <button class="btn btn-secondary" onclick="notificationManager.refreshNotifications()">
+                                <i class="fas fa-sync"></i>
+                                Yenile
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notification Stats -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-paper-plane" style="color: var(--primary);"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="totalNotifications">0</div>
+                                <div class="stat-label">Toplam Bildirim</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-eye" style="color: var(--success);"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="deliveredNotifications">0</div>
+                                <div class="stat-label">Ulaşan Bildirim</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-heart" style="color: var(--danger);"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="favoriteNotifications">0</div>
+                                <div class="stat-label">Favori Bildirimleri</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-map-marker-alt" style="color: var(--info);"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="proximityNotifications">0</div>
+                                <div class="stat-label">Yakınlık Bildirimleri</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Send Notification Form -->
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3 class="table-title">Yeni Bildirim Gönder</h3>
+                        </div>
+                        <div class="notification-form" style="padding: 20px;">
+                            <div class="form-row">
+                                <div class="form-group" style="margin-right: 20px;">
+                                    <label for="notificationType">Bildirim Türü</label>
+                                    <select id="notificationType" class="form-control">
+                                        <option value="general">🔔 Genel Duyuru</option>
+                                        <option value="promotion">🔥 Promosyon/İndirim</option>
+                                        <option value="city">🏙️ Şehir Bazlı</option>
+                                        <option value="restaurant">🍽️ Restoran Bazlı</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="notificationPriority">Öncelik</label>
+                                    <select id="notificationPriority" class="form-control">
+                                        <option value="normal">Normal</option>
+                                        <option value="high">Yüksek</option>
+                                        <option value="urgent">Acil</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="notificationTitle">Bildirim Başlığı</label>
+                                <input type="text" id="notificationTitle" class="form-control" placeholder="Örn: Yeni İndirim Fırsatı!" maxlength="50">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="notificationMessage">Bildirim Mesajı</label>
+                                <textarea id="notificationMessage" class="form-control" rows="3" placeholder="Bildirim mesajınızı buraya yazın..." maxlength="200"></textarea>
+                            </div>
+
+                            <div class="form-actions" style="margin-top: 20px;">
+                                <button type="button" class="btn btn-secondary" onclick="notificationManager.resetForm()">
+                                    <i class="fas fa-undo"></i>
+                                    Temizle
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="notificationManager.sendNotification()">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Gönder
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification History -->
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3 class="table-title">Bildirim Geçmişi</h3>
+                        </div>
+                        <div id="notificationHistory" class="loading">
+                            <div class="spinner"></div>
+                            <span>Geçmiş yükleniyor...</span>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Applications Section -->
                 <section id="applications" class="content-section">
                     <div id="dataContainer">
@@ -1515,5 +1638,6 @@
 
     <!-- Load Admin Dashboard JavaScript -->
     <script src="./js/admin-pro-dash-v2.js?v=2025.08.28"></script>
+    <script src="./js/notification-manager.js?v=2025.01.15"></script>
 </body>
 </html>
