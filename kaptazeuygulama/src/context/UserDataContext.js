@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import io from 'socket.io-client';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import { Platform } from 'react-native';
 import apiService from '../services/apiService';
 
 const UserDataContext = createContext();
@@ -19,7 +22,10 @@ export const UserDataProvider = ({ children }) => {
   const [favorites, setFavorites] = useState([]);
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pushToken, setPushToken] = useState(null);
   const socketRef = useRef(null);
+  const notificationListener = useRef();
+  const responseListener = useRef();
 
   // AsyncStorage keys
   const STORAGE_KEYS = {
@@ -35,16 +41,34 @@ export const UserDataProvider = ({ children }) => {
     ORDERS: `@kaptaze_orders_${userId}`,
   });
 
+  // Configure notifications
+  useEffect(() => {
+    setupNotifications();
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, []);
+
   // Load user data on app start
   useEffect(() => {
     loadUserData();
   }, []);
 
-  // Socket.IO connection management
+  // Socket.IO connection management + Push token setup
   useEffect(() => {
     if (currentUser) {
       // Initialize Socket.IO connection
       initializeSocket();
+
+      // Send push token to backend if we have one
+      if (pushToken) {
+        sendPushTokenToBackend(pushToken);
+      }
     } else {
       // Disconnect socket when user logs out
       if (socketRef.current) {
@@ -60,7 +84,7 @@ export const UserDataProvider = ({ children }) => {
         socketRef.current = null;
       }
     };
-  }, [currentUser]);
+  }, [currentUser, pushToken]);
 
   // Update Socket.IO listeners when orders change
   useEffect(() => {
@@ -69,6 +93,129 @@ export const UserDataProvider = ({ children }) => {
       updateSocketListeners();
     }
   }, [orders, currentUser]);
+
+  // Setup push notifications
+  const setupNotifications = async () => {
+    console.log('🔔 Setting up push notifications');
+
+    // Set notification handler
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+
+    // Register for push notifications
+    await registerForPushNotificationsAsync();
+
+    // This listener is fired whenever a notification is received while the app is foregrounded
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      console.log('🔔 Notification received while app is open:', notification);
+
+      // Show custom in-app notification or handle accordingly
+      const { title, body } = notification.request.content;
+
+      // You could show a custom toast here
+      console.log(`📱 ${title}: ${body}`);
+    });
+
+    // This listener is fired whenever a user taps on or interacts with a notification
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('👆 User interacted with notification:', response);
+
+      const notificationData = response.notification.request.content.data;
+
+      // Handle different notification types
+      if (notificationData?.type === 'order_status') {
+        // Navigate to orders screen
+        console.log('📋 Opening orders screen for order:', notificationData.orderId);
+        // Navigation logic here if needed
+      } else if (notificationData?.type === 'promotion') {
+        // Navigate to promotions or specific restaurant
+        console.log('🔥 Opening promotion:', notificationData.promotionId);
+      }
+    });
+  };
+
+  // Register for push notifications
+  const registerForPushNotificationsAsync = async () => {
+    console.log('📱 Registering for push notifications');
+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#16a34a',
+      });
+    }
+
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+
+      if (existingStatus !== 'granted') {
+        console.log('🔐 Requesting notification permissions');
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        console.log('❌ Failed to get push token for push notification!');
+        return;
+      }
+
+      try {
+        const token = await Notifications.getExpoPushTokenAsync({
+          projectId: 'your-project-id', // This will be set in app.json
+        });
+
+        console.log('✅ Push token obtained:', token.data);
+        setPushToken(token.data);
+
+        // Save token to AsyncStorage
+        await AsyncStorage.setItem('@kaptaze_push_token', token.data);
+
+        // Send token to backend when user logs in
+        if (currentUser) {
+          await sendPushTokenToBackend(token.data);
+        }
+
+      } catch (error) {
+        console.log('❌ Error getting push token:', error);
+      }
+    } else {
+      console.log('📱 Must use physical device for Push Notifications');
+    }
+  };
+
+  // Send push token to backend
+  const sendPushTokenToBackend = async (token) => {
+    if (!currentUser || !token) return;
+
+    try {
+      console.log('📤 Sending push token to backend');
+
+      // API call to save user's push token
+      const response = await apiService.savePushToken({
+        userId: currentUser.id || currentUser.email,
+        pushToken: token,
+        platform: Platform.OS,
+        deviceInfo: {
+          brand: Device.brand,
+          model: Device.modelName,
+          osVersion: Device.osVersion
+        }
+      });
+
+      console.log('✅ Push token saved to backend:', response);
+
+    } catch (error) {
+      console.error('❌ Failed to save push token:', error);
+    }
+  };
 
   const initializeSocket = () => {
     if (!currentUser || socketRef.current) return;

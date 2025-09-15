@@ -28,6 +28,14 @@ export default {
         {
           "locationAlwaysAndWhenInUsePermission": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#16a34a",
+          "defaultChannel": "default"
+        }
       ]
     ],
     splash: {
