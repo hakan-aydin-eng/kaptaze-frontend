@@ -20,9 +20,51 @@ import PrivacyScreen from './src/screens/PrivacyScreen';
 import AboutScreen from './src/screens/AboutScreen';
 import SupportScreen from './src/screens/SupportScreen';
 import UserDataProvider from './src/context/UserDataContext';
-import AuthProvider from './src/context/AuthContext';
+import AuthProvider, { useAuth } from './src/context/AuthContext';
 
 const Stack = createStackNavigator();
+
+// App Navigator Component with authentication check
+const AppNavigator = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <View style={styles.loadingContent}>
+          <Text style={styles.loadingTitle}>🌱 KapTaze</Text>
+          <Text style={styles.loadingText}>Yükleniyor...</Text>
+          <ActivityIndicator size="large" color="#ffffff" style={{ marginTop: 16 }} />
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <Stack.Navigator
+      initialRouteName={isAuthenticated ? "Main" : "Welcome"}
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: true,
+      }}
+    >
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="Main" component={MainScreen} />
+      <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
+      <Stack.Screen name="Nearby" component={NearbyScreen} />
+      <Stack.Screen name="Favorites" component={FavoritesScreen} />
+      <Stack.Screen name="Orders" component={OrdersScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="Purchase" component={PurchaseScreen} />
+      <Stack.Screen name="Map" component={MapScreen} />
+      <Stack.Screen name="Privacy" component={PrivacyScreen} />
+      <Stack.Screen name="About" component={AboutScreen} />
+      <Stack.Screen name="Support" component={SupportScreen} />
+    </Stack.Navigator>
+  );
+};
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -91,28 +133,7 @@ export default function App() {
           <View style={styles.container}>
             <StatusBar style="auto" translucent backgroundColor="transparent" />
             <NavigationContainer>
-              <Stack.Navigator 
-                initialRouteName="Welcome"
-                screenOptions={{
-                  headerShown: false,
-                  gestureEnabled: true,
-                }}
-              >
-                <Stack.Screen name="Welcome" component={WelcomeScreen} />
-                <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="Register" component={RegisterScreen} />
-                <Stack.Screen name="Main" component={MainScreen} />
-                <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
-                <Stack.Screen name="Nearby" component={NearbyScreen} />
-                <Stack.Screen name="Favorites" component={FavoritesScreen} />
-                <Stack.Screen name="Orders" component={OrdersScreen} />
-                <Stack.Screen name="Profile" component={ProfileScreen} />
-                <Stack.Screen name="Purchase" component={PurchaseScreen} />
-                <Stack.Screen name="Map" component={MapScreen} />
-                <Stack.Screen name="Privacy" component={PrivacyScreen} />
-                <Stack.Screen name="About" component={AboutScreen} />
-                <Stack.Screen name="Support" component={SupportScreen} />
-              </Stack.Navigator>
+              <AppNavigator />
             </NavigationContainer>
           </View>
         </AuthProvider>
