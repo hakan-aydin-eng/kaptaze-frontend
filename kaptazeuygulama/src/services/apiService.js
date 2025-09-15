@@ -177,6 +177,12 @@ class ApiService {
       }
     });
   }
+
+  // Save push notification token
+  async savePushToken(tokenData) {
+    console.log('📤 ApiService: Saving push token to backend');
+    return this.post('/auth/push-token', tokenData);
+  }
 }
 
 const apiService = new ApiService();
