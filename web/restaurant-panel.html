@@ -465,8 +465,7 @@
                     <div class="info-section">
                         <h4>Çalışma Saatleri</h4>
                         <div class="working-hours" id="working-hours">
-                            <div class="day">Pazartesi - Cuma: 09:00 - 22:00</div>
-                            <div class="day">Cumartesi - Pazar: 10:00 - 23:00</div>
+                            <div class="day" id="operating-hours-display">09:00 - 22:00</div>
                         </div>
                     </div>
                     
@@ -526,18 +525,13 @@
                                 <label>Çalışma Saatleri</label>
                                 <div class="time-inputs">
                                     <div class="time-row">
-                                        <label>Hafta İçi:</label>
-                                        <input type="time" id="weekdayOpen" class="form-control">
-                                        <span>-</span>
-                                        <input type="time" id="weekdayClose" class="form-control">
-                                    </div>
-                                    <div class="time-row">
-                                        <label>Hafta Sonu:</label>
-                                        <input type="time" id="weekendOpen" class="form-control">
-                                        <span>-</span>
-                                        <input type="time" id="weekendClose" class="form-control">
+                                        <label>Açılış:</label>
+                                        <input type="time" id="operatingOpen" class="form-control" value="09:00">
+                                        <label>Kapanış:</label>
+                                        <input type="time" id="operatingClose" class="form-control" value="22:00">
                                     </div>
                                 </div>
+                                <small>Restoranınızın günlük çalışma saatleri (örnek: 09:00 - 22:00)</small>
                             </div>
                         </div>
                     </div>
@@ -662,11 +656,6 @@
                             </small>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="availableUntil">Son Teslim Tarihi ve Saati</label>
-                            <input type="datetime-local" id="availableUntil" class="form-control">
-                            <small>Boş bırakırsanız süresiz olarak ayarlanır</small>
-                        </div>
                     </div>
                 </div>
                 

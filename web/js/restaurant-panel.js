@@ -167,9 +167,10 @@ class RestaurantPanel {
                 phone: this.currentUser.phone || '',
                 email: this.currentUser.email || '',
                 specialties: [],
-                businessHours: {
-                    weekday: { open: '09:00', close: '22:00' },
-                    weekend: { open: '10:00', close: '23:00' }
+                operatingHours: {
+                    open: '09:00',
+                    close: '22:00',
+                    closed: false
                 },
                 status: 'active'
             };
@@ -241,9 +242,10 @@ class RestaurantPanel {
                 
                 // Profile specific fields
                 specialties: [],
-                businessHours: {
-                    weekday: { open: '09:00', close: '22:00' },
-                    weekend: { open: '10:00', close: '23:00' }
+                operatingHours: {
+                    open: '09:00',
+                    close: '22:00',
+                    closed: false
                 },
                 status: 'active'
             };
@@ -605,10 +607,6 @@ class RestaurantPanel {
         // Use new operatingHours system if available
         if (operatingHours && operatingHours.open && operatingHours.close) {
             display.textContent = `${operatingHours.open} - ${operatingHours.close}`;
-        }
-        // Fallback to old businessHours system
-        else if (businessHours && businessHours.weekday && businessHours.weekday.open) {
-            display.textContent = `${businessHours.weekday.open} - ${businessHours.weekday.close}`;
         }
         // Default display
         else {
@@ -1004,10 +1002,10 @@ class RestaurantPanel {
             document.getElementById('operatingOpen').value = profile.operatingHours.open || '09:00';
             document.getElementById('operatingClose').value = profile.operatingHours.close || '22:00';
         }
-        // Fallback to old businessHours for backward compatibility
-        else if (profile.businessHours && profile.businessHours.weekday) {
-            document.getElementById('operatingOpen').value = profile.businessHours.weekday.open || '09:00';
-            document.getElementById('operatingClose').value = profile.businessHours.weekday.close || '22:00';
+        // Use default values if no operating hours
+        else {
+            document.getElementById('operatingOpen').value = '09:00';
+            document.getElementById('operatingClose').value = '22:00';
         }
         
         // Show current main image
