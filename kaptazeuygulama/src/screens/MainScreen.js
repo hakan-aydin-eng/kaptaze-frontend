@@ -295,10 +295,10 @@ const MainScreen = ({ navigation }) => {
           restaurantImage: restaurant.profileImage || restaurant.images?.logo || restaurant.imageUrl || restaurant.image,
           // Use description for business description
           businessDescription: restaurant.description || '',
-          // Add working hours from restaurant profile
-          workingHours: restaurant.workingHours || {
-            weekday: { open: '09:00', close: '22:00' },
-            weekend: { open: '10:00', close: '23:00' }
+          // Use operatingHours from restaurant profile (new simple system)
+          operatingHours: restaurant.operatingHours || {
+            open: '09:00',
+            close: '22:00'
           },
           // Format packages to match restaurant detail screen - only active packages
           packages: restaurant.packages && restaurant.packages.length > 0 ? 
@@ -598,11 +598,9 @@ const MainScreen = ({ navigation }) => {
             <View style={styles.pickupTimeContainer}>
               <Text style={styles.pickupTimeIcon}>⏰</Text>
               <Text style={styles.pickupTimeText}>
-                {item.operatingHours ? 
-                  `${item.operatingHours.open}-${item.operatingHours.close}` : 
-                  item.workingHours?.weekday ? 
-                    `${item.workingHours.weekday.open}-${item.workingHours.weekday.close}` : 
-                    '09:00-22:00'}
+                {item.operatingHours ?
+                  `${item.operatingHours.open}-${item.operatingHours.close}` :
+                  '09:00-22:00'}
               </Text>
             </View>
             <Text style={styles.distanceText}>{item.distance}</Text>
@@ -852,11 +850,9 @@ const MainScreen = ({ navigation }) => {
                       <View style={styles.pickupTimeContainer}>
                         <Text style={styles.pickupTimeIcon}>⏰</Text>
                         <Text style={styles.pickupTimeText}>
-                          {restaurant.operatingHours ? 
-                            `${restaurant.operatingHours.open}-${restaurant.operatingHours.close}` : 
-                            restaurant.workingHours?.weekday ? 
-                              `${restaurant.workingHours.weekday.open}-${restaurant.workingHours.weekday.close}` : 
-                              '09:00-22:00'}
+                          {restaurant.operatingHours ?
+                            `${restaurant.operatingHours.open}-${restaurant.operatingHours.close}` :
+                            '09:00-22:00'}
                         </Text>
                       </View>
                       <View style={styles.distanceContainer}>
