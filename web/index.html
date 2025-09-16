@@ -363,9 +363,98 @@
         }
 
         /* Restaurant Showcase */
-        .restaurants {
+        .mission {
             padding: 5rem 2rem;
             background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .mission-container {
+            position: relative;
+            max-width: 800px;
+            margin: 3rem auto;
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mission-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .mission-bag {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.1));
+        }
+
+        .mission-points {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .mission-point {
+            position: absolute;
+            background: var(--white);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 250px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .mission-point:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .mission-point--top {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .mission-point--right {
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+        }
+
+        .mission-point--bottom {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .mission-point--left {
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+
+        .mission-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .mission-point h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        .mission-point p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.4;
         }
 
         .restaurant-grid {
@@ -632,6 +721,34 @@
                 gap: 2rem;
             }
 
+            .mission-container {
+                min-height: auto;
+                padding: 2rem 0;
+            }
+
+            .mission-bag {
+                width: 150px;
+                height: 150px;
+            }
+
+            .mission-point {
+                position: relative !important;
+                width: 100%;
+                margin-bottom: 2rem;
+                transform: none !important;
+                top: auto !important;
+                left: auto !important;
+                right: auto !important;
+                bottom: auto !important;
+            }
+
+            .mission-points {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+                margin-top: 2rem;
+            }
+
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -777,18 +894,38 @@
     </section>
 
     <!-- Restaurant Showcase -->
-    <section class="restaurants" id="restaurants">
+    <section class="mission" id="mission">
         <div class="section-container">
             <div class="section-header">
-                <div class="section-badge">🍽️ Popüler</div>
-                <h2 class="section-title">Öne Çıkan Restoranlar</h2>
-                <p class="section-subtitle">Antalya'nın en sevilen restoranları KapTaze'de</p>
+                <div class="section-badge">🎯 Amaç</div>
+                <h2 class="section-title">Misyonumuz</h2>
+                <p class="section-subtitle">Gıda israfını önleyerek daha sürdürülebilir bir dünya</p>
             </div>
-            <div class="restaurant-grid" id="restaurant-grid">
-                <!-- Loading state -->
-                <div class="restaurant-loading">
-                    <div class="loading-spinner">⏳</div>
-                    <p>Öne çıkan restoranlar yükleniyor...</p>
+            <div class="mission-container">
+                <div class="mission-center">
+                    <img src="images/karton.png" alt="KapTaze Misyon" class="mission-bag" />
+                </div>
+                <div class="mission-points">
+                    <div class="mission-point mission-point--top">
+                        <div class="mission-icon">💰</div>
+                        <h3>Yarı Fiyatına Lezzet</h3>
+                        <p>Lezzetli yiyeceklerin tadını yarı fiyatına veya daha ucuza çıkar</p>
+                    </div>
+                    <div class="mission-point mission-point--right">
+                        <div class="mission-icon">🍕</div>
+                        <h3>Yeni Tatlar Keşfet</h3>
+                        <p>Yerel kafe, fırın ve restoranlardan yeni tatlar dene</p>
+                    </div>
+                    <div class="mission-point mission-point--bottom">
+                        <div class="mission-icon">🌍</div>
+                        <h3>Çevreyi Koru</h3>
+                        <p>Gıda israfını azaltarak çevreye yardımcı ol</p>
+                    </div>
+                    <div class="mission-point mission-point--left">
+                        <div class="mission-icon">🛡️</div>
+                        <h3>Yiyecekleri Kurtar</h3>
+                        <p>Çevrenizdeki yiyecekleri kurtar</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1191,7 +1328,7 @@
 
         // Initialize featured restaurants on page load
         document.addEventListener('DOMContentLoaded', function() {
-            loadFeaturedRestaurants();
+            // Mission section - no loading needed
             startRestaurantRefresh();
         });
     </script>
