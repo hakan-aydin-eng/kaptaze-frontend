@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import apiService from '../services/apiService';
 import { useUserData } from '../context/UserDataContext';
+import NotificationPanel from '../components/NotificationPanel';
 
 const getRestaurantIcon = (category) => {
   const icons = {
@@ -71,7 +72,8 @@ const MainScreen = ({ navigation }) => {
   const [selectedDistance, setSelectedDistance] = useState(25);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [categories, setCategories] = useState([]);
-  
+  const [showNotificationPanel, setShowNotificationPanel] = useState(false);
+
   // Refresh state
   const [refreshing, setRefreshing] = useState(false);
   
@@ -229,15 +231,6 @@ const MainScreen = ({ navigation }) => {
           console.log('✅ API restaurants loaded:', apiRestaurants.length);
           console.log('📋 Restaurant names:', apiRestaurants.map(r => r.name));
           
-          // Find Papi Culo specifically
-          const papiCulo = apiRestaurants.find(r => r.name?.toLowerCase().includes('papi'));
-          if (papiCulo) {
-            console.log('🔥 Papi Culo RAW from API:', {
-              name: papiCulo.name,
-              packages: papiCulo.packages,
-              packageCount: papiCulo.packages?.length
-            });
-          }
         } else {
           console.log('⚠️ No restaurants in API response');
         }
@@ -660,7 +653,10 @@ const MainScreen = ({ navigation }) => {
             </View>
             
             <View style={styles.headerButtons}>
-              <TouchableOpacity style={styles.headerButton}>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={() => setShowNotificationPanel(true)}
+              >
                 <Text style={styles.headerButtonIcon}>🔔</Text>
               </TouchableOpacity>
             </View>
@@ -749,19 +745,6 @@ const MainScreen = ({ navigation }) => {
               const mainPackage = restaurant.packages?.[0] || {};
               const totalPackages = restaurant.packages?.reduce((sum, pkg) => sum + pkg.quantity, 0) || 0;
               
-              // Debug Papi Culo prices
-              if (restaurant.name?.toLowerCase().includes('papi')) {
-                console.log('🔴 Papi Culo FORMATTED banner data:', {
-                  name: restaurant.name,
-                  packagesLength: restaurant.packages?.length,
-                  firstPackage: restaurant.packages?.[0],
-                  showingPrice: restaurant.packages?.[0] ? {
-                    original: restaurant.packages[0].originalPrice,
-                    sale: restaurant.packages[0].salePrice,
-                    discount: restaurant.packages[0].discount
-                  } : 'NO PACKAGE'
-                });
-              }
 
               return (
                 <TouchableOpacity 
@@ -976,6 +959,12 @@ const MainScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+
+      {/* Notification Panel */}
+      <NotificationPanel
+        visible={showNotificationPanel}
+        onClose={() => setShowNotificationPanel(false)}
+      />
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>

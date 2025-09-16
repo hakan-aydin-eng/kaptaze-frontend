@@ -181,7 +181,22 @@ class ApiService {
   // Save push notification token
   async savePushToken(tokenData) {
     console.log('📤 ApiService: Saving push token to backend');
-    return this.post('/auth/push-token', tokenData);
+
+    // Get auth token from AsyncStorage
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    const authToken = await AsyncStorage.getItem('@kaptaze_user_token');
+
+    if (!authToken) {
+      throw new Error('No authentication token found');
+    }
+
+    return this.request('/auth/push-token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify(tokenData)
+    });
   }
 }
 

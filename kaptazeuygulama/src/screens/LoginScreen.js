@@ -59,7 +59,12 @@ const LoginScreen = ({ navigation }) => {
         }
       } catch (error) {
         console.error('Login error:', error);
-        Alert.alert('❌ Hata', 'Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.');
+        // Distinguish between network errors and validation errors
+        if (error.message && error.message.includes('fetch')) {
+          Alert.alert('❌ Bağlantı Hatası', 'Internet bağlantınızı kontrol edin ve tekrar deneyin.');
+        } else {
+          Alert.alert('❌ Giriş Hatası', 'E-posta veya şifre hatalı. Lütfen kontrol edip tekrar deneyin.');
+        }
       } finally {
         setIsSubmitting(false);
       }

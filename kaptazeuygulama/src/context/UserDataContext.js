@@ -33,6 +33,7 @@ export const UserDataProvider = ({ children }) => {
     USER_TOKEN: '@kaptaze_user_token',
     FAVORITES: '@kaptaze_favorites',
     ORDERS: '@kaptaze_orders',
+    NOTIFICATIONS: '@kaptaze_notifications',
   };
 
   // Get user-specific storage keys
@@ -94,6 +95,45 @@ export const UserDataProvider = ({ children }) => {
     }
   }, [orders, currentUser]);
 
+  // Save notification to local storage
+  const saveNotificationToStorage = async (notification) => {
+    try {
+      console.log('💾 Saving notification to local storage:', notification);
+
+      // Get existing notifications
+      const existingNotifications = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+      let notifications = [];
+
+      if (existingNotifications) {
+        notifications = JSON.parse(existingNotifications);
+      }
+
+      // Create notification object
+      const notificationObj = {
+        id: `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: notification.title || 'KapTaze Bildirim',
+        body: notification.body || '',
+        timestamp: new Date().toISOString(),
+        read: false,
+        type: notification.data?.type || 'general',
+        data: notification.data || {}
+      };
+
+      // Add to beginning of array (newest first)
+      notifications.unshift(notificationObj);
+
+      // Keep only last 100 notifications
+      notifications = notifications.slice(0, 100);
+
+      // Save back to storage
+      await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
+      console.log('✅ Notification saved to storage successfully');
+
+    } catch (error) {
+      console.error('❌ Error saving notification to storage:', error);
+    }
+  };
+
   // Setup push notifications
   const setupNotifications = async () => {
     console.log('🔔 Setting up push notifications');
@@ -114,6 +154,13 @@ export const UserDataProvider = ({ children }) => {
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       console.log('🔔 Notification received while app is open:', notification);
 
+      // Save notification to local storage
+      saveNotificationToStorage({
+        title: notification.request.content.title,
+        body: notification.request.content.body,
+        data: notification.request.content.data
+      });
+
       // Show custom in-app notification or handle accordingly
       const { title, body } = notification.request.content;
 
@@ -124,6 +171,13 @@ export const UserDataProvider = ({ children }) => {
     // This listener is fired whenever a user taps on or interacts with a notification
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('👆 User interacted with notification:', response);
+
+      // Save notification to local storage if not already saved
+      saveNotificationToStorage({
+        title: response.notification.request.content.title,
+        body: response.notification.request.content.body,
+        data: response.notification.request.content.data
+      });
 
       const notificationData = response.notification.request.content.data;
 
@@ -201,6 +255,7 @@ export const UserDataProvider = ({ children }) => {
       // API call to save user's push token
       const response = await apiService.savePushToken({
         userId: currentUser.id || currentUser.email,
+        consumerEmail: currentUser.email, // Add consumer email for backend authentication
         token: token,
         platform: Platform.OS,
         deviceInfo: {
