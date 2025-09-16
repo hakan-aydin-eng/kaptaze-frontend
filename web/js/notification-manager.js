@@ -14,7 +14,8 @@ const notificationManager = {
         try {
             const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/notifications/stats', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    'Authorization': `Bearer ${localStorage.getItem('kaptaze_auth_token')}`,
+                    'Content-Type': 'application/json'
                 }
             });
 
@@ -266,7 +267,7 @@ const notificationManager = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    'Authorization': `Bearer ${localStorage.getItem('kaptaze_auth_token')}`
                 },
                 body: JSON.stringify(notificationData)
             });
@@ -314,7 +315,7 @@ const notificationManager = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    'Authorization': `Bearer ${localStorage.getItem('kaptaze_auth_token')}`
                 },
                 body: JSON.stringify({
                     email: 'test@kaptaze.com'
