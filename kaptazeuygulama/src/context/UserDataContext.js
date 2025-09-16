@@ -169,7 +169,7 @@ export const UserDataProvider = ({ children }) => {
 
       try {
         const token = await Notifications.getExpoPushTokenAsync({
-          projectId: 'your-project-id', // This will be set in app.json
+          projectId: '20e11315-3be4-4335-af55-44487c0e423a',
         });
 
         console.log('✅ Push token obtained:', token.data);
@@ -201,7 +201,7 @@ export const UserDataProvider = ({ children }) => {
       // API call to save user's push token
       const response = await apiService.savePushToken({
         userId: currentUser.id || currentUser.email,
-        pushToken: token,
+        token: token,
         platform: Platform.OS,
         deviceInfo: {
           brand: Device.brand,
