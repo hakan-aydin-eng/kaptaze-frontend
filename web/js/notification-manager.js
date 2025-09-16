@@ -12,7 +12,7 @@ const notificationManager = {
     // Load notification statistics
     async loadNotificationStats() {
         try {
-            const response = await fetch('/admin/notifications/stats', {
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/notifications/stats', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                 }
@@ -262,7 +262,7 @@ const notificationManager = {
             sendButton.disabled = true;
 
             // Make API call to backend
-            const response = await fetch('/admin/notifications/send', {
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/notifications/send', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -310,7 +310,7 @@ const notificationManager = {
         try {
             console.log('Sending test notification...');
 
-            const response = await fetch('/admin/notifications/test', {
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/notifications/test', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
