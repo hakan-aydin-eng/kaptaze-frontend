@@ -25,10 +25,15 @@ const notificationManager = {
                     const data = result.data;
 
                     // Update statistics display
-                    document.getElementById('totalConsumers').textContent = data.consumers.total || 0;
-                    document.getElementById('activeDevices').textContent = data.pushTokens.total || 0;
-                    document.getElementById('iosDevices').textContent = data.pushTokens.byPlatform.ios || 0;
-                    document.getElementById('androidDevices').textContent = data.pushTokens.byPlatform.android || 0;
+                    const totalConsumersEl = document.getElementById('totalConsumers');
+                    const activeDevicesEl = document.getElementById('activeDevices');
+                    const iosDevicesEl = document.getElementById('iosDevices');
+                    const androidDevicesEl = document.getElementById('androidDevices');
+
+                    if (totalConsumersEl) totalConsumersEl.textContent = data.consumers.total || 0;
+                    if (activeDevicesEl) activeDevicesEl.textContent = data.pushTokens.total || 0;
+                    if (iosDevicesEl) iosDevicesEl.textContent = data.pushTokens.byPlatform.ios || 0;
+                    if (androidDevicesEl) androidDevicesEl.textContent = data.pushTokens.byPlatform.android || 0;
 
                     // Update configuration status
                     const configStatus = document.getElementById('firebaseStatus');
@@ -228,9 +233,17 @@ const notificationManager = {
                 return;
             }
 
+            // Map form values to backend expected values
+            const typeMapping = {
+                'general': 'genel',
+                'promotion': 'promosyon',
+                'city': 'şehir',
+                'restaurant': 'restoran'
+            };
+
             // Prepare notification data
             const notificationData = {
-                type,
+                type: typeMapping[type] || type,
                 priority,
                 title,
                 message,
@@ -238,14 +251,14 @@ const notificationManager = {
             };
 
             // Add specific target data based on notification type
-            if (type === 'şehir') {
+            if (type === 'city') {
                 // For city-based notifications, you might want to add location data
                 notificationData.targetData = {
                     latitude: 41.0082, // Istanbul coordinates as example
                     longitude: 28.9784,
                     radiusKm: 5
                 };
-            } else if (type === 'restoran') {
+            } else if (type === 'restaurant') {
                 // For restaurant-based notifications, you might want to add restaurant selection
                 // This would require additional UI elements
                 const restaurantId = document.getElementById('targetRestaurant')?.value;
