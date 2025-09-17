@@ -109,6 +109,21 @@ const MainScreen = ({ navigation }) => {
     }
   }, [restaurants]);
 
+  // Search functionality with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim() !== '') {
+        console.log('🔍 Searching for:', searchQuery);
+        loadRestaurants(searchQuery);
+      } else if (searchQuery === '') {
+        console.log('🔍 Clearing search, loading all restaurants');
+        loadRestaurants();
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
   // 🔄 PHASE 2: Real-time Restaurant Updates
   useEffect(() => {
     console.log('📡 Setting up real-time restaurant updates...');
@@ -214,16 +229,23 @@ const MainScreen = ({ navigation }) => {
     setCurrentPage(1);
   };
 
-  const loadRestaurants = async () => {
+  const loadRestaurants = async (searchTerm = '') => {
     try {
       setLoading(false); // Don't block UI
-      console.log('📱 Loading restaurants for mobile app...');
-      
+      console.log('📱 Loading restaurants for mobile app...', searchTerm ? `Search: "${searchTerm}"` : '');
+
       // API'den gerçek restaurant verilerini çek
       let apiRestaurants = [];
       try {
         console.log('🔄 Loading restaurants from KapTaze API...');
-        const apiResponse = await apiService.getRestaurants();
+
+        // Build filters object with search term
+        const filters = {};
+        if (searchTerm && searchTerm.trim()) {
+          filters.search = searchTerm.trim();
+        }
+
+        const apiResponse = await apiService.getRestaurants(filters);
         console.log('📊 API response:', apiResponse);
         
         if (apiResponse.success && apiResponse.data) {
@@ -441,15 +463,7 @@ const MainScreen = ({ navigation }) => {
   };
 
   const filteredRestaurants = restaurants.filter(restaurant => {
-    // Search filter
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase();
-      const matchesName = restaurant.name?.toLowerCase().includes(searchLower);
-      const matchesCategory = restaurant.category?.toLowerCase().includes(searchLower);
-      if (!matchesName && !matchesCategory) return false;
-    }
-    
-    // Category filter
+    // Only category filter - search is now handled by backend API
     if (activeFilter === 'all') return true;
     const categoryMap = {
       'coffee': ['Kahve & Atıştırmalık', 'Özel Kahve'],
