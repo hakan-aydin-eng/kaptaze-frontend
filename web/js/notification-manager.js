@@ -49,11 +49,47 @@ const notificationManager = {
             } else {
                 throw new Error('Failed to fetch notification stats');
             }
+
+            // Load restaurants for restaurant-based notifications
+            await this.loadRestaurants();
+
         } catch (error) {
             console.error('Failed to load notification stats:', error);
             // Fallback to mock data
             document.getElementById('totalConsumers').textContent = '---';
             document.getElementById('activeDevices').textContent = '---';
+        }
+    },
+
+    // Load restaurants for restaurant-based notifications
+    async loadRestaurants() {
+        try {
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/restaurants', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('kaptaze_auth_token')}`
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                const restaurants = result.data || [];
+
+                const restaurantSelect = document.getElementById('targetRestaurant');
+                if (restaurantSelect) {
+                    restaurantSelect.innerHTML = '<option value="">Restoran seçiniz...</option>';
+
+                    restaurants.forEach(restaurant => {
+                        const option = document.createElement('option');
+                        option.value = restaurant._id;
+                        option.textContent = `${restaurant.name} (${restaurant.category})`;
+                        restaurantSelect.appendChild(option);
+                    });
+
+                    console.log(`✅ Loaded ${restaurants.length} restaurants`);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Failed to load restaurants:', error);
         }
     },
 
@@ -188,7 +224,52 @@ const notificationManager = {
         // Type change listener
         const typeSelect = document.getElementById('notificationType');
         if (typeSelect) {
-            typeSelect.addEventListener('change', () => this.updatePreview());
+            typeSelect.addEventListener('change', () => {
+                this.toggleFormOptions();
+                this.updatePreview();
+            });
+        }
+
+        // City select listener
+        const citySelect = document.getElementById('citySelect');
+        if (citySelect) {
+            citySelect.addEventListener('change', () => this.toggleCustomCoordinates());
+        }
+    },
+
+    // Toggle form options based on notification type
+    toggleFormOptions() {
+        const typeSelect = document.getElementById('notificationType');
+        const cityOptions = document.getElementById('cityOptions');
+        const restaurantOptions = document.getElementById('restaurantOptions');
+
+        if (!typeSelect || !cityOptions || !restaurantOptions) return;
+
+        const selectedType = typeSelect.value;
+
+        // Hide all options first
+        cityOptions.style.display = 'none';
+        restaurantOptions.style.display = 'none';
+
+        // Show relevant options
+        if (selectedType === 'city') {
+            cityOptions.style.display = 'block';
+        } else if (selectedType === 'restaurant') {
+            restaurantOptions.style.display = 'block';
+        }
+    },
+
+    // Toggle custom coordinates fields
+    toggleCustomCoordinates() {
+        const citySelect = document.getElementById('citySelect');
+        const customCoordinates = document.getElementById('customCoordinates');
+
+        if (!citySelect || !customCoordinates) return;
+
+        if (citySelect.value === 'custom') {
+            customCoordinates.style.display = 'block';
+        } else {
+            customCoordinates.style.display = 'none';
         }
     },
 
@@ -252,19 +333,51 @@ const notificationManager = {
 
             // Add specific target data based on notification type
             if (type === 'city') {
-                // For city-based notifications, you might want to add location data
-                notificationData.targetData = {
-                    latitude: 41.0082, // Istanbul coordinates as example
-                    longitude: 28.9784,
-                    radiusKm: 5
-                };
-            } else if (type === 'restaurant') {
-                // For restaurant-based notifications, you might want to add restaurant selection
-                // This would require additional UI elements
-                const restaurantId = document.getElementById('targetRestaurant')?.value;
-                if (restaurantId) {
-                    notificationData.targetData.restaurantId = restaurantId;
+                // Get city coordinates
+                const citySelect = document.getElementById('citySelect');
+                const radiusKm = parseInt(document.getElementById('radiusKm')?.value) || 5;
+
+                if (citySelect?.value === 'custom') {
+                    // Use custom coordinates
+                    const latitude = parseFloat(document.getElementById('latitude')?.value);
+                    const longitude = parseFloat(document.getElementById('longitude')?.value);
+
+                    if (!latitude || !longitude) {
+                        alert('Lütfen geçerli koordinatlar girin');
+                        return;
+                    }
+
+                    notificationData.targetData = { latitude, longitude, radiusKm };
+                } else {
+                    // Use predefined city coordinates
+                    const cityCoordinates = {
+                        'istanbul': { latitude: 41.0082, longitude: 28.9784 },
+                        'ankara': { latitude: 39.9334, longitude: 32.8597 },
+                        'izmir': { latitude: 38.4192, longitude: 27.1287 },
+                        'bursa': { latitude: 40.1826, longitude: 29.0669 },
+                        'antalya': { latitude: 36.8969, longitude: 30.7133 }
+                    };
+
+                    const coords = cityCoordinates[citySelect?.value];
+                    if (!coords) {
+                        alert('Lütfen bir şehir seçin');
+                        return;
+                    }
+
+                    notificationData.targetData = {
+                        latitude: coords.latitude,
+                        longitude: coords.longitude,
+                        radiusKm
+                    };
                 }
+            } else if (type === 'restaurant') {
+                // Get selected restaurant
+                const restaurantId = document.getElementById('targetRestaurant')?.value;
+                if (!restaurantId) {
+                    alert('Lütfen bir restoran seçin');
+                    return;
+                }
+                notificationData.targetData.restaurantId = restaurantId;
             }
 
             console.log('Sending notification:', notificationData);
@@ -362,6 +475,14 @@ const notificationManager = {
                 }
             });
         }
+
+        // Hide optional sections
+        document.getElementById('cityOptions').style.display = 'none';
+        document.getElementById('restaurantOptions').style.display = 'none';
+        document.getElementById('customCoordinates').style.display = 'none';
+
+        // Reset specific values
+        document.getElementById('radiusKm').value = '5';
 
         // Reset preview
         this.updatePreview();

@@ -1552,6 +1552,52 @@
                                 <textarea id="notificationMessage" class="form-control" rows="3" placeholder="Bildirim mesajınızı buraya yazın..." maxlength="200"></textarea>
                             </div>
 
+                            <!-- City-based notification options -->
+                            <div id="cityOptions" class="form-group" style="display: none;">
+                                <h4 style="margin-bottom: 15px; color: #2563eb;">🏙️ Şehir Bazlı Bildirim Ayarları</h4>
+                                <div class="form-row">
+                                    <div class="form-group" style="margin-right: 15px;">
+                                        <label for="citySelect">Şehir Seç</label>
+                                        <select id="citySelect" class="form-control">
+                                            <option value="istanbul">İstanbul</option>
+                                            <option value="ankara">Ankara</option>
+                                            <option value="izmir">İzmir</option>
+                                            <option value="bursa">Bursa</option>
+                                            <option value="antalya">Antalya</option>
+                                            <option value="custom">Özel Koordinat</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="radiusKm">Yarıçap (km)</label>
+                                        <input type="number" id="radiusKm" class="form-control" value="5" min="1" max="50">
+                                    </div>
+                                </div>
+                                <div id="customCoordinates" style="display: none;">
+                                    <div class="form-row">
+                                        <div class="form-group" style="margin-right: 15px;">
+                                            <label for="latitude">Enlem (Latitude)</label>
+                                            <input type="number" id="latitude" class="form-control" step="0.000001" placeholder="41.0082">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="longitude">Boylam (Longitude)</label>
+                                            <input type="number" id="longitude" class="form-control" step="0.000001" placeholder="28.9784">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Restaurant-based notification options -->
+                            <div id="restaurantOptions" class="form-group" style="display: none;">
+                                <h4 style="margin-bottom: 15px; color: #dc2626;">🍽️ Restoran Bazlı Bildirim Ayarları</h4>
+                                <div class="form-group">
+                                    <label for="targetRestaurant">Hedef Restoran</label>
+                                    <select id="targetRestaurant" class="form-control">
+                                        <option value="">Restoran seçiliyor...</option>
+                                    </select>
+                                    <small class="form-text text-muted">Bu restoranı favorilerine eklemiş kullanıcılara bildirim gönderilir.</small>
+                                </div>
+                            </div>
+
                             <div class="form-actions" style="margin-top: 20px;">
                                 <button type="button" class="btn btn-secondary" onclick="notificationManager.resetForm()">
                                     <i class="fas fa-undo"></i>
