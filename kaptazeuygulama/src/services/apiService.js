@@ -198,6 +198,64 @@ class ApiService {
       body: JSON.stringify(tokenData)
     });
   }
+
+  // Favorites Management
+  async getFavorites() {
+    console.log('📤 ApiService: Getting favorites from backend');
+
+    // Get auth token from AsyncStorage
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    const authToken = await AsyncStorage.getItem('@kaptaze_user_token');
+
+    if (!authToken) {
+      throw new Error('No authentication token found');
+    }
+
+    return this.request('/auth/favorites', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+  }
+
+  async addToFavorites(restaurantId) {
+    console.log('❤️ ApiService: Adding restaurant to favorites:', restaurantId);
+
+    // Get auth token from AsyncStorage
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    const authToken = await AsyncStorage.getItem('@kaptaze_user_token');
+
+    if (!authToken) {
+      throw new Error('No authentication token found');
+    }
+
+    return this.request(`/auth/favorites/${restaurantId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+  }
+
+  async removeFromFavorites(restaurantId) {
+    console.log('💔 ApiService: Removing restaurant from favorites:', restaurantId);
+
+    // Get auth token from AsyncStorage
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    const authToken = await AsyncStorage.getItem('@kaptaze_user_token');
+
+    if (!authToken) {
+      throw new Error('No authentication token found');
+    }
+
+    return this.request(`/auth/favorites/${restaurantId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+  }
 }
 
 const apiService = new ApiService();

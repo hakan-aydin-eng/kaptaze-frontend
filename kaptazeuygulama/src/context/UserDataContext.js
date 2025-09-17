@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import messaging from '@react-native-firebase/messaging';
 import apiService from '../services/apiService';
 
 const UserDataContext = createContext();
@@ -193,6 +194,53 @@ export const UserDataProvider = ({ children }) => {
     });
   };
 
+  // Setup Firebase message handlers
+  const setupFirebaseMessageHandlers = () => {
+    console.log('🔔 Setting up Firebase message handlers');
+
+    // Handle background messages
+    messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+      console.log('🔔 Message handled in the background!', remoteMessage);
+
+      // Save notification to local storage
+      await saveNotificationToStorage({
+        title: remoteMessage.notification?.title || 'KapTaze Bildirim',
+        body: remoteMessage.notification?.body || '',
+        data: remoteMessage.data
+      });
+    });
+
+    // Handle foreground messages
+    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+      console.log('🔔 Firebase message received while app is open:', remoteMessage);
+
+      // Save notification to local storage
+      await saveNotificationToStorage({
+        title: remoteMessage.notification?.title || 'KapTaze Bildirim',
+        body: remoteMessage.notification?.body || '',
+        data: remoteMessage.data
+      });
+
+      // Show custom in-app notification if needed
+      const { title, body } = remoteMessage.notification || {};
+      if (title && body) {
+        console.log(`📱 ${title}: ${body}`);
+
+        // You could also show a local notification here
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: title,
+            body: body,
+            data: remoteMessage.data,
+          },
+          trigger: null, // Show immediately
+        });
+      }
+    });
+
+    return unsubscribe;
+  };
+
   // Register for push notifications
   const registerForPushNotificationsAsync = async () => {
     console.log('📱 Registering for push notifications');
@@ -222,23 +270,33 @@ export const UserDataProvider = ({ children }) => {
       }
 
       try {
-        const token = await Notifications.getExpoPushTokenAsync({
-          projectId: '20e11315-3be4-4335-af55-44487c0e423a',
-        });
+        // Request Firebase messaging permission
+        const authStatus = await messaging().requestPermission();
+        const enabled = authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+                       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-        console.log('✅ Push token obtained:', token.data);
-        setPushToken(token.data);
+        if (enabled) {
+          console.log('✅ Firebase messaging authorization status:', authStatus);
 
-        // Save token to AsyncStorage
-        await AsyncStorage.setItem('@kaptaze_push_token', token.data);
+          // Get Firebase FCM token
+          const fcmToken = await messaging().getToken();
 
-        // Send token to backend when user logs in
-        if (currentUser) {
-          await sendPushTokenToBackend(token.data);
+          console.log('✅ Firebase FCM token obtained:', fcmToken);
+          setPushToken(fcmToken);
+
+          // Save token to AsyncStorage
+          await AsyncStorage.setItem('@kaptaze_push_token', fcmToken);
+
+          // Send token to backend when user logs in
+          if (currentUser) {
+            await sendPushTokenToBackend(fcmToken);
+          }
+        } else {
+          console.log('❌ Firebase messaging permission denied');
         }
 
       } catch (error) {
-        console.log('❌ Error getting push token:', error);
+        console.log('❌ Error getting Firebase FCM token:', error);
       }
     } else {
       console.log('📱 Must use physical device for Push Notifications');
@@ -364,6 +422,11 @@ export const UserDataProvider = ({ children }) => {
         // Load user-specific data - prioritize email
         const userId = userData.email || userData.id;
         await loadUserSpecificData(userId);
+
+        // Sync favorites from backend if user is logged in
+        if (savedToken) {
+          await syncFavoritesFromBackend();
+        }
       }
 
       if (savedToken) {
@@ -475,33 +538,53 @@ export const UserDataProvider = ({ children }) => {
     const isAlreadyFavorite = favorites.some(fav => fav._id === restaurant._id);
     if (isAlreadyFavorite) return false;
 
-    const userId = currentUser.email || currentUser.id;
-    const updatedFavorites = [...favorites, {
-      ...restaurant,
-      addedAt: new Date().toISOString(),
-      userId: userId,
-    }];
+    try {
+      // Add to backend first
+      await apiService.addToFavorites(restaurant._id);
 
-    console.log('➕ Adding to favorites:', restaurant.name);
-    console.log('❤️ User:', userId);
-    console.log('📍 New favorites count:', updatedFavorites.length);
+      // Then update local state
+      const userId = currentUser.email || currentUser.id;
+      const updatedFavorites = [...favorites, {
+        ...restaurant,
+        addedAt: new Date().toISOString(),
+        userId: userId,
+      }];
 
-    setFavorites(updatedFavorites);
-    const userKeys = getUserSpecificKeys(userId);
-    console.log('💾 Saving to key:', userKeys.FAVORITES);
-    await saveUserData(userKeys.FAVORITES, updatedFavorites);
-    return true;
+      console.log('➕ Adding to favorites:', restaurant.name);
+      console.log('❤️ User:', userId);
+      console.log('📍 New favorites count:', updatedFavorites.length);
+
+      setFavorites(updatedFavorites);
+      const userKeys = getUserSpecificKeys(userId);
+      console.log('💾 Saving to key:', userKeys.FAVORITES);
+      await saveUserData(userKeys.FAVORITES, updatedFavorites);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to add to favorites:', error);
+      return false;
+    }
   };
 
   const removeFromFavorites = async (restaurantId) => {
     if (!currentUser) return false;
 
-    const userId = currentUser.email || currentUser.id;
-    const updatedFavorites = favorites.filter(fav => fav._id !== restaurantId);
-    setFavorites(updatedFavorites);
-    const userKeys = getUserSpecificKeys(userId);
-    await saveUserData(userKeys.FAVORITES, updatedFavorites);
-    return true;
+    try {
+      // Remove from backend first
+      await apiService.removeFromFavorites(restaurantId);
+
+      // Then update local state
+      const userId = currentUser.email || currentUser.id;
+      const updatedFavorites = favorites.filter(fav => fav._id !== restaurantId);
+      setFavorites(updatedFavorites);
+      const userKeys = getUserSpecificKeys(userId);
+      await saveUserData(userKeys.FAVORITES, updatedFavorites);
+
+      console.log('💔 Removed from favorites:', restaurantId);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to remove from favorites:', error);
+      return false;
+    }
   };
 
   const isFavorite = (restaurantId) => {
@@ -643,6 +726,38 @@ export const UserDataProvider = ({ children }) => {
     if (!currentUser) return [];
     const userId = currentUser.email || currentUser.id;
     return favorites.filter(fav => fav.userId === userId);
+  };
+
+  // Sync favorites from backend
+  const syncFavoritesFromBackend = async () => {
+    if (!currentUser) return;
+
+    try {
+      console.log('🔄 Syncing favorites from backend...');
+      const response = await apiService.getFavorites();
+
+      if (response.success && response.data?.favorites) {
+        const serverFavorites = response.data.favorites;
+        console.log(`📥 Found ${serverFavorites.length} favorites on server`);
+
+        // Convert server favorites to local format
+        const userId = currentUser.email || currentUser.id;
+        const localFormattedFavorites = serverFavorites.map(restaurant => ({
+          ...restaurant,
+          addedAt: new Date().toISOString(),
+          userId: userId,
+        }));
+
+        // Update local state and storage
+        setFavorites(localFormattedFavorites);
+        const userKeys = getUserSpecificKeys(userId);
+        await saveUserData(userKeys.FAVORITES, localFormattedFavorites);
+
+        console.log('✅ Favorites synced successfully');
+      }
+    } catch (error) {
+      console.error('❌ Failed to sync favorites from backend:', error);
+    }
   };
 
   // Statistics
