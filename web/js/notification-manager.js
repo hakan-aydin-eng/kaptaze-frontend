@@ -12,7 +12,7 @@ const notificationManager = {
     // Load notification statistics
     async loadNotificationStats() {
         try {
-            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/notifications/stats', {
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/notification-stats', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('kaptaze_auth_token')}`,
                     'Content-Type': 'application/json'
@@ -22,26 +22,25 @@ const notificationManager = {
             if (response.ok) {
                 const result = await response.json();
                 if (result.success) {
-                    const data = result.data;
+                    const data = result.data.overview;
 
-                    // Update statistics display
-                    const totalConsumersEl = document.getElementById('totalConsumers');
-                    const activeDevicesEl = document.getElementById('activeDevices');
-                    const iosDevicesEl = document.getElementById('iosDevices');
-                    const androidDevicesEl = document.getElementById('androidDevices');
+                    // Update dashboard statistics
+                    const totalNotificationsEl = document.querySelector('[data-stat="totalNotifications"]');
+                    const reachedNotificationsEl = document.querySelector('[data-stat="reachedNotifications"]');
+                    const favoriteNotificationsEl = document.querySelector('[data-stat="favoriteNotifications"]');
+                    const proximityNotificationsEl = document.querySelector('[data-stat="proximityNotifications"]');
 
-                    if (totalConsumersEl) totalConsumersEl.textContent = data.consumers.total || 0;
-                    if (activeDevicesEl) activeDevicesEl.textContent = data.pushTokens.total || 0;
-                    if (iosDevicesEl) iosDevicesEl.textContent = data.pushTokens.byPlatform.ios || 0;
-                    if (androidDevicesEl) androidDevicesEl.textContent = data.pushTokens.byPlatform.android || 0;
+                    if (totalNotificationsEl) totalNotificationsEl.textContent = data.totalNotifications || 0;
+                    if (reachedNotificationsEl) reachedNotificationsEl.textContent = data.totalReached || 0;
+                    if (favoriteNotificationsEl) favoriteNotificationsEl.textContent = data.totalFavoriteNotifications || 0;
+                    if (proximityNotificationsEl) proximityNotificationsEl.textContent = data.totalProximityNotifications || 0;
 
-                    // Update configuration status
-                    const configStatus = document.getElementById('firebaseStatus');
-                    if (configStatus) {
-                        configStatus.innerHTML = data.firebase.configured
-                            ? '✅ Firebase yapılandırıldı'
-                            : '⚠️ Firebase yapılandırılması gerekiyor (Mock mode)';
-                        configStatus.className = data.firebase.configured ? 'status-success' : 'status-warning';
+                    // Update delivery rate display
+                    const deliveryRateEl = document.querySelector('[data-stat="deliveryRate"]');
+                    if (deliveryRateEl) {
+                        const rate = data.averageDeliveryRate || 0;
+                        deliveryRateEl.textContent = `${rate}%`;
+                        deliveryRateEl.className = `delivery-rate ${rate >= 80 ? 'success' : rate >= 60 ? 'warning' : 'danger'}`;
                     }
 
                     console.log('✅ Notification stats loaded:', data);
@@ -99,34 +98,43 @@ const notificationManager = {
             const historyContainer = document.getElementById('notificationHistory');
             if (!historyContainer) return;
 
-            // Mock data for now - will be replaced with API call
-            const notifications = [
-                {
-                    id: 1,
-                    title: "Yeni İndirim Kampanyası",
-                    message: "%50 indirim fırsatını kaçırmayın!",
-                    type: "promotion",
-                    sentAt: "2025-01-15T10:30:00Z",
-                    delivered: 156,
-                    clicked: 23
-                },
-                {
-                    id: 2,
-                    title: "Yeni Restoran",
-                    message: "Yakınınızda yeni restoran açıldı!",
-                    type: "new_restaurant",
-                    sentAt: "2025-01-14T15:45:00Z",
-                    delivered: 89,
-                    clicked: 12
+            const response = await fetch('https://kaptaze-backend-api.onrender.com/admin/notification-history?limit=20', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('kaptaze_auth_token')}`,
+                    'Content-Type': 'application/json'
                 }
-            ];
+            });
 
-            historyContainer.innerHTML = this.renderNotificationHistory(notifications);
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.data) {
+                    const notifications = result.data.notifications;
+                    historyContainer.innerHTML = this.renderNotificationHistory(notifications);
+                    console.log('✅ Notification history loaded:', notifications.length, 'notifications');
+                } else {
+                    throw new Error('Invalid response format');
+                }
+            } else {
+                throw new Error('Failed to fetch notification history');
+            }
         } catch (error) {
-            console.error('Failed to load notification history:', error);
+            console.error('❌ Failed to load notification history:', error);
             const historyContainer = document.getElementById('notificationHistory');
             if (historyContainer) {
-                historyContainer.innerHTML = '<div class="error">Bildirim geçmişi yüklenemedi</div>';
+                // Show fallback mock data
+                const mockNotifications = [
+                    {
+                        id: 'mock-1',
+                        title: "Bildirim Geçmişi",
+                        message: "Backend'e bağlanılamadı, real-time veriler yüklenecek",
+                        type: "general",
+                        targetName: "All Users",
+                        stats: { delivered: 0, failed: 0, total: 0, deliveryRate: 0 },
+                        sentAt: new Date().toISOString(),
+                        status: "pending"
+                    }
+                ];
+                historyContainer.innerHTML = this.renderNotificationHistory(mockNotifications);
             }
         }
     },
@@ -156,11 +164,12 @@ const notificationManager = {
             const typeLabels = {
                 general: '🔔 Genel',
                 promotion: '🔥 Promosyon',
-                new_restaurant: '🏪 Yeni Restoran',
-                city: '🏙️ Şehir'
+                restaurant: '🍽️ Restoran',
+                city: '🏙️ Şehir',
+                test: '🧪 Test'
             };
 
-            const sentAt = new Date(notification.sentAt).toLocaleDateString('tr-TR', {
+            const sentAt = new Date(notification.sentAt || notification.createdAt).toLocaleDateString('tr-TR', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
@@ -168,30 +177,71 @@ const notificationManager = {
                 minute: '2-digit'
             });
 
+            // Calculate delivery rate using real data
+            const deliveryRate = notification.stats && notification.stats.validTokens > 0
+                ? Math.round((notification.stats.successCount / notification.stats.validTokens) * 100)
+                : (notification.deliveryRate || 0);
+
+            const statusBadge = notification.status === 'completed'
+                ? '<span class="status-badge success">✅ Tamamlandı</span>'
+                : notification.status === 'failed'
+                ? '<span class="status-badge error">❌ Başarısız</span>'
+                : notification.status === 'sending'
+                ? '<span class="status-badge warning">📤 Gönderiliyor</span>'
+                : '<span class="status-badge pending">⏳ Beklemede</span>';
+
+            // Get target information
+            let targetInfo = 'Tüm Kullanıcılar';
+            if (notification.targetType === 'city' && notification.targetDetails?.city) {
+                targetInfo = `🏙️ ${notification.targetDetails.city}`;
+            } else if (notification.targetType === 'restaurant' && notification.targetDetails?.restaurantName) {
+                targetInfo = `🍽️ ${notification.targetDetails.restaurantName}`;
+            } else if (notification.targetType === 'location' && notification.targetDetails?.coordinates) {
+                const coords = notification.targetDetails.coordinates;
+                const radius = notification.targetDetails.radius || 5;
+                targetInfo = `📍 ${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)} (${radius}km)`;
+            }
+
+            // Calculate click rate (if available)
+            const successCount = notification.stats?.successCount || 0;
+            const clickCount = 0; // Not tracked yet
+            const clickRate = successCount > 0 ? Math.round((clickCount / successCount) * 100) : 0;
+
             html += `
                 <tr>
                     <td>
                         <div class="notification-title">${notification.title}</div>
-                        <div class="notification-preview">${notification.message}</div>
+                        <div class="notification-preview">${notification.message.substring(0, 50)}${notification.message.length > 50 ? '...' : ''}</div>
+                        <div class="notification-target">📍 ${targetInfo}</div>
                     </td>
                     <td>
                         <span class="badge badge-${notification.type}">
                             ${typeLabels[notification.type] || notification.type}
                         </span>
-                    </td>
-                    <td>${sentAt}</td>
-                    <td>
-                        <span class="stat-number">${notification.delivered}</span>
-                    </td>
-                    <td>
-                        <span class="stat-number">${notification.clicked}</span>
-                        <span class="stat-percentage">(${Math.round((notification.clicked / notification.delivered) * 100)}%)</span>
+                        <div class="priority-indicator priority-${notification.priority || 'normal'}">
+                            ${notification.priority || 'normal'}
+                        </div>
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-secondary" onclick="notificationManager.viewDetails(${notification.id})">
+                        ${sentAt}
+                        ${statusBadge}
+                    </td>
+                    <td>
+                        <span class="stat-number">${successCount}</span>
+                        <div class="stat-details">
+                            <small>Toplam: ${notification.stats?.totalTokens || 0}</small><br>
+                            <small>Başarı: ${deliveryRate}%</small>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="stat-number">${clickCount}</span>
+                        <span class="stat-percentage">(${clickRate}%)</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="notificationManager.viewDetails('${notification._id}')">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn btn-sm btn-primary" onclick="notificationManager.resendNotification(${notification.id})">
+                        <button class="btn btn-sm btn-primary" onclick="notificationManager.resendNotification('${notification._id}')">
                             <i class="fas fa-redo"></i>
                         </button>
                     </td>
