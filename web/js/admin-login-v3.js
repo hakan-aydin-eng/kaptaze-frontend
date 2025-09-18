@@ -228,9 +228,14 @@ class AdminLoginV3 {
         localStorage.setItem('adminUser', JSON.stringify(loginResult.user));
 
         // Set unified API auth token
+        localStorage.setItem('kaptaze_auth_token', loginResult.token);
         if (window.KapTazeAPI && window.KapTazeAPI.setAuthToken) {
             window.KapTazeAPI.setAuthToken(loginResult.token);
         }
+
+        // Store credentials for auto-refresh (securely)
+        localStorage.setItem('kaptaze_admin_email', email);
+        localStorage.setItem('kaptaze_admin_password', password);
 
         // Show success message
         this.showAlert('success', `Hoşgeldiniz ${loginResult.user.name}! Yönlendiriliyorsunuz...`);

@@ -27,6 +27,28 @@ window.KapTazeAPIService = {
             const data = await response.json();
             
             if (!response.ok) {
+                // Handle 403 as potential auth issue and retry once
+                if (response.status === 403 && !options._retry) {
+                    console.log('🔄 403 error, attempting to refresh auth...');
+                    await this.refreshAuth();
+
+                    // Retry with new token
+                    const newHeaders = window.KapTazeAPI.getAuthHeaders();
+                    const retryConfig = {
+                        ...config,
+                        headers: { ...newHeaders, ...options.headers },
+                        _retry: true
+                    };
+
+                    const retryResponse = await fetch(url, retryConfig);
+                    const retryData = await retryResponse.json();
+
+                    if (retryResponse.ok) {
+                        console.log(`✅ API Response (retry): ${config.method} ${endpoint}`, retryData);
+                        return retryData;
+                    }
+                }
+
                 throw new Error(data.error || `HTTP ${response.status}`);
             }
             
@@ -49,7 +71,46 @@ window.KapTazeAPIService = {
             throw error;
         }
     },
-    
+
+    // Refresh authentication by re-login with stored credentials
+    async refreshAuth() {
+        try {
+            const adminEmail = localStorage.getItem('kaptaze_admin_email');
+            const adminPassword = localStorage.getItem('kaptaze_admin_password');
+
+            if (!adminEmail || !adminPassword) {
+                console.log('❌ No stored credentials for refresh');
+                return false;
+            }
+
+            console.log('🔄 Attempting to refresh admin auth...');
+
+            const response = await fetch(window.KapTazeAPI.buildUrl('/admin/login'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: adminEmail,
+                    password: adminPassword
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success && data.token) {
+                localStorage.setItem('kaptaze_auth_token', data.token);
+                console.log('✅ Auth refreshed successfully');
+                return true;
+            } else {
+                console.log('❌ Auth refresh failed');
+                return false;
+            }
+
+        } catch (error) {
+            console.error('❌ Auth refresh error:', error);
+            return false;
+        }
+    },
+
     // Authentication methods
     auth: {
         async adminLogin(username, password) {
