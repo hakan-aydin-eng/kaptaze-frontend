@@ -85,19 +85,20 @@ window.KapTazeAPIService = {
 
             console.log('🔄 Attempting to refresh admin auth...');
 
-            const response = await fetch(window.KapTazeAPI.buildUrl('/admin/login'), {
+            const response = await fetch(window.KapTazeAPI.buildUrl('/auth/admin/login'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email: adminEmail,
-                    password: adminPassword
+                    username: adminEmail,
+                    password: adminPassword,
+                    userType: 'admin'
                 })
             });
 
             const data = await response.json();
 
-            if (response.ok && data.success && data.token) {
-                localStorage.setItem('kaptaze_auth_token', data.token);
+            if (response.ok && data.success && data.data && data.data.token) {
+                localStorage.setItem('kaptaze_auth_token', data.data.token);
                 console.log('✅ Auth refreshed successfully');
                 return true;
             } else {

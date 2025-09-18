@@ -192,7 +192,7 @@ class AdminLoginV3 {
             // NO DEMO FALLBACK - Real API only
 
             if (loginResult && loginResult.success) {
-                await this.handleSuccessfulLogin(loginResult);
+                await this.handleSuccessfulLogin(loginResult, username, password);
             } else {
                 this.handleFailedLogin();
             }
@@ -213,7 +213,7 @@ class AdminLoginV3 {
 
     // Demo methods removed - NO FALLBACKS
 
-    async handleSuccessfulLogin(loginResult) {
+    async handleSuccessfulLogin(loginResult, username, password) {
         console.log('✅ Login successful:', loginResult);
 
         // Reset failed attempts
@@ -234,7 +234,7 @@ class AdminLoginV3 {
         }
 
         // Store credentials for auto-refresh (securely)
-        localStorage.setItem('kaptaze_admin_email', email);
+        localStorage.setItem('kaptaze_admin_email', username);
         localStorage.setItem('kaptaze_admin_password', password);
 
         // Show success message
