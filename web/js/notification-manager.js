@@ -71,7 +71,7 @@ const notificationManager = {
 
             if (response.ok) {
                 const result = await response.json();
-                const restaurants = result.data || [];
+                const restaurants = Array.isArray(result.data) ? result.data : [];
 
                 const restaurantSelect = document.getElementById('targetRestaurant');
                 if (restaurantSelect) {
