@@ -1188,7 +1188,7 @@ class RestaurantPanel {
     async updatePackageAPI(packageId, updates) {
         try {
             const response = await window.backendService.makeRequest(`/restaurant/packages/${packageId}`, {
-                method: 'PATCH',
+                method: 'PUT',
                 body: updates
             });
             return response.data;
