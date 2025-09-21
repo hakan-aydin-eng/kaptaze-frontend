@@ -133,6 +133,24 @@
             box-shadow: 0 10px 20px rgba(22, 163, 74, 0.3);
         }
 
+        .restaurant-button {
+            background: #FC923C;
+            color: #000000;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: 1rem;
+        }
+
+        .restaurant-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(252, 146, 60, 0.3);
+            color: #000000;
+        }
+
         /* Hero Section */
         .hero {
             margin-top: 80px;
@@ -786,6 +804,18 @@
             padding: 1rem 2rem;
         }
 
+        .mobile-menu .restaurant-button {
+            margin: 1rem 2rem;
+            margin-left: 0;
+            display: inline-block;
+            text-align: center;
+            border: none;
+            background: #FC923C;
+            color: #000000;
+            border-radius: 8px;
+            padding: 1rem 2rem;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .nav-links {
@@ -961,7 +991,8 @@
                 <a href="#mission">Amacımız</a>
                 <a href="#impact">Etkimiz</a>
                 <a href="#app">Uygulama</a>
-                <a href="https://kaptaze.com/customer-registration-v2.html" class="cta-button">Hemen Kayıt Ol</a>
+                <a href="https://kaptaze.com/customer-registration-v2.html" class="cta-button">İş Ortağı Ol</a>
+                <a href="https://kaptaze.com/restaurant-login" class="restaurant-button">Esnaf Paneli</a>
             </div>
             <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
                 ☰
@@ -975,7 +1006,8 @@
         <a href="#mission" onclick="closeMobileMenu()">Amacımız</a>
         <a href="#impact" onclick="closeMobileMenu()">Etkimiz</a>
         <a href="#app" onclick="closeMobileMenu()">Uygulama</a>
-        <a href="https://kaptaze.com/customer-registration-v2.html" class="cta-button">Hemen Kayıt Ol</a>
+        <a href="https://kaptaze.com/customer-registration-v2.html" class="cta-button">İş Ortağı Ol</a>
+        <a href="https://kaptaze.com/restaurant-login" class="restaurant-button">Esnaf Paneli</a>
     </div>
 
     <!-- Hero Section -->
