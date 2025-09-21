@@ -458,10 +458,57 @@
         }
 
         /* Mobile layout elements - hidden on desktop */
-        .mission-center-mobile,
+        .mission-center-mobile {
+            display: none;
+        }
+
+        /* Desktop layout for cards - show but position around center */
         .mission-top-cards,
         .mission-bottom-cards {
-            display: none;
+            position: static;
+        }
+
+        .mission-top-cards {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .mission-bottom-cards {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Desktop positioning for individual cards */
+        .mission-top-cards .mission-point--top {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+
+        .mission-top-cards .mission-point--right {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .mission-bottom-cards .mission-point--bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+
+        .mission-bottom-cards .mission-point--left {
+            position: absolute;
+            bottom: 0;
+            right: 0;
         }
 
         .restaurant-grid {
@@ -805,6 +852,7 @@
             .mission-top-cards,
             .mission-bottom-cards {
                 display: block;
+                position: static !important;
             }
 
             .mission-center-mobile {
