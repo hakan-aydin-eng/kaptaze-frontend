@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gizlilik Politikası - KapTaze</title>
+    <link rel="icon" type="image/png" href="./assets/favicon.png">
+    <link rel="apple-touch-icon" href="./assets/favicon.png">
+
+    <style>
+        :root {
+            --primary-green: #16a34a;
+            --light-green: #22c55e;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --white: #ffffff;
+            --bg-light: #f9fafb;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+            background: var(--bg-light);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--white);
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--primary-green);
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-green);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            color: var(--text-dark);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .content {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            color: var(--primary-green);
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        h3 {
+            color: var(--text-dark);
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.75rem 0;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, var(--primary-green), var(--light-green));
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+
+        .privacy-box {
+            background: #f0f9ff;
+            border: 1px solid #0284c7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: var(--primary-green);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: transform 0.3s;
+            margin-top: 2rem;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .update-date {
+            text-align: center;
+            color: var(--text-light);
+            font-style: italic;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .data-table th {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .data-table {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🔒 KapTaze</div>
+            <h1>Gizlilik Politikası</h1>
+            <p class="subtitle">Kişisel verilerinizin korunması ve işlenmesi politikası</p>
+        </div>
+
+        <div class="content">
+            <div class="highlight">
+                <strong>Gizliliğiniz Bizim İçin Önemli:</strong> KapTaze olarak kişisel verilerinizi korumak ve gizliliğinizi sağlamak önceliğimizdir.
+            </div>
+
+            <h2>1. Giriş</h2>
+            <p>Bu gizlilik politikası, KapTaze platformunu kullandığınızda kişisel verilerinizin nasıl toplandığını, kullanıldığını, korunduğunu ve paylaşıldığını açıklar.</p>
+
+            <div class="privacy-box">
+                <strong>Veri Sorumlusu:</strong> KapTaze platformunun sahibi olarak, kişisel verilerinizin işlenmesinden sorumlu kuruluşuz.
+            </div>
+
+            <h2>2. Toplanan Kişisel Veriler</h2>
+
+            <h3>2.1 Müşterilerden Toplanan Veriler</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Veri Türü</th>
+                        <th>Açıklama</th>
+                        <th>Toplama Amacı</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Kimlik Bilgileri</td>
+                        <td>Ad, soyad</td>
+                        <td>Hesap oluşturma, sipariş takibi</td>
+                    </tr>
+                    <tr>
+                        <td>İletişim Bilgileri</td>
+                        <td>E-posta, telefon</td>
+                        <td>Bildirimler, müşteri hizmetleri</td>
+                    </tr>
+                    <tr>
+                        <td>Konum Bilgileri</td>
+                        <td>Şehir, ilçe bilgisi</td>
+                        <td>Yakın restoranları gösterme</td>
+                    </tr>
+                    <tr>
+                        <td>Ödeme Bilgileri</td>
+                        <td>Kart son 4 hanesi (şifreli)</td>
+                        <td>Ödeme işlemleri, fatura</td>
+                    </tr>
+                    <tr>
+                        <td>Uygulama Verileri</td>
+                        <td>Sipariş geçmişi, tercihler</td>
+                        <td>Kişiselleştirilmiş deneyim</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>2.2 Restoranlardan Toplanan Veriler</h3>
+            <ul>
+                <li>İşletme bilgileri (ad, adres, telefon)</li>
+                <li>Yetkili kişi bilgileri</li>
+                <li>Vergi dairesi ve vergi numarası</li>
+                <li>Banka hesap bilgileri (ödeme için)</li>
+                <li>Menü ve ürün bilgileri</li>
+            </ul>
+
+            <h2>3. Veri Toplama Yöntemleri</h2>
+
+            <h3>3.1 Doğrudan Toplama</h3>
+            <ul>
+                <li>Hesap oluşturma formları</li>
+                <li>Sipariş verme süreci</li>
+                <li>İletişim formları</li>
+                <li>Müşteri hizmetleri görüşmeleri</li>
+            </ul>
+
+            <h3>3.2 Otomatik Toplama</h3>
+            <ul>
+                <li>Çerezler (cookies) aracılığıyla</li>
+                <li>Uygulama kullanım analitikleri</li>
+                <li>IP adresi ve cihaz bilgileri</li>
+                <li>Tarayıcı türü ve sürümü</li>
+            </ul>
+
+            <h2>4. Veri İşleme Amaçları</h2>
+
+            <h3>4.1 Temel Hizmet Sağlama</h3>
+            <ul>
+                <li>Hesap oluşturma ve yönetimi</li>
+                <li>Sipariş alma ve işleme</li>
+                <li>Ödeme işlemlerini gerçekleştirme</li>
+                <li>Müşteri hizmetleri sağlama</li>
+            </ul>
+
+            <h3>4.2 Hizmet İyileştirme</h3>
+            <ul>
+                <li>Platform performansını artırma</li>
+                <li>Kişiselleştirilmiş öneriler sunma</li>
+                <li>Kullanıcı deneyimini geliştirme</li>
+                <li>Yeni özellikler geliştirme</li>
+            </ul>
+
+            <h3>4.3 Güvenlik ve Uyumluluk</h3>
+            <ul>
+                <li>Dolandırıcılığı önleme</li>
+                <li>Hesap güvenliğini sağlama</li>
+                <li>Yasal yükümlülükleri yerine getirme</li>
+                <li>Platform kurallarını uygulama</li>
+            </ul>
+
+            <h2>5. Veri Saklama Süreleri</h2>
+            <div class="privacy-box">
+                <strong>Genel Kural:</strong> Kişisel verileriniz, işleme amacının ortadan kalkması veya yasal saklama sürelerinin dolması durumunda silinir.
+            </div>
+
+            <ul>
+                <li><strong>Hesap Bilgileri:</strong> Hesap aktif olduğu süre + 3 yıl</li>
+                <li><strong>Sipariş Bilgileri:</strong> 5 yıl (vergi mevzuatı gereği)</li>
+                <li><strong>İletişim Kayıtları:</strong> 3 yıl</li>
+                <li><strong>Pazarlama Verileri:</strong> İzin çekilene kadar</li>
+                <li><strong>Log Kayıtları:</strong> 2 yıl</li>
+            </ul>
+
+            <h2>6. Veri Paylaşımı</h2>
+
+            <h3>6.1 Üçüncü Taraflarla Paylaşım</h3>
+            <p>Kişisel verileriniz, yalnızca aşağıdaki durumlarda ve sınırlı kapsamda paylaşılır:</p>
+
+            <ul>
+                <li><strong>Restoranlarla:</strong> Sipariş işleme için gerekli bilgiler</li>
+                <li><strong>Ödeme Sağlayıcıları:</strong> Güvenli ödeme işlemleri için</li>
+                <li><strong>Teknoloji Partnerleri:</strong> Platform hizmetleri için</li>
+                <li><strong>Yasal Otoriteler:</strong> Yasal yükümlülük halinde</li>
+            </ul>
+
+            <h3>6.2 Veri Transferi</h3>
+            <p>Verileriniz, güvenlik standartları sağlanarak, hizmet kalitesini artırmak amacıyla güvenilir teknoloji partnerleriyle paylaşılabilir.</p>
+
+            <h2>7. Veri Güvenliği</h2>
+
+            <h3>7.1 Teknik Güvenlik Önlemleri</h3>
+            <ul>
+                <li>SSL şifreleme ile veri iletimi</li>
+                <li>Güçlü şifreleme algoritmalarıyla veri saklama</li>
+                <li>Düzenli güvenlik güncellemeleri</li>
+                <li>Sızma testleri ve güvenlik denetimleri</li>
+            </ul>
+
+            <h3>7.2 Organizasyonel Önlemler</h3>
+            <ul>
+                <li>Erişim yetki kontrolü</li>
+                <li>Personel gizlilik eğitimleri</li>
+                <li>Güvenlik politikalarının uygulanması</li>
+                <li>Düzenli risk değerlendirmeleri</li>
+            </ul>
+
+            <h2>8. Çerezler (Cookies)</h2>
+
+            <h3>8.1 Çerez Türleri</h3>
+            <ul>
+                <li><strong>Zorunlu Çerezler:</strong> Platform işlevselliği için</li>
+                <li><strong>Performans Çerezleri:</strong> Site performansını ölçmek için</li>
+                <li><strong>İşlevsellik Çerezleri:</strong> Tercihlerinizi hatırlamak için</li>
+                <li><strong>Hedefleme Çerezleri:</strong> Kişiselleştirilmiş içerik için</li>
+            </ul>
+
+            <h3>8.2 Çerez Yönetimi</h3>
+            <p>Tarayıcınızın ayarlarından çerezleri kontrol edebilir, silebilir veya engelleyebilirsiniz.</p>
+
+            <h2>9. Kullanıcı Hakları</h2>
+
+            <h3>9.1 KVKK Kapsamındaki Haklarınız</h3>
+            <ul>
+                <li><strong>Bilgi Alma Hakkı:</strong> İşlenen verileriniz hakkında bilgi talep etme</li>
+                <li><strong>Erişim Hakkı:</strong> Kişisel verilerinize erişim talep etme</li>
+                <li><strong>Düzeltme Hakkı:</strong> Yanlış/eksik verilerin düzeltilmesini isteme</li>
+                <li><strong>Silme Hakkı:</strong> Verilerinizin silinmesini talep etme</li>
+                <li><strong>İtiraz Hakkı:</strong> Veri işlemeye itiraz etme</li>
+                <li><strong>Taşınabilirlik Hakkı:</strong> Verilerinizi başka platforma taşıma</li>
+            </ul>
+
+            <h3>9.2 Hak Kullanımı</h3>
+            <p>Haklarınızı kullanmak için <strong>gizlilik@kaptaze.com</strong> adresine yazabilirsiniz.</p>
+
+            <h2>10. Pazarlama İletişimi</h2>
+            <p>E-posta, SMS ve push bildirimleri için onayınızı alırız. İstediğiniz zaman bu onayı geri çekebilirsiniz.</p>
+
+            <h3>10.1 Onay Geri Çekme</h3>
+            <ul>
+                <li>Uygulama ayarlarından bildirim tercihlerini değiştirme</li>
+                <li>E-posta altındaki "abonelikten çık" linkini kullanma</li>
+                <li>Müşteri hizmetlerine başvurma</li>
+            </ul>
+
+            <h2>11. Çocukların Gizliliği</h2>
+            <p>13 yaş altı çocuklardan bilerek kişisel veri toplamayız. Böyle bir durumla karşılaştığımızda, verileri derhal sileriz.</p>
+
+            <h2>12. Politika Değişiklikleri</h2>
+            <p>Bu gizlilik politikası güncellenebilir. Önemli değişiklikler size bildirilir.</p>
+
+            <h2>13. İletişim</h2>
+            <p>Gizlilik ile ilgili sorularınız için:</p>
+            <ul>
+                <li><strong>E-posta:</strong> gizlilik@kaptaze.com</li>
+                <li><strong>Telefon:</strong> +90 XXX XXX XX XX</li>
+                <li><strong>Adres:</strong> Antalya, Türkiye</li>
+                <li><strong>KVKK Sorumlusu:</strong> kvkk@kaptaze.com</li>
+            </ul>
+
+            <div class="update-date">
+                Son güncelleme: 21 Eylül 2024
+            </div>
+
+            <a href="/" class="back-button">← Ana Sayfaya Dön</a>
+        </div>
+    </div>
+</body>
+</html>
