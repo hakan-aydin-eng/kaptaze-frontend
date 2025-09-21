@@ -701,10 +701,72 @@
             color: rgba(255, 255, 255, 0.6);
         }
 
+        /* Mobile Menu Styles */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--primary-green);
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 80px;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            box-shadow: 0 4px 6px var(--shadow);
+            z-index: 999;
+            padding: 1rem 0;
+        }
+
+        .mobile-menu.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mobile-menu a {
+            display: block;
+            padding: 1rem 2rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.3s;
+        }
+
+        .mobile-menu a:hover {
+            background-color: #f8fafc;
+            color: var(--primary-green);
+        }
+
+        .mobile-menu .cta-button {
+            margin: 1rem 2rem;
+            display: inline-block;
+            text-align: center;
+            border: none;
+            background: linear-gradient(135deg, var(--primary-green), var(--light-green));
+            border-radius: 8px;
+            padding: 1rem 2rem;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .nav-links {
                 display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
             }
 
             .hero-container {
@@ -723,12 +785,20 @@
 
             .mission-container {
                 min-height: auto;
-                padding: 2rem 0;
+                padding: 2rem 1rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .mission-center {
+                order: 1;
+                margin-bottom: 2rem;
             }
 
             .mission-bag {
-                width: 300px;
-                height: 300px;
+                width: 250px;
+                height: 250px;
             }
 
             .mission-point {
@@ -743,10 +813,12 @@
             }
 
             .mission-points {
+                order: 2;
                 display: flex;
                 flex-direction: column;
-                gap: 2rem;
-                margin-top: 2rem;
+                gap: 1.5rem;
+                width: 100%;
+                max-width: 400px;
             }
 
             .stats-grid {
@@ -801,8 +873,20 @@
                 <a href="#app">Uygulama</a>
                 <a href="https://kaptaze.com/customer-registration-v2.html" class="cta-button">Hemen Kayıt Ol</a>
             </div>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                ☰
+            </button>
         </div>
     </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#how-it-works" onclick="closeMobileMenu()">Nasıl Çalışır?</a>
+        <a href="#mission" onclick="closeMobileMenu()">Amacımız</a>
+        <a href="#impact" onclick="closeMobileMenu()">Etkimiz</a>
+        <a href="#app" onclick="closeMobileMenu()">Uygulama</a>
+        <a href="https://kaptaze.com/customer-registration-v2.html" class="cta-button">Hemen Kayıt Ol</a>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -1325,6 +1409,27 @@
             }
         `;
         document.head.appendChild(additionalStyle);
+
+        // Mobile menu functions
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('active');
+        }
+
+        function closeMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.remove('active');
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+
+            if (!mobileMenu.contains(event.target) && !menuToggle.contains(event.target)) {
+                mobileMenu.classList.remove('active');
+            }
+        });
 
         // Initialize featured restaurants on page load
         document.addEventListener('DOMContentLoaded', function() {
