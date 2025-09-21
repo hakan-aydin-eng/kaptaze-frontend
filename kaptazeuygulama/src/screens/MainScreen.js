@@ -22,6 +22,7 @@ import * as Location from 'expo-location';
 import apiService from '../services/apiService';
 import { useUserData } from '../context/UserDataContext';
 import NotificationPanel from '../components/NotificationPanel';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const getRestaurantIcon = (category) => {
   const icons = {
@@ -73,6 +74,7 @@ const MainScreen = ({ navigation }) => {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [categories, setCategories] = useState([]);
   const [showNotificationPanel, setShowNotificationPanel] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   // Refresh state
   const [refreshing, setRefreshing] = useState(false);
@@ -92,13 +94,14 @@ const MainScreen = ({ navigation }) => {
         await Promise.allSettled([
           loadRestaurants(),
           loadCategories(),
-          loadUserLocation()
+          loadUserLocation(),
+          loadUnreadNotificationCount()
         ]);
       } catch (error) {
         console.error('❌ Failed to load initial data:', error);
       }
     };
-    
+
     loadInitialData();
   }, []);
 
@@ -227,6 +230,69 @@ const MainScreen = ({ navigation }) => {
     setDisplayedRestaurants(filteredByDistance.slice(0, ITEMS_PER_PAGE));
     setHasMore(filteredByDistance.length > ITEMS_PER_PAGE);
     setCurrentPage(1);
+  };
+
+  const loadUnreadNotificationCount = async () => {
+    try {
+      console.log('🔔 Loading unread notification count...');
+
+      // Get auth token first
+      const authToken = await AsyncStorage.getItem('@kaptaze_user_token');
+      if (!authToken) {
+        console.log('⚠️ No auth token found, skipping notification count load');
+        setUnreadNotificationCount(0);
+        return;
+      }
+
+      // Try to get from backend first
+      try {
+        const response = await apiService.getNotifications();
+        if (response.success && response.data) {
+          const unreadCount = response.data.unreadCount || 0;
+          setUnreadNotificationCount(unreadCount);
+          console.log(`🔔 Unread notifications: ${unreadCount}`);
+          return;
+        }
+      } catch (apiError) {
+        console.log('⚠️ Failed to load from API, trying AsyncStorage:', apiError.message);
+      }
+
+      // Fallback to AsyncStorage
+      const storedNotifications = await AsyncStorage.getItem('@kaptaze_notifications');
+      if (storedNotifications) {
+        const notifications = JSON.parse(storedNotifications);
+        const unreadCount = notifications.filter(notif => !notif.read).length;
+        setUnreadNotificationCount(unreadCount);
+        console.log(`🔔 Unread notifications from storage: ${unreadCount}`);
+      } else {
+        // Demo bildirimler oluştur eğer hiç yoksa
+        const demoNotifications = [
+          {
+            id: 'demo1',
+            title: 'KapTaze\'ye Hoş Geldin! 🎉',
+            body: 'Gıda israfına karşı mücadelede sen de yer al!',
+            timestamp: new Date().toISOString(),
+            read: false,
+            type: 'welcome'
+          },
+          {
+            id: 'demo2',
+            title: 'Yakındaki Fırsatlar 📍',
+            body: 'Çevrende indirimli paketler var, hemen keşfet!',
+            timestamp: new Date(Date.now() - 60000).toISOString(),
+            read: false,
+            type: 'promo'
+          }
+        ];
+        await AsyncStorage.setItem('@kaptaze_notifications', JSON.stringify(demoNotifications));
+        setUnreadNotificationCount(2);
+        console.log('🔔 Created demo notifications for testing');
+      }
+
+    } catch (error) {
+      console.error('❌ Error loading unread notification count:', error);
+      setUnreadNotificationCount(0);
+    }
   };
 
   const loadRestaurants = async (searchTerm = '') => {
@@ -669,9 +735,20 @@ const MainScreen = ({ navigation }) => {
             <View style={styles.headerButtons}>
               <TouchableOpacity
                 style={styles.headerButton}
-                onPress={() => setShowNotificationPanel(true)}
+                onPress={() => {
+                  setShowNotificationPanel(true);
+                  // Refresh notification count when panel is opened
+                  loadUnreadNotificationCount();
+                }}
               >
                 <Text style={styles.headerButtonIcon}>🔔</Text>
+                {unreadNotificationCount > 0 && (
+                  <View style={styles.notificationBadge}>
+                    <Text style={styles.notificationBadgeText}>
+                      {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -977,7 +1054,15 @@ const MainScreen = ({ navigation }) => {
       {/* Notification Panel */}
       <NotificationPanel
         visible={showNotificationPanel}
-        onClose={() => setShowNotificationPanel(false)}
+        onClose={() => {
+          setShowNotificationPanel(false);
+          // Refresh notification count when panel is closed
+          loadUnreadNotificationCount();
+        }}
+        onNotificationRead={() => {
+          // Update count when notification is marked as read
+          loadUnreadNotificationCount();
+        }}
       />
 
       {/* Bottom Navigation */}
@@ -1094,6 +1179,25 @@ const styles = StyleSheet.create({
   headerButtonIcon: {
     fontSize: 18,
     color: '#ffffff',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+  },
+  notificationBadgeText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   searchContainer: {
     marginBottom: 16,
