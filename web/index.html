@@ -373,16 +373,9 @@
             max-width: 1200px;
             margin: 1rem auto;
             min-height: 500px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .mission-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
             z-index: 2;
         }
 
@@ -400,7 +393,6 @@
         }
 
         .mission-point {
-            position: absolute;
             background: var(--white);
             border-radius: 15px;
             padding: 1.5rem;
@@ -414,30 +406,6 @@
         .mission-point:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .mission-point--top {
-            top: 0;
-            right: 0;
-            transform: none;
-        }
-
-        .mission-point--right {
-            bottom: 0;
-            right: 0;
-            transform: none;
-        }
-
-        .mission-point--bottom {
-            bottom: 0;
-            left: 0;
-            transform: none;
-        }
-
-        .mission-point--left {
-            top: 0;
-            left: 0;
-            transform: none;
         }
 
         .mission-icon {
@@ -468,10 +436,7 @@
             grid-template-columns: 1fr 400px 1fr;
             grid-template-rows: 1fr 1fr;
             gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
             align-items: center;
-            min-height: 500px;
         }
 
         .mission-center {
@@ -480,39 +445,43 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
         }
 
-        .mission-top-cards {
+        /* Remove wrapper elements from grid flow */
+        .mission-top-cards,
+        .mission-bottom-cards,
+        .mission-points {
             display: contents;
         }
 
-        .mission-bottom-cards {
-            display: contents;
-        }
-
-        /* Position cards in grid */
-        .mission-top-cards .mission-point--right {
+        /* Position individual mission cards in grid */
+        .mission-point--right {
             grid-column: 1;
             grid-row: 1;
             justify-self: end;
+            align-self: center;
         }
 
-        .mission-top-cards .mission-point--top {
+        .mission-point--top {
             grid-column: 3;
             grid-row: 1;
             justify-self: start;
+            align-self: center;
         }
 
-        .mission-bottom-cards .mission-point--bottom {
+        .mission-point--bottom {
             grid-column: 1;
             grid-row: 2;
             justify-self: end;
+            align-self: center;
         }
 
-        .mission-bottom-cards .mission-point--left {
+        .mission-point--left {
             grid-column: 3;
             grid-row: 2;
             justify-self: start;
+            align-self: center;
         }
 
         .restaurant-grid {
