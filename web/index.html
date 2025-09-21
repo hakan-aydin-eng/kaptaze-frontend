@@ -457,6 +457,13 @@
             line-height: 1.4;
         }
 
+        /* Mobile layout elements - hidden on desktop */
+        .mission-center-mobile,
+        .mission-top-cards,
+        .mission-bottom-cards {
+            display: none;
+        }
+
         .restaurant-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -786,39 +793,58 @@
             .mission-container {
                 min-height: auto;
                 padding: 2rem 1rem;
+            }
+
+            /* Hide desktop center image on mobile */
+            .mission-center {
+                display: none;
+            }
+
+            /* Show mobile layout */
+            .mission-center-mobile,
+            .mission-top-cards,
+            .mission-bottom-cards {
+                display: block;
+            }
+
+            .mission-center-mobile {
+                text-align: center;
+                margin: 2rem 0;
+            }
+
+            .mission-bag-mobile {
+                width: 200px;
+                height: 200px;
+                object-fit: contain;
+                filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.1));
+            }
+
+            .mission-points {
                 display: flex;
                 flex-direction: column;
-                align-items: center;
+                gap: 0;
             }
 
-            .mission-center {
-                order: 1;
-                margin-bottom: 3rem;
-            }
-
-            .mission-bag {
-                width: 250px;
-                height: 250px;
+            .mission-top-cards,
+            .mission-bottom-cards {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+                margin-bottom: 1.5rem;
             }
 
             .mission-point {
                 position: relative !important;
                 width: 100%;
-                margin-bottom: 2rem;
+                margin-bottom: 0;
                 transform: none !important;
                 top: auto !important;
                 left: auto !important;
                 right: auto !important;
                 bottom: auto !important;
-            }
-
-            .mission-points {
-                order: 2;
-                display: flex;
-                flex-direction: column;
-                gap: 1.5rem;
-                width: 100%;
                 max-width: 400px;
+                margin-left: auto;
+                margin-right: auto;
             }
 
             .stats-grid {
@@ -1024,25 +1050,37 @@
                     <img src="images/karton.png" alt="KapTaze Misyon" class="mission-bag" />
                 </div>
                 <div class="mission-points">
-                    <div class="mission-point mission-point--top">
-                        <div class="mission-icon">💰</div>
-                        <h3>Yarı Fiyatına Lezzet</h3>
-                        <p>Lezzetli yiyeceklerin tadını yarı fiyatına veya daha ucuza çıkar</p>
+                    <!-- Top Cards for Mobile -->
+                    <div class="mission-top-cards">
+                        <div class="mission-point mission-point--top">
+                            <div class="mission-icon">💰</div>
+                            <h3>Yarı Fiyatına Lezzet</h3>
+                            <p>Lezzetli yiyeceklerin tadını yarı fiyatına veya daha ucuza çıkar</p>
+                        </div>
+                        <div class="mission-point mission-point--right">
+                            <div class="mission-icon">🍕</div>
+                            <h3>Yeni Tatlar Keşfet</h3>
+                            <p>Yerel kafe, fırın ve restoranlardan yeni tatlar dene</p>
+                        </div>
                     </div>
-                    <div class="mission-point mission-point--right">
-                        <div class="mission-icon">🍕</div>
-                        <h3>Yeni Tatlar Keşfet</h3>
-                        <p>Yerel kafe, fırın ve restoranlardan yeni tatlar dene</p>
+
+                    <!-- Center Image for Mobile -->
+                    <div class="mission-center-mobile">
+                        <img src="images/karton.png" alt="KapTaze Misyon" class="mission-bag-mobile" />
                     </div>
-                    <div class="mission-point mission-point--bottom">
-                        <div class="mission-icon">🌍</div>
-                        <h3>Çevreyi Koru</h3>
-                        <p>Gıda israfını azaltarak çevreye yardımcı ol</p>
-                    </div>
-                    <div class="mission-point mission-point--left">
-                        <div class="mission-icon">🛡️</div>
-                        <h3>Yiyecekleri Kurtar</h3>
-                        <p>Çevrenizdeki yiyecekleri kurtar</p>
+
+                    <!-- Bottom Cards for Mobile -->
+                    <div class="mission-bottom-cards">
+                        <div class="mission-point mission-point--bottom">
+                            <div class="mission-icon">🌍</div>
+                            <h3>Çevreyi Koru</h3>
+                            <p>Gıda israfını azaltarak çevreye yardımcı ol</p>
+                        </div>
+                        <div class="mission-point mission-point--left">
+                            <div class="mission-icon">🛡️</div>
+                            <h3>Yiyecekleri Kurtar</h3>
+                            <p>Çevrenizdeki yiyecekleri kurtar</p>
+                        </div>
                     </div>
                 </div>
             </div>
