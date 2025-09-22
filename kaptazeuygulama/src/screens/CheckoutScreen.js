@@ -108,17 +108,24 @@ const CheckoutScreen = ({ route, navigation }) => {
       console.log('✅ Payment result:', result);
 
       if (result.success) {
-        // Payment successful - navigate to success screen
-        Alert.alert(
-          'Ödeme Başarılı! 🎉',
-          `Sipariş kodunuz: ${result.orderCode}\n\nRestorana giderek siparişinizi teslim alabilirsiniz.`,
-          [
-            {
-              text: 'Siparişlerim',
-              onPress: () => navigation.navigate('Orders')
-            }
-          ]
-        );
+        if (result.status === 'waiting_3d_secure' && result.threeDSHtmlContent) {
+          // 3D Secure verification required
+          console.log('🔒 3D Secure verification required');
+          setThreeDSHtml(result.threeDSHtmlContent);
+          setShowWebView(true);
+        } else {
+          // Payment successful - navigate to success screen
+          Alert.alert(
+            'Ödeme Başarılı! 🎉',
+            `Sipariş kodunuz: ${result.orderCode}\n\nRestorana giderek siparişinizi teslim alabilirsiniz.`,
+            [
+              {
+                text: 'Siparişlerim',
+                onPress: () => navigation.navigate('Orders')
+              }
+            ]
+          );
+        }
       } else {
         Alert.alert('Ödeme Hatası', result.error || 'Ödeme işlemi başarısız oldu.');
       }
@@ -325,6 +332,81 @@ const CheckoutScreen = ({ route, navigation }) => {
           <View style={{ height: 50 }} />
         </ScrollView>
       </LinearGradient>
+
+      {/* 3D Secure WebView Modal */}
+      <Modal
+        visible={showWebView}
+        animationType="slide"
+        onRequestClose={() => setShowWebView(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: '#e5e7eb',
+            backgroundColor: '#ffffff'
+          }}>
+            <TouchableOpacity
+              onPress={() => setShowWebView(false)}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: '#f3f4f6',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginRight: 12
+              }}
+            >
+              <Text style={{ fontSize: 18, color: '#374151' }}>×</Text>
+            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#111827' }}>
+              3D Secure Doğrulama
+            </Text>
+          </View>
+
+          {threeDSHtml ? (
+            <WebView
+              source={{ html: threeDSHtml }}
+              style={{ flex: 1 }}
+              onNavigationStateChange={(navState) => {
+                console.log('🔒 WebView navigation:', navState.url);
+
+                // Check if redirected back to app (payment completed)
+                if (navState.url.includes('kaptaze://payment-success')) {
+                  setShowWebView(false);
+                  Alert.alert(
+                    'Ödeme Başarılı! 🎉',
+                    'Siparişiniz onaylandı. Restorana giderek teslim alabilirsiniz.',
+                    [
+                      {
+                        text: 'Siparişlerim',
+                        onPress: () => navigation.navigate('Orders')
+                      }
+                    ]
+                  );
+                } else if (navState.url.includes('kaptaze://payment-failed')) {
+                  setShowWebView(false);
+                  Alert.alert('Ödeme Hatası', '3D Secure doğrulama başarısız. Lütfen tekrar deneyin.');
+                }
+              }}
+              onError={(error) => {
+                console.error('🔒 WebView error:', error);
+                setShowWebView(false);
+                Alert.alert('Hata', '3D Secure sayfası yüklenirken hata oluştu.');
+              }}
+            />
+          ) : (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <ActivityIndicator size="large" color="#16a34a" />
+              <Text style={{ marginTop: 16, color: '#6b7280' }}>3D Secure sayfası yükleniyor...</Text>
+            </View>
+          )}
+        </SafeAreaView>
+      </Modal>
+
     </SafeAreaView>
   );
 };
