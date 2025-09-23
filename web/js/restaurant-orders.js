@@ -110,10 +110,13 @@ function initializeSocket() {
         socket = io(API_URL);
         
         socket.on('connect', () => {
-            console.log('✅ Socket.IO connected');
+            console.log('✅ Socket.IO connected with ID:', socket.id);
             console.log('🏪 Connecting to restaurant room:', restaurantId);
             // Connect to restaurant room
             socket.emit('restaurant-connect', restaurantId);
+
+            // Show connection status in UI
+            showToast('✅ Real-time notifications active', 'success');
         });
         
         socket.on('disconnect', () => {
@@ -399,8 +402,12 @@ async function loadOrders() {
     try {
         console.log('Loading orders for restaurant:', restaurantId);
         
-        // Use backend service (handles auth automatically)
-        const orders = await window.backendService.makeRequest(`/orders/restaurant/${restaurantId}`);
+        // Use restaurant-specific orders endpoint with proper auth
+        console.log('🔍 Loading orders via /restaurant/orders endpoint...');
+        const response = await window.backendService.makeRequest(`/restaurant/orders`);
+        console.log('🔍 Restaurant orders response:', response);
+
+        const orders = response.success ? response.data.orders : [];
         
         if (orders && Array.isArray(orders)) {
             console.log('Orders loaded:', orders.length);
@@ -518,20 +525,25 @@ function createOrderCard(order) {
 // Update order status
 async function updateOrderStatus(orderId, newStatus) {
     try {
-        // Use backend service for API calls
-        const response = await window.backendService.makeRequest(`/orders/${orderId}/status`, {
-            method: 'PUT',
+        console.log(`🔄 Updating order ${orderId} to status: ${newStatus}`);
+
+        // Use restaurant orders endpoint for status updates
+        const response = await window.backendService.makeRequest(`/restaurant/orders/${orderId}/status`, {
+            method: 'PATCH',
             body: JSON.stringify({ status: newStatus })
         });
-        
+
+        console.log('🔄 Status update response:', response);
+
         if (response && response.success) {
-            showToast('Sipariş durumu güncellendi', 'success');
+            showToast(`✅ Sipariş ${newStatus === 'confirmed' ? 'onaylandı' : newStatus === 'ready' ? 'hazır' : newStatus === 'completed' ? 'teslim edildi' : 'güncellendi'}`, 'success');
             loadOrders();
         } else {
+            console.error('❌ Status update failed:', response);
             showToast('Güncelleme başarısız', 'error');
         }
     } catch (error) {
-        console.error('Update failed:', error);
+        console.error('❌ Update failed:', error);
         showToast('Bağlantı hatası', 'error');
     }
 }
