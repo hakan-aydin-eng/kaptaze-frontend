@@ -953,6 +953,22 @@ class RestaurantPanel {
     }
 
     setupDataSync() {
+        // Initialize restaurant orders system for real-time notifications
+        if (typeof window.initializeRestaurantOrders === 'function') {
+            console.log('🍽️ Initializing restaurant orders system...');
+            window.initializeRestaurantOrders();
+        } else {
+            console.log('⚠️ Restaurant orders system not available - will retry in 2 seconds');
+            setTimeout(() => {
+                if (typeof window.initializeRestaurantOrders === 'function') {
+                    console.log('🍽️ Retry: Initializing restaurant orders system...');
+                    window.initializeRestaurantOrders();
+                } else {
+                    console.log('❌ Restaurant orders system still not available');
+                }
+            }, 2000);
+        }
+
         // Real-time data synchronization
         setInterval(() => {
             this.updateStatistics();

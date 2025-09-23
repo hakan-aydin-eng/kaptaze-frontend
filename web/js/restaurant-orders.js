@@ -120,9 +120,14 @@ function initializeSocket() {
             console.log('❌ Socket.IO disconnected');
         });
         
-        // Listen for new orders
+        // Listen for new orders (support both event names for compatibility)
         socket.on('new-order', (data) => {
-            console.log('🔔 New order received:', data);
+            console.log('🔔 New order received (new-order):', data);
+            handleNewOrder(data.order);
+        });
+
+        socket.on('newOrder', (data) => {
+            console.log('🔔 New order received (newOrder):', data);
             handleNewOrder(data.order);
         });
     }
