@@ -387,9 +387,15 @@ const CheckoutScreen = ({ route, navigation }) => {
                 // Check if redirected back to app (payment completed)
                 if (navState.url.includes('kaptaze://payment-success')) {
                   setShowWebView(false);
+
+                  // Extract order details from URL
+                  const urlParams = new URLSearchParams(navState.url.split('?')[1] || '');
+                  const orderId = urlParams.get('orderId');
+                  const orderCode = urlParams.get('orderCode');
+
                   Alert.alert(
                     'Ödeme Başarılı! 🎉',
-                    'Siparişiniz onaylandı. Restorana giderek teslim alabilirsiniz.',
+                    `Sipariş kodunuz: ${orderCode || 'N/A'}\n\nSiparişiniz onaylandı. Restorana giderek teslim alabilirsiniz.`,
                     [
                       {
                         text: 'Siparişlerim',
@@ -400,6 +406,9 @@ const CheckoutScreen = ({ route, navigation }) => {
                 } else if (navState.url.includes('kaptaze://payment-failed')) {
                   setShowWebView(false);
                   Alert.alert('Ödeme Hatası', '3D Secure doğrulama başarısız. Lütfen tekrar deneyin.');
+                } else if (navState.url.includes('/payment/3ds-callback')) {
+                  // Backend callback endpoint - wait for redirect
+                  console.log('🔒 Backend processing payment...');
                 }
               }}
               onError={(error) => {
