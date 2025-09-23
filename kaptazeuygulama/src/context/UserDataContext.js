@@ -417,7 +417,8 @@ export const UserDataProvider = ({ children }) => {
     console.log(`📱 Setting up listeners for ${userOrders.length} orders`);
 
     userOrders.forEach((order, index) => {
-      console.log(`📋 Order ${index + 1}: ${order.orderNumber} - Backend ID: ${order.backendOrderId || 'MISSING'} - Status: ${order.status}`);
+      const orderIdentifier = order.id || order.pickupCode || order.orderNumber || 'unknown';
+      console.log(`📋 Order ${index + 1}: ${orderIdentifier} - Backend ID: ${order.backendOrderId || 'MISSING'} - Status: ${order.status}`);
 
       if (order.backendOrderId) {
         const orderEventName = `order-update-${order.backendOrderId}`;
@@ -432,7 +433,14 @@ export const UserDataProvider = ({ children }) => {
           handleOrderStatusUpdate(order.backendOrderId, updateData.status);
         });
       } else {
-        console.log(`❌ Order ${order.orderNumber} has no backendOrderId - cannot listen for updates!`);
+        console.log(`❌ Order ${orderIdentifier} has no backendOrderId - cannot listen for updates!`);
+        console.log(`📝 Order details for debugging:`, {
+          id: order.id,
+          pickupCode: order.pickupCode,
+          backendOrderId: order.backendOrderId,
+          restaurant: order.restaurant?.name,
+          status: order.status
+        });
       }
     });
   };
