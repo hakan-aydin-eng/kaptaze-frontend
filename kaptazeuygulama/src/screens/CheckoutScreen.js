@@ -112,13 +112,22 @@ const CheckoutScreen = ({ route, navigation }) => {
           // 3D Secure verification required
           console.log('🔒 3D Secure verification required');
 
-          // Decode Base64 HTML content
+          // Check if content is Base64 encoded or plain HTML
           try {
-            const decodedHtml = atob(result.threeDSHtmlContent);
-            console.log('🔒 Decoded HTML length:', decodedHtml.length);
-            setThreeDSHtml(decodedHtml);
+            let htmlContent = result.threeDSHtmlContent;
+
+            // If content doesn't contain HTML tags, try Base64 decode
+            if (!htmlContent.includes('<html') && !htmlContent.includes('<!DOCTYPE')) {
+              console.log('🔒 Attempting Base64 decode...');
+              htmlContent = atob(result.threeDSHtmlContent);
+              console.log('🔒 Base64 decoded HTML length:', htmlContent.length);
+            } else {
+              console.log('🔒 Using plain HTML content, length:', htmlContent.length);
+            }
+
+            setThreeDSHtml(htmlContent);
           } catch (error) {
-            console.error('🔒 Base64 decode error:', error);
+            console.error('🔒 HTML processing error:', error);
             setThreeDSHtml(result.threeDSHtmlContent); // Fallback to original
           }
 
