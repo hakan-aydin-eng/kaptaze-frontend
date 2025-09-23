@@ -111,7 +111,17 @@ const CheckoutScreen = ({ route, navigation }) => {
         if (result.status === 'waiting_3d_secure' && result.threeDSHtmlContent) {
           // 3D Secure verification required
           console.log('🔒 3D Secure verification required');
-          setThreeDSHtml(result.threeDSHtmlContent);
+
+          // Decode Base64 HTML content
+          try {
+            const decodedHtml = atob(result.threeDSHtmlContent);
+            console.log('🔒 Decoded HTML length:', decodedHtml.length);
+            setThreeDSHtml(decodedHtml);
+          } catch (error) {
+            console.error('🔒 Base64 decode error:', error);
+            setThreeDSHtml(result.threeDSHtmlContent); // Fallback to original
+          }
+
           setShowWebView(true);
         } else {
           // Payment successful - navigate to success screen
