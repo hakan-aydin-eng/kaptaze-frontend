@@ -21,7 +21,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import apiService from '../services/apiService';
 import { useUserData } from '../context/UserDataContext';
-import NotificationPanel from '../components/NotificationPanel';
+// import NotificationPanel from '../components/NotificationPanel'; // Removed - using Firebase push notifications
+import SurpriseStories from '../components/SurpriseStories';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const getRestaurantIcon = (category) => {
@@ -73,8 +74,7 @@ const MainScreen = ({ navigation }) => {
   const [selectedDistance, setSelectedDistance] = useState(25);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [showNotificationPanel, setShowNotificationPanel] = useState(false);
-  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  // Notification panel removed - using Firebase push notifications instead
 
   // Refresh state
   const [refreshing, setRefreshing] = useState(false);
@@ -94,8 +94,7 @@ const MainScreen = ({ navigation }) => {
         await Promise.allSettled([
           loadRestaurants(),
           loadCategories(),
-          loadUserLocation(),
-          loadUnreadNotificationCount()
+          loadUserLocation()
         ]);
       } catch (error) {
         console.error('❌ Failed to load initial data:', error);
@@ -232,68 +231,7 @@ const MainScreen = ({ navigation }) => {
     setCurrentPage(1);
   };
 
-  const loadUnreadNotificationCount = async () => {
-    try {
-      console.log('🔔 Loading unread notification count...');
-
-      // Get auth token first
-      const authToken = await AsyncStorage.getItem('@kaptaze_user_token');
-      if (!authToken) {
-        console.log('⚠️ No auth token found, skipping notification count load');
-        setUnreadNotificationCount(0);
-        return;
-      }
-
-      // Try to get from backend first
-      try {
-        const response = await apiService.getNotifications();
-        if (response.success && response.data) {
-          const unreadCount = response.data.unreadCount || 0;
-          setUnreadNotificationCount(unreadCount);
-          console.log(`🔔 Unread notifications: ${unreadCount}`);
-          return;
-        }
-      } catch (apiError) {
-        console.log('⚠️ Failed to load from API, trying AsyncStorage:', apiError.message);
-      }
-
-      // Fallback to AsyncStorage
-      const storedNotifications = await AsyncStorage.getItem('@kaptaze_notifications');
-      if (storedNotifications) {
-        const notifications = JSON.parse(storedNotifications);
-        const unreadCount = notifications.filter(notif => !notif.read).length;
-        setUnreadNotificationCount(unreadCount);
-        console.log(`🔔 Unread notifications from storage: ${unreadCount}`);
-      } else {
-        // Demo bildirimler oluştur eğer hiç yoksa
-        const demoNotifications = [
-          {
-            id: 'demo1',
-            title: 'KapTaze\'ye Hoş Geldin! 🎉',
-            body: 'Gıda israfına karşı mücadelede sen de yer al!',
-            timestamp: new Date().toISOString(),
-            read: false,
-            type: 'welcome'
-          },
-          {
-            id: 'demo2',
-            title: 'Yakındaki Fırsatlar 📍',
-            body: 'Çevrende indirimli paketler var, hemen keşfet!',
-            timestamp: new Date(Date.now() - 60000).toISOString(),
-            read: false,
-            type: 'promo'
-          }
-        ];
-        await AsyncStorage.setItem('@kaptaze_notifications', JSON.stringify(demoNotifications));
-        setUnreadNotificationCount(2);
-        console.log('🔔 Created demo notifications for testing');
-      }
-
-    } catch (error) {
-      console.error('❌ Error loading unread notification count:', error);
-      setUnreadNotificationCount(0);
-    }
-  };
+  // loadUnreadNotificationCount function removed - using Firebase push notifications instead
 
   const loadRestaurants = async (searchTerm = '') => {
     try {
@@ -732,25 +670,7 @@ const MainScreen = ({ navigation }) => {
               </View>
             </View>
             
-            <View style={styles.headerButtons}>
-              <TouchableOpacity
-                style={styles.headerButton}
-                onPress={() => {
-                  setShowNotificationPanel(true);
-                  // Refresh notification count when panel is opened
-                  loadUnreadNotificationCount();
-                }}
-              >
-                <Text style={styles.headerButtonIcon}>🔔</Text>
-                {unreadNotificationCount > 0 && (
-                  <View style={styles.notificationBadge}>
-                    <Text style={styles.notificationBadgeText}>
-                      {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
+            {/* Notification button removed - using Firebase push notifications instead */}
           </View>
 
           {/* Search Bar */}
@@ -779,6 +699,8 @@ const MainScreen = ({ navigation }) => {
           </View>
         </LinearGradient>
 
+        {/* Surprise Stories Section */}
+        <SurpriseStories userCity={userLocation} />
 
         {/* Featured Restaurants Section */}
         <View style={styles.featuredSection}>
@@ -1051,19 +973,7 @@ const MainScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* Notification Panel */}
-      <NotificationPanel
-        visible={showNotificationPanel}
-        onClose={() => {
-          setShowNotificationPanel(false);
-          // Refresh notification count when panel is closed
-          loadUnreadNotificationCount();
-        }}
-        onNotificationRead={() => {
-          // Update count when notification is marked as read
-          loadUnreadNotificationCount();
-        }}
-      />
+      {/* Notification panel removed - using Firebase push notifications instead */}
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
@@ -1180,25 +1090,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#ffffff',
   },
-  notificationBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    backgroundColor: '#ef4444',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#ffffff',
-  },
-  notificationBadgeText: {
-    color: '#ffffff',
-    fontSize: 11,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
+  // Notification styles removed - using Firebase push notifications instead
   searchContainer: {
     marginBottom: 16,
   },

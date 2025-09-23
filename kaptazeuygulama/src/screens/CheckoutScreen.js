@@ -403,13 +403,49 @@ const CheckoutScreen = ({ route, navigation }) => {
                       }
                     ]
                   );
+                  return false; // Prevent WebView from handling the deep link
                 } else if (navState.url.includes('kaptaze://payment-failed')) {
                   setShowWebView(false);
                   Alert.alert('Ödeme Hatası', '3D Secure doğrulama başarısız. Lütfen tekrar deneyin.');
+                  return false; // Prevent WebView from handling the deep link
                 } else if (navState.url.includes('/payment/3ds-callback')) {
                   // Backend callback endpoint - wait for redirect
                   console.log('🔒 Backend processing payment...');
                 }
+              }}
+              onShouldStartLoadWithRequest={(request) => {
+                console.log('🔒 WebView should start load:', request.url);
+
+                // Handle deep links manually
+                if (request.url.includes('kaptaze://payment-success')) {
+                  setShowWebView(false);
+
+                  // Extract order details from URL
+                  const urlParams = new URLSearchParams(request.url.split('?')[1] || '');
+                  const orderId = urlParams.get('orderId');
+                  const orderCode = urlParams.get('orderCode');
+
+                  Alert.alert(
+                    'Ödeme Başarılı! 🎉',
+                    `Sipariş kodunuz: ${orderCode || 'N/A'}\n\nSiparişiniz onaylandı. Restorana giderek teslim alabilirsiniz.`,
+                    [
+                      {
+                        text: 'Siparişlerim',
+                        onPress: () => navigation.navigate('Orders')
+                      }
+                    ]
+                  );
+                  return false; // Prevent navigation
+                }
+
+                if (request.url.includes('kaptaze://payment-failed')) {
+                  setShowWebView(false);
+                  Alert.alert('Ödeme Hatası', '3D Secure doğrulama başarısız. Lütfen tekrar deneyin.');
+                  return false; // Prevent navigation
+                }
+
+                // Allow all other navigations
+                return true;
               }}
               onError={(error) => {
                 console.error('🔒 WebView error:', error);

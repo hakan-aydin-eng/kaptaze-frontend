@@ -2,7 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View, Text, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, Platform } from 'react-native';
+import Constants from 'expo-constants';
+
+// Conditional Firebase initialization for Expo Go compatibility
+const isExpoGo = Constants.appOwnership === 'expo';
+if (!isExpoGo) {
+  // Initialize Firebase only in standalone app (production/development builds)
+  require('@react-native-firebase/app');
+  console.log('🔥 Firebase initialized for standalone app');
+} else {
+  console.log('📱 Expo Go detected - Firebase skipped for development');
+}
 
 // Import screens
 import WelcomeScreen from './src/screens/WelcomeScreen';
@@ -15,10 +26,12 @@ import FavoritesScreen from './src/screens/FavoritesScreen';
 import OrdersScreen from './src/screens/OrdersScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import PurchaseScreen from './src/screens/PurchaseScreen';
+import CheckoutScreen from './src/screens/CheckoutScreen';
 import MapScreen from './src/screens/MapScreen';
 import PrivacyScreen from './src/screens/PrivacyScreen';
 import AboutScreen from './src/screens/AboutScreen';
 import SupportScreen from './src/screens/SupportScreen';
+import RatingScreen from './src/screens/RatingScreen';
 import UserDataProvider from './src/context/UserDataContext';
 import AuthProvider, { useAuth } from './src/context/AuthContext';
 
@@ -58,10 +71,12 @@ const AppNavigator = () => {
       <Stack.Screen name="Orders" component={OrdersScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Purchase" component={PurchaseScreen} />
+      <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="Map" component={MapScreen} />
       <Stack.Screen name="Privacy" component={PrivacyScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
+      <Stack.Screen name="Rating" component={RatingScreen} />
     </Stack.Navigator>
   );
 };

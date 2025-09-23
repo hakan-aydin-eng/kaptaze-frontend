@@ -14,7 +14,7 @@ import { useUserData } from '../context/UserDataContext';
 const PurchaseScreen = ({ route, navigation }) => {
   const { restaurant, package: selectedPackage, quantity } = route.params;
   const { addOrder, currentUser } = useUserData();
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentMethod, setPaymentMethod] = useState('online');
   const [notes, setNotes] = useState('');
 
   const totalPrice = selectedPackage.salePrice * quantity;
@@ -29,113 +29,32 @@ const PurchaseScreen = ({ route, navigation }) => {
     return '18:00 - 21:00'; // fallback
   };
 
+  // Sadece online ödeme
   const paymentMethods = [
-    { id: 'cash', name: 'Nakit', icon: '💵' },
-    { id: 'card', name: 'Kredi/Banka Kartı', icon: '💳' },
     { id: 'online', name: 'Online Ödeme', icon: '📱' },
   ];
 
   const confirmPurchase = async () => {
-    Alert.alert(
-      'Rezervasyonu Onayla',
-      `${restaurant.name}'dan ${selectedPackage.name} (${quantity} adet) rezerve etmek istiyorsunuz?\n\nToplam: ₺${totalPrice}\n\nRezerve ettiğiniz paketi restorana giderek teslim alabilirsiniz.`,
-      [
-        { text: 'İptal', style: 'cancel' },
-        { 
-          text: 'Rezerve Et', 
-          onPress: async () => {
-            try {
-              // Debug logging
-              console.log('Restaurant data:', restaurant);
-              console.log('Package data:', selectedPackage);
-              
-              // Prepare order data for backend
-              const orderData = {
-                customer: {
-                  id: currentUser?.id || 'guest_' + Date.now(),
-                  name: currentUser?.name || 'Mobil Kullanıcı',
-                  phone: currentUser?.phone || '05XX XXX XX XX',
-                  address: 'Restorana gelip alacak'
-                },
-                restaurantId: restaurant._id || restaurant.id,
-                items: [{
-                  productId: selectedPackage.id || selectedPackage._id,
-                  name: selectedPackage.name,
-                  price: selectedPackage.salePrice,
-                  quantity: quantity,
-                  total: selectedPackage.salePrice * quantity
-                }],
-                totalAmount: totalPrice,
-                paymentMethod: paymentMethod,
-                notes: notes || 'Mobil uygulama rezervasyonu'
-              };
+    // Direkt online ödeme ekranına yönlendir
+    const basketItems = [{
+      _id: selectedPackage._id || selectedPackage.id,
+      packageName: selectedPackage.name,
+      price: selectedPackage.salePrice,
+      discountedPrice: selectedPackage.salePrice,
+      originalPrice: selectedPackage.originalPrice,
+      quantity: quantity
+    }];
 
-              // Debug order data
-              console.log('Order data being sent:', orderData);
-
-              // Send order to backend
-              const API_URL = 'https://kaptaze-backend-api.onrender.com';
-              const response = await fetch(`${API_URL}/orders/create`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(orderData)
-              });
-
-              console.log('Response status:', response.status);
-              const result = await response.json();
-              console.log('Response data:', result);
-              
-              if (response.ok && result.success) {
-                // Also save to local context
-                await addOrder({
-                  restaurant,
-                  package: selectedPackage,
-                  quantity,
-                  totalPrice,
-                  originalPrice: originalTotal,
-                  paymentMethod,
-                  orderId: result.orderId
-                });
-
-                Alert.alert(
-                  'Başarılı! 🎉',
-                  `Rezervasyonunuz alındı. Rezervasyon No: #${result.orderId.slice(-6)}\n\nPaketinizi ${restaurant.name} restoranına giderek teslim alabilirsiniz.\n\nTeslim saatleri: ${getPickupHours()}`,
-                  [
-                    { 
-                      text: 'Siparişlerim', 
-                      onPress: () => navigation.navigate('Orders')
-                    },
-                    { 
-                      text: 'Ana Sayfa', 
-                      onPress: () => navigation.navigate('Main')
-                    }
-                  ]
-                );
-              } else {
-                // Handle stock errors specifically
-                if (result.stockError && result.details) {
-                  const stockMessage = result.details.join('\n\n');
-                  Alert.alert(
-                    '📦 Stok Yetersiz',
-                    `Üzgünüz, aşağıdaki paketlerde stok sorunu var:\n\n${stockMessage}\n\nLütfen farklı miktarlarda tekrar deneyin.`,
-                    [
-                      { text: 'Tamam', onPress: () => navigation.goBack() }
-                    ]
-                  );
-                } else {
-                  Alert.alert('Hata', result.error || 'Rezervasyon oluşturulurken bir hata oluştu.');
-                }
-              }
-            } catch (error) {
-              console.error('Order creation error:', error);
-              Alert.alert('Hata', 'Rezervasyon oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
-            }
-          }
-        }
-      ]
-    );
+    navigation.navigate('Checkout', {
+      basketItems,
+      totalAmount: totalPrice,
+      restaurant: {
+        _id: restaurant._id,
+        name: restaurant.name,
+        district: restaurant.district || restaurant.location?.district || 'Merkez',
+        city: restaurant.city || restaurant.location?.city || 'Antalya'
+      }
+    });
   };
 
   return (

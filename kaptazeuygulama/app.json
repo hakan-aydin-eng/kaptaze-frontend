@@ -12,6 +12,9 @@
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "newArchEnabled": false
           }
         }
       ],
@@ -20,7 +23,17 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır."
         }
-      ]
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#16a34a",
+          "defaultChannel": "default"
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging"
     ],
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -57,6 +70,7 @@
       "package": "com.kaptaze.app",
       "versionCode": 2,
       "jsEngine": "hermes",
+      "googleServicesFile": "./android/app/google-services.json",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"

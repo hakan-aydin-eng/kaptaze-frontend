@@ -12,7 +12,14 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+// Conditional import for web compatibility
+let MapView, Marker, PROVIDER_GOOGLE;
+if (Platform.OS !== 'web') {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  Marker = maps.Marker;
+  PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
+}
 import { useUserData } from '../context/UserDataContext';
 import apiService from '../services/apiService';
 
@@ -146,15 +153,16 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
     }
   };
 
-  const goToPurchase = () => {
-    if (selectedPackage) {
-      navigation.navigate('Purchase', { 
-        restaurant, 
-        package: selectedPackage, 
-        quantity 
+  const goToPurchase = (packageToOrder) => {
+    if (packageToOrder) {
+      setSelectedPackage(packageToOrder);
+      navigation.navigate('Purchase', {
+        restaurant,
+        package: packageToOrder,
+        quantity: 1
       });
     } else {
-      Alert.alert('Uyarı', 'Lütfen bir paket seçin.');
+      Alert.alert('Uyarı', 'Paket bilgisi bulunamadı.');
     }
   };
 
@@ -292,12 +300,9 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                     </View>
                   </View>
                   
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.packageReserveButton}
-                    onPress={() => {
-                      setSelectedPackage(pkg);
-                      goToPurchase();
-                    }}
+                    onPress={() => goToPurchase(pkg)}
                   >
                     <Text style={styles.packageReserveText}>Rezerve Et</Text>
                   </TouchableOpacity>

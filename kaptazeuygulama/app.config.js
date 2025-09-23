@@ -8,7 +8,7 @@ export default {
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
-    newArchEnabled: false,
+    newArchEnabled: true,
     plugins: [
       [
         "expo-build-properties",
@@ -19,7 +19,8 @@ export default {
           },
           "android": {
             "compileSdkVersion": 34,
-            "targetSdkVersion": 34
+            "targetSdkVersion": 34,
+            "newArchEnabled": true
           }
         }
       ],
@@ -36,7 +37,9 @@ export default {
           "color": "#16a34a",
           "defaultChannel": "default"
         }
-      ]
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging"
     ],
     splash: {
       image: "./assets/splash-icon.png",
@@ -48,6 +51,7 @@ export default {
       bundleIdentifier: "com.kaptaze.app",
       buildNumber: "12",
       jsEngine: "hermes",
+      googleServicesFile: "./GoogleService-Info.plist",
       infoPlist: {
         NSLocationWhenInUseUsageDescription: "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
         NSLocationAlwaysUsageDescription: "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
@@ -72,8 +76,14 @@ export default {
         backgroundColor: "#16a34a"
       },
       package: "com.kaptaze.app",
+      versionCode: 2,
       edgeToEdgeEnabled: true,
       jsEngine: "hermes",
+      googleServicesFile: "./android/app/google-services.json",
+      permissions: [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
       config: {
         googleMaps: {
           apiKey: "AIzaSyBGEzq8t3l5L1H4n5v8Y9yW1uF9O5dQ7X2"

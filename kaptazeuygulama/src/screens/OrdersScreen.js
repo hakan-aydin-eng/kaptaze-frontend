@@ -187,6 +187,70 @@ const OrdersScreen = ({ navigation }) => {
                       <Text style={styles.pickupIcon}>⏰</Text>
                       <Text style={styles.pickupText}>Teslim: {order.pickupTime}</Text>
                     </View>
+
+                    {/* Status-specific notifications */}
+                    {order.status === 'pending' && (
+                      <View style={styles.statusNotification}>
+                        <Text style={styles.statusNotificationText}>
+                          ⏳ Siparişin onay bekliyor! Restaurant en kısa sürede onaylayacak.
+                        </Text>
+                      </View>
+                    )}
+
+                    {order.status === 'confirmed' && (
+                      <View style={styles.statusNotification}>
+                        <Text style={styles.statusNotificationText}>
+                          ✅ Siparişin onaylandı! Restaurant paketini hazırlıyor.
+                        </Text>
+                      </View>
+                    )}
+
+                    {order.status === 'ready' && (
+                      <View style={styles.statusNotification}>
+                        <Text style={styles.statusNotificationText}>
+                          🎉 Paketiniz hazır! Hemen alabilirsiniz.
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Puanlama teşviki - tüm aktif siparişlerde göster */}
+                    {(order.status === 'pending' || order.status === 'confirmed' || order.status === 'ready') && !order.isRated && (
+                      <View style={styles.ratingEncouragement}>
+                        <Text style={styles.ratingEncouragementText}>
+                          ⭐ Teslim aldıktan sonra puanlamayı unutma! 😊
+                        </Text>
+                        <Text style={styles.photoEncouragementText}>
+                          📸 Sürpriz paketinin fotoğrafını çekip puanlama ekranına ekleyebilirsin! 🎁
+                        </Text>
+                      </View>
+                    )}
+
+                    {order.status === 'completed' && !order.isRated && (
+                      <View style={styles.ratingReminder}>
+                        <Text style={styles.ratingReminderText}>
+                          ⭐ Teslim aldıktan sonra puanlamayı unutma! 😊
+                        </Text>
+                        <Text style={styles.photoReminderText}>
+                          📸 Sürpriz paketinin fotoğrafını çekip puanlama ekranına ekleyebilirsin! 🎁
+                        </Text>
+                      </View>
+                    )}
+
+                    {order.status === 'completed' && order.isRated && (
+                      <View style={styles.statusNotification}>
+                        <Text style={styles.statusNotificationText}>
+                          💚 Teşekkürler! Puanlamanız kaydedildi.
+                        </Text>
+                      </View>
+                    )}
+
+                    {order.status === 'cancelled' && (
+                      <View style={styles.cancelledNotification}>
+                        <Text style={styles.cancelledNotificationText}>
+                          ❌ Bu sipariş iptal edildi.
+                        </Text>
+                      </View>
+                    )}
                   </View>
 
                   {/* Action Buttons */}
@@ -202,7 +266,7 @@ const OrdersScreen = ({ navigation }) => {
                       
                       {/* Durum butonları */}
                       {(order.status === 'ready' || order.status === 'pending') && (
-                        <TouchableOpacity 
+                        <TouchableOpacity
                           style={[
                             styles.actionButton,
                             order.status === 'ready' ? styles.readyButton : styles.cancelButton
@@ -212,6 +276,16 @@ const OrdersScreen = ({ navigation }) => {
                           <Text style={styles.actionButtonText}>
                             {order.status === 'ready' ? 'Teslim Aldım' : 'İptal Et'}
                           </Text>
+                        </TouchableOpacity>
+                      )}
+
+                      {/* Rating button for completed orders */}
+                      {order.status === 'completed' && !order.isRated && (
+                        <TouchableOpacity
+                          style={[styles.actionButton, styles.ratingButton]}
+                          onPress={() => navigation.navigate('Rating', { order })}
+                        >
+                          <Text style={styles.actionButtonText}>⭐ Puanla</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -509,6 +583,78 @@ const styles = StyleSheet.create({
     color: '#dc2626',
     fontSize: 16,
     fontWeight: '600',
+  },
+  ratingReminder: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  ratingReminderText: {
+    fontSize: 12,
+    color: '#f59e0b',
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  photoReminderText: {
+    fontSize: 11,
+    color: '#6b7280',
+    fontStyle: 'italic',
+  },
+  ratingButton: {
+    backgroundColor: '#f59e0b',
+  },
+  statusNotification: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    backgroundColor: '#f0f9ff',
+    padding: 8,
+    borderRadius: 6,
+  },
+  statusNotificationText: {
+    fontSize: 12,
+    color: '#0369a1',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  cancelledNotification: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    backgroundColor: '#fef2f2',
+    padding: 8,
+    borderRadius: 6,
+  },
+  cancelledNotificationText: {
+    fontSize: 12,
+    color: '#dc2626',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  ratingEncouragement: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    backgroundColor: '#fef3c7',
+    padding: 8,
+    borderRadius: 6,
+  },
+  ratingEncouragementText: {
+    fontSize: 12,
+    color: '#d97706',
+    fontWeight: '500',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  photoEncouragementText: {
+    fontSize: 11,
+    color: '#92400e',
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
 });
 

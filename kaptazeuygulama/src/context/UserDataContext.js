@@ -4,8 +4,18 @@ import io from 'socket.io-client';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
+import Constants from 'expo-constants';
 import apiService from '../services/apiService';
+
+// Conditional Firebase messaging import for Expo Go compatibility
+const isExpoGo = Constants.appOwnership === 'expo';
+let messaging = null;
+if (!isExpoGo) {
+  messaging = require('@react-native-firebase/messaging').default;
+  console.log('🔥 Firebase messaging loaded for standalone app');
+} else {
+  console.log('📱 Expo Go detected - Firebase messaging skipped');
+}
 
 const UserDataContext = createContext();
 
@@ -270,16 +280,17 @@ export const UserDataProvider = ({ children }) => {
       }
 
       try {
-        // Request Firebase messaging permission
-        const authStatus = await messaging().requestPermission();
-        const enabled = authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-                       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+        if (messaging) {
+          // Request Firebase messaging permission (only in standalone app)
+          const authStatus = await messaging().requestPermission();
+          const enabled = authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+                         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-        if (enabled) {
-          console.log('✅ Firebase messaging authorization status:', authStatus);
+          if (enabled) {
+            console.log('✅ Firebase messaging authorization status:', authStatus);
 
-          // Get Firebase FCM token
-          const fcmToken = await messaging().getToken();
+            // Get Firebase FCM token
+            const fcmToken = await messaging().getToken();
 
           console.log('✅ Firebase FCM token obtained:', fcmToken);
           setPushToken(fcmToken);
@@ -287,16 +298,31 @@ export const UserDataProvider = ({ children }) => {
           // Save token to AsyncStorage
           await AsyncStorage.setItem('@kaptaze_push_token', fcmToken);
 
-          // Send token to backend when user logs in
-          if (currentUser) {
-            await sendPushTokenToBackend(fcmToken);
+            // Send token to backend when user logs in
+            if (currentUser) {
+              await sendPushTokenToBackend(fcmToken);
+            }
+          } else {
+            console.log('❌ Firebase messaging permission denied');
           }
         } else {
-          console.log('❌ Firebase messaging permission denied');
+          // Expo Go fallback - use Expo push notifications instead
+          console.log('📱 Expo Go detected - using Expo push notifications as fallback');
+          const expoPushToken = (await Notifications.getExpoPushTokenAsync()).data;
+          console.log('✅ Expo push token obtained:', expoPushToken);
+          setPushToken(expoPushToken);
+
+          // Save token to AsyncStorage
+          await AsyncStorage.setItem('@kaptaze_push_token', expoPushToken);
+
+          // Send token to backend when user logs in
+          if (currentUser) {
+            await sendPushTokenToBackend(expoPushToken);
+          }
         }
 
       } catch (error) {
-        console.log('❌ Error getting Firebase FCM token:', error);
+        console.log('❌ Error getting push token:', error);
       }
     } else {
       console.log('📱 Must use physical device for Push Notifications');
@@ -720,6 +746,26 @@ export const UserDataProvider = ({ children }) => {
     }
   };
 
+  const updateOrderRating = async (orderId, ratingData) => {
+    const updatedOrders = orders.map(order =>
+      order.id === orderId ? {
+        ...order,
+        rating: ratingData.rating,
+        comment: ratingData.comment,
+        ratingPhotos: ratingData.photos,
+        isRated: ratingData.isRated || true,
+        ratedAt: new Date().toISOString()
+      } : order
+    );
+
+    setOrders(updatedOrders);
+    const userId = currentUser?.email || currentUser?.id;
+    if (userId) {
+      const userKeys = getUserSpecificKeys(userId);
+      await saveUserData(userKeys.ORDERS, updatedOrders);
+    }
+  };
+
   const getUserOrders = () => {
     if (!currentUser) return [];
     const userId = currentUser.email || currentUser.id;
@@ -800,6 +846,7 @@ export const UserDataProvider = ({ children }) => {
     orders: getUserOrders(),
     addOrder,
     updateOrderStatus,
+    updateOrderRating,
     
     // Stats
     getUserStats,
