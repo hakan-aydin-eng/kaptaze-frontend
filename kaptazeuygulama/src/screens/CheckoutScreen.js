@@ -447,6 +447,47 @@ const CheckoutScreen = ({ route, navigation }) => {
                 // Allow all other navigations
                 return true;
               }}
+              onMessage={(event) => {
+                console.log('🔒 WebView message received:', event.nativeEvent.data);
+
+                try {
+                  const message = JSON.parse(event.nativeEvent.data);
+                  console.log('🔒 Parsed message:', message);
+
+                  if (message.type === 'PAYMENT_SUCCESS' || message.type === 'PAYMENT_SUCCESS_AUTO_CLOSE') {
+                    setShowWebView(false);
+
+                    Alert.alert(
+                      'Ödeme Başarılı! 🎉',
+                      `Sipariş kodunuz: ${message.orderCode || 'N/A'}\n\nSiparişiniz onaylandı. Restorana giderek teslim alabilirsiniz.`,
+                      [
+                        {
+                          text: 'Siparişlerim',
+                          onPress: () => navigation.navigate('Orders')
+                        }
+                      ]
+                    );
+                  } else if (message.type === 'PAYMENT_FAILED' || message.type === 'PAYMENT_FAILED_AUTO_CLOSE') {
+                    setShowWebView(false);
+
+                    Alert.alert(
+                      'Ödeme Hatası',
+                      message.error || '3D Secure doğrulama başarısız. Lütfen tekrar deneyin.',
+                      [
+                        {
+                          text: 'Tamam',
+                          onPress: () => {}
+                        }
+                      ]
+                    );
+                  }
+                } catch (error) {
+                  console.error('🔒 Error parsing WebView message:', error);
+                }
+              }}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              allowsInlineMediaPlayback={true}
               onError={(error) => {
                 console.error('🔒 WebView error:', error);
                 setShowWebView(false);
