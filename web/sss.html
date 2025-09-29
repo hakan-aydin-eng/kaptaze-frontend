@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sıkça Sorulan Sorular - KapTaze</title>
+    <meta name="description" content="KapTaze hakkında en çok merak edilen sorulara yanıtlar. Gıda israfını önleme platformu hakkında her şey.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="./assets/favicon.png">
+    <link rel="apple-touch-icon" href="./assets/favicon.png">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #16a34a;
+            --dark-green: #0f7938;
+            --light-green: #22c55e;
+            --accent-orange: #fb923c;
+            --background: #f8fafc;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+            background: var(--background);
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--white);
+            box-shadow: 0 2px 10px var(--shadow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-green);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-green);
+        }
+
+        .back-button {
+            background: var(--primary-green);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            font-weight: 600;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(22, 163, 74, 0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-top: 100px;
+            padding: 2rem;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 3rem 2rem;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-radius: 20px;
+        }
+
+        .page-badge {
+            display: inline-block;
+            background: var(--primary-green);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .page-subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* FAQ Sections */
+        .faq-section {
+            margin-bottom: 3rem;
+            background: var(--white);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px var(--shadow);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--primary-green);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .faq-item {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 1.5rem;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .faq-question {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .faq-question:hover {
+            color: var(--primary-green);
+        }
+
+        .faq-answer {
+            color: var(--text-light);
+            line-height: 1.6;
+            padding-left: 1.5rem;
+        }
+
+        .faq-answer ul {
+            margin: 0.5rem 0;
+            padding-left: 1rem;
+        }
+
+        .faq-answer li {
+            margin-bottom: 0.3rem;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .main-content {
+                padding: 1rem;
+                margin-top: 80px;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .faq-section {
+                padding: 1.5rem;
+            }
+
+            .faq-answer {
+                padding-left: 1rem;
+            }
+        }
+
+        /* Animation effects */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .faq-section {
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .faq-section:nth-child(even) {
+            animation-delay: 0.1s;
+        }
+
+        .faq-section:nth-child(odd) {
+            animation-delay: 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="./assets/favicon.png" alt="KapTaze" style="width: 32px; height: 32px; border-radius: 50%;">
+                kaptaze
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Ana Sayfa</a>
+                <a href="index.html#how-it-works">Nasıl Çalışır?</a>
+                <a href="index.html#mission">Amacımız</a>
+                <a href="index.html#impact">Etkimiz</a>
+                <a href="index.html" class="back-button">← Ana Sayfaya Dön</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-badge">❓ Yardım</div>
+            <h1 class="page-title">Sıkça Sorulan Sorular</h1>
+            <p class="page-subtitle">KapTaze hakkında en çok merak edilen sorulara yanıtlar</p>
+        </div>
+
+        <!-- Genel Sorular -->
+        <div class="faq-section">
+            <h2 class="section-title">🌱 Genel Sorular</h2>
+
+            <div class="faq-item">
+                <div class="faq-question">❓ KapTaze nedir?</div>
+                <div class="faq-answer">
+                    KapTaze, gıda israfını önlemek için kurulmuş bir platformdur. Restoranların, kafelerin arta kalan kaliteli yemeklerini uygun fiyatlarla satın alabilirsiniz.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">🌍 Nasıl çevre dostu bir platform?</div>
+                <div class="faq-answer">
+                    Her satın aldığınız yemek paketi ile:
+                    <ul>
+                        <li>🌍 Gıda israfını azaltıyorsunuz</li>
+                        <li>💚 CO2 emisyonunu düşürüyorsunuz</li>
+                        <li>♻️ Sürdürülebilir tüketime katkıda bulunuyorsunuz</li>
+                        <li>🍃 Çevreyi koruyorsunuz</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">💰 Ne kadar tasarruf ediyorum?</div>
+                <div class="faq-answer">
+                    Normal fiyatların %50-70'i kadar tasarruf edebilirsiniz! Hem cebiniz hem de çevre kazanır.
+                </div>
+            </div>
+        </div>
+
+        <!-- Sürpriz Paketler -->
+        <div class="faq-section">
+            <h2 class="section-title">📦 Sürpriz Paketler</h2>
+
+            <div class="faq-item">
+                <div class="faq-question">🎁 Sürpriz paket nedir?</div>
+                <div class="faq-answer">
+                    Restoranların günün sonunda kalan kaliteli yemeklerini bir araya getirdiği paketlerdir. İçeriği önceden bilemezsiniz ama her zaman değerli yemekler bulursunuz.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">🔍 Paket içeriğini önceden bilebilir miyim?</div>
+                <div class="faq-answer">
+                    Hayır, bu "sürpriz"in güzelliği! Ama hangi restorandan aldığınızı bilir, o işletmenin kaliteli yemeklerini bulursunuz.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">⏰ Paketler ne zaman hazır olur?</div>
+                <div class="faq-answer">
+                    Esnafın paket eklediği herhangi bir saat :)
+                </div>
+            </div>
+        </div>
+
+        <!-- İşletmeler ve Ortaklık -->
+        <div class="faq-section">
+            <h2 class="section-title">🏪 İşletmeler ve Ortaklık</h2>
+
+            <div class="faq-item">
+                <div class="faq-question">🏢 Hangi işletmeler var?</div>
+                <div class="faq-answer">
+                    <ul>
+                        <li>🍕 Restoranlar</li>
+                        <li>☕ Kafeler</li>
+                        <li>🥖 Fırınlar</li>
+                        <li>🏪 Marketler</li>
+                        <li>🌸 Çiçekçiler</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">✅ Kalite garantisi var mı?</div>
+                <div class="faq-answer">
+                    Evet! Tüm yemekler aynı gün hazırlanmış, taze ve güvenlidir. Sadece fazla üretilmiş olan kaliteli yemeklerdir.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">🤝 İşletme sahibiyim, nasıl katılabilirim?</div>
+                <div class="faq-answer">
+                    "İş Ortağı Ol" sayfasından başvuru yapın. Arta kalan yemeklerinizi değerlendirin, hem kazanç elde edin hem de israfı önleyin.
+                </div>
+            </div>
+        </div>
+
+        <!-- Sipariş ve Alma Saatleri -->
+        <div class="faq-section">
+            <h2 class="section-title">⏰ Sipariş ve Alma Saatleri</h2>
+
+            <div class="faq-item">
+                <div class="faq-question">🕐 Ne zaman sipariş verebilirim?</div>
+                <div class="faq-answer">
+                    Paketler genellikle 15:00-21:00 saatleri arasında aktif olur. Her işletmenin kendi programı vardır.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">⏱️ Son alma saati nedir?</div>
+                <div class="faq-answer">
+                    İşletmeye göre değişir, genellikle 20:00-22:00 arası son alma saatleridir. Uygulamada her paketin son alma saati belirtilir.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">📅 Rezervasyon yapabilir miyim?</div>
+                <div class="faq-answer">
+                    Evet! Beğendiğiniz paketi rezerve edip belirtilen saatte alabilirsiniz.
+                </div>
+            </div>
+        </div>
+
+        <!-- Fiyat ve Ödeme -->
+        <div class="faq-section">
+            <h2 class="section-title">💰 Fiyat ve Ödeme</h2>
+
+            <div class="faq-item">
+                <div class="faq-question">💵 Fiyatlar nasıl belirleniyor?</div>
+                <div class="faq-answer">
+                    Normal fiyatların %30-50'si kadar. İşletme kendi indirim oranını belirler.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">💳 Hangi ödeme yöntemleri kabul ediliyor?</div>
+                <div class="faq-answer">
+                    Sadece online ödeme kabul edilmektedir:
+                    <ul>
+                        <li>💳 Kredi/Banka kartı</li>
+                        <li>📱 Mobil ödeme</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">🔄 İade alabilir miyim?</div>
+                <div class="faq-answer">
+                    Alamadığınız rezervasyonlar için iade yapılır. Alınan paketlerde özel durumlar değerlendirilir.
+                </div>
+            </div>
+        </div>
+
+        <!-- Uygulama Kullanımı -->
+        <div class="faq-section">
+            <h2 class="section-title">📱 Uygulama Kullanımı</h2>
+
+            <div class="faq-item">
+                <div class="faq-question">🚀 Nasıl çalışır?</div>
+                <div class="faq-answer">
+                    <ul>
+                        <li>📱 Uygulamamızı indirin (App Store veya Google Play)</li>
+                        <li>📍 Konumunuzu belirleyin</li>
+                        <li>📦 Çevrenizdeki aktif paketleri görün</li>
+                        <li>❤️ Beğendiğinizi rezerve edin</li>
+                        <li>💳 Online ödeme yapın</li>
+                        <li>🏃‍♂️ Belirtilen saatte alın</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">🔔 Bildirim alabilir miyim?</div>
+                <div class="faq-answer">
+                    Evet! Favori işletmelerinizden yeni paket gelince bildirim alabilirsiniz.
+                </div>
+            </div>
+        </div>
+
+        <!-- Sosyal Etki -->
+        <div class="faq-section">
+            <h2 class="section-title">🤝 Sosyal Etki</h2>
+
+            <div class="faq-item">
+                <div class="faq-question">📊 Kaç kg gıda israfını önledim?</div>
+                <div class="faq-answer">
+                    Profilinizde şimdiye kadar kurtardığınız yemek miktarını ve çevresel etkisini görebilirsiniz.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">🌍 Toplumsal faydası nedir?</div>
+                <div class="faq-answer">
+                    <ul>
+                        <li>🌍 Çevreyi koruma</li>
+                        <li>💰 Ekonomik tasarruf</li>
+                        <li>🤝 Yerel işletmeleri destekleme</li>
+                        <li>🍽️ Kaliteli yemeğe erişim</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teknik Destek -->
+        <div class="faq-section">
+            <h2 class="section-title">📞 Teknik Destek</h2>
+
+            <div class="faq-item">
+                <div class="faq-question">🛠️ Uygulama çalışmıyor, ne yapmalıyım?</div>
+                <div class="faq-answer">
+                    <ul>
+                        <li>Uygulamayı kapatıp tekrar açın</li>
+                        <li>İnternet bağlantınızı kontrol edin</li>
+                        <li>Uygulama güncellemelerini kontrol edin</li>
+                        <li>Sorun devam ederse destek@kaptaze.com'a yazın</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">📧 Müşteri hizmetlerine nasıl ulaşabilirim?</div>
+                <div class="faq-answer">
+                    <ul>
+                        <li>📧 E-posta: destek@kaptaze.com</li>
+                        <li>📱 Uygulama içi destek</li>
+                        <li>🌐 Web sitesi: kaptaze.com/iletisim</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">🕐 Çalışma saatleri nedir?</div>
+                <div class="faq-answer">
+                    Müşteri hizmetlerimiz 7/24 hizmet vermektedir. İşletmelerimizin çalışma saatleri genellikle 11:00-22:00 arasındadır.
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Home Button -->
+        <div style="text-align: center; margin-top: 3rem;">
+            <a href="index.html" class="back-button">← Ana Sayfaya Dön</a>
+        </div>
+    </main>
+
+    <script>
+        // Add click functionality to FAQ questions
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const answer = question.nextElementSibling;
+                const isVisible = answer.style.display === 'block';
+
+                // Hide all answers
+                document.querySelectorAll('.faq-answer').forEach(ans => {
+                    ans.style.display = 'none';
+                });
+
+                // Show clicked answer if it wasn't visible
+                if (!isVisible) {
+                    answer.style.display = 'block';
+                }
+            });
+        });
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
