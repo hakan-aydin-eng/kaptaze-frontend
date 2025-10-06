@@ -1,10 +1,4 @@
-# Domain Yönlendirmeleri
-# kaptaze.com'dan kapkazan.com'a otomatik yönlendirme (301 - kalıcı)
-https://kaptaze.com/* https://kapkazan.com/:splat 301!
-https://www.kaptaze.com/* https://kapkazan.com/:splat 301!
-http://kaptaze.com/* https://kapkazan.com/:splat 301!
-http://www.kaptaze.com/* https://kapkazan.com/:splat 301!
-
+# kapkazan.com Domain Yönlendirmeleri
 # www'li versiyonu www'siz versiyona yönlendir
 https://www.kapkazan.com/* https://kapkazan.com/:splat 301!
 http://www.kapkazan.com/* https://kapkazan.com/:splat 301!
