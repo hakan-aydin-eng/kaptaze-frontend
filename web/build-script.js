@@ -21,7 +21,11 @@ const htmlFiles = [
     'admin-login-v3.html',
     'customer-registration-v2.html',
     'restaurant-login.html',
-    'restaurant-panel.html'
+    'restaurant-panel.html',
+    'sss.html',
+    'kvkk.html',
+    'gizlilik-politikasi.html',
+    'kullanim-kosullari.html'
 ];
 
 htmlFiles.forEach(file => {
@@ -31,8 +35,8 @@ htmlFiles.forEach(file => {
     }
 });
 
-// Copy assets, css directories (js will be handled separately)
-const directories = ['assets', 'css'];
+// Copy assets, css, images directories (js will be handled separately)
+const directories = ['assets', 'css', 'images'];
 directories.forEach(dir => {
     if (fs.existsSync(dir)) {
         copyDirectory(dir, path.join(distDir, dir));
