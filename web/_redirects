@@ -1,12 +1,13 @@
-# Restaurant routes (these take priority)
-/restaurant-login /restaurant-login.html 200
-/restaurant-panel /restaurant-panel.html 200
+# Domain Yönlendirmeleri
+# kaptaze.com'dan kapkazan.com'a otomatik yönlendirme (301 - kalıcı)
+https://kaptaze.com/* https://kapkazan.com/:splat 301!
+https://www.kaptaze.com/* https://kapkazan.com/:splat 301!
+http://kaptaze.com/* https://kapkazan.com/:splat 301!
+http://www.kaptaze.com/* https://kapkazan.com/:splat 301!
 
-# Admin routes
-/admin-login /admin-login-v3.html 200
+# www'li versiyonu www'siz versiyona yönlendir
+https://www.kapkazan.com/* https://kapkazan.com/:splat 301!
+http://www.kapkazan.com/* https://kapkazan.com/:splat 301!
 
-# Root redirect
-/ /index.html 200
-
-# SPA fallback (only for unmatched routes)
-/* /index.html 200
+# HTTP'yi HTTPS'e yönlendir
+http://kapkazan.com/* https://kapkazan.com/:splat 301!

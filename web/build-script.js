@@ -110,13 +110,21 @@ function copyDirectory(src, dest) {
     items.forEach(item => {
         const srcPath = path.join(src, item);
         const destPath = path.join(dest, item);
-        
+
         if (fs.lstatSync(srcPath).isDirectory()) {
             copyDirectory(srcPath, destPath);
         } else {
             fs.copyFileSync(srcPath, destPath);
         }
     });
+}
+
+// Copy _redirects file for Netlify domain redirection
+const redirectsPath = path.join(__dirname, '_redirects');
+const redirectsDestPath = path.join(distDir, '_redirects');
+if (fs.existsSync(redirectsPath)) {
+    fs.copyFileSync(redirectsPath, redirectsDestPath);
+    console.log('✅ Copied _redirects file for domain redirection');
 }
 
 console.log('✨ Build completed successfully!');
