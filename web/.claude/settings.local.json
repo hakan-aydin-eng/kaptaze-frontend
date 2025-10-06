@@ -32,7 +32,9 @@
       "Bash(node:*)",
       "Bash(timeout:*)",
       "Bash(pm2 restart:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(nslookup:*)",
+      "Bash(netlify:*)"
     ],
     "deny": [],
     "ask": [],
