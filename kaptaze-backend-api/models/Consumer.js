@@ -97,6 +97,24 @@ const consumerSchema = new mongoose.Schema({
         version: String,
         deviceId: String
     },
+    // Push notification token
+    pushToken: {
+        token: String,
+        platform: {
+            type: String,
+            enum: ['ios', 'android', 'expo']
+        },
+        deviceInfo: {
+            brand: String,
+            model: String,
+            osVersion: String
+        },
+        lastUpdated: {
+            type: Date,
+            default: Date.now
+        }
+    },
+
     
     // Notification preferences
     notifications: {

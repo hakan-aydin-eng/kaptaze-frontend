@@ -252,8 +252,8 @@ const MainScreen = ({ navigation }) => {
         const apiResponse = await apiService.getRestaurants(filters);
         console.log('📊 API response:', apiResponse);
         
-        if (apiResponse.success && apiResponse.data) {
-          apiRestaurants = apiResponse.data;
+        if (apiResponse.success && apiResponse.data && apiResponse.data.restaurants) {
+          apiRestaurants = apiResponse.data.restaurants;
           console.log('✅ API restaurants loaded:', apiRestaurants.length);
           console.log('📋 Restaurant names:', apiRestaurants.map(r => r.name));
           
@@ -392,8 +392,8 @@ const MainScreen = ({ navigation }) => {
         // Fallback to API call if restaurants not loaded yet
         const response = await apiService.getRestaurants();
         
-        if (response.success && response.data) {
-          const apiRestaurants = response.data;
+        if (response.success && response.data && response.data.restaurants) {
+          const apiRestaurants = response.data.restaurants;
           setFeaturedRestaurants(apiRestaurants.filter(r => {
             const rating = typeof r.rating === 'object' ? r.rating.average : r.rating;
             return rating >= 4.0;
