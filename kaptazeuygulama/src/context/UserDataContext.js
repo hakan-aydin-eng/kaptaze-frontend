@@ -298,10 +298,8 @@ export const UserDataProvider = ({ children }) => {
           // Save token to AsyncStorage
           await AsyncStorage.setItem('@kaptaze_push_token', fcmToken);
 
-            // Send token to backend when user logs in
-            if (currentUser) {
-              await sendPushTokenToBackend(fcmToken);
-            }
+            // Send token to backend (works without login)
+            await sendPushTokenToBackend(fcmToken);
           } else {
             console.log('❌ Firebase messaging permission denied');
           }
@@ -315,10 +313,8 @@ export const UserDataProvider = ({ children }) => {
           // Save token to AsyncStorage
           await AsyncStorage.setItem('@kaptaze_push_token', expoPushToken);
 
-          // Send token to backend when user logs in
-          if (currentUser) {
-            await sendPushTokenToBackend(expoPushToken);
-          }
+          // Send token to backend (works without login)
+          await sendPushTokenToBackend(expoPushToken);
         }
 
       } catch (error) {
@@ -331,36 +327,46 @@ export const UserDataProvider = ({ children }) => {
 
   // Send push token to backend
   const sendPushTokenToBackend = async (token) => {
-    if (!currentUser || !token) {
-      console.log('📱 Push token not sent - user not logged in or no token');
+    if (!token) {
+      console.log('📱 No push token to send');
       return;
     }
 
     try {
       console.log('📤 Sending push token to backend');
 
-      // API call to save user's push token
-      const response = await apiService.savePushToken({
-        userId: currentUser.id || currentUser.email,
-        consumerEmail: currentUser.email, // Add consumer email for backend authentication
+      // Prepare token data
+      const tokenData = {
         token: token,
         platform: Platform.OS,
         deviceInfo: {
           brand: Device.brand,
           model: Device.modelName,
           osVersion: Device.osVersion
-        }
-      });
+        },
+        deviceId: Device.osBuildId || Device.osInternalBuildId // Unique device identifier
+      };
 
-      console.log('✅ Push token saved to backend:', response);
+      // Add user info if logged in
+      if (currentUser) {
+        tokenData.userId = currentUser.id || currentUser._id;
+        tokenData.consumerEmail = currentUser.email;
+        console.log('📱 Sending push token with user info');
+      } else {
+        console.log('📱 Sending push token for anonymous device');
+      }
+
+      // API call to save device push token
+      const response = await apiService.savePushToken(tokenData);
+
+      if (response.success) {
+        console.log('✅ Push token saved to backend:', response);
+      } else {
+        console.log('⚠️ Push token save response:', response.message);
+      }
 
     } catch (error) {
-      // Don't log as error if user is not authenticated
-      if (error.message && error.message.includes('authentication')) {
-        console.log('📱 Push token requires login - skipping');
-      } else {
-        console.log('⚠️ Could not save push token:', error.message || 'Unknown error');
-      }
+      console.log('⚠️ Could not save push token:', error.message || 'Unknown error');
     }
   };
 

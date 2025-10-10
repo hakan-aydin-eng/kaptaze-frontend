@@ -291,20 +291,14 @@ class ApiService {
   async savePushToken(tokenData) {
     console.log('📤 ApiService: Saving push token to backend');
 
-    // Get auth token from AsyncStorage
-    const authToken = await AsyncStorage.getItem('@kaptaze_user_token');
-
-    if (!authToken) {
-      // Return silently if no auth token - user not logged in
-      console.log('📱 Push token save skipped - no auth token');
-      return { success: false, message: 'User not authenticated' };
-    }
+    // Push token endpoint is now public - no auth required
+    // This allows receiving notifications without login
 
     try {
       return await this.request('/auth/push-token', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${authToken}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(tokenData)
       });
