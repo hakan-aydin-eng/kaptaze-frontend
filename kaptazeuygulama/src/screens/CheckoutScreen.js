@@ -50,11 +50,52 @@ const CheckoutScreen = ({ route, navigation }) => {
         email: currentUser.email || '',
         phone: currentUser.phone || ''
       }));
+    } else {
+      // Show login prompt when page loads without user
+      setTimeout(() => {
+        Alert.alert(
+          'Giriş Gerekli',
+          'Sipariş verebilmek için lütfen giriş yapın.',
+          [
+            {
+              text: 'Geri Dön',
+              style: 'cancel',
+              onPress: () => navigation.goBack()
+            },
+            {
+              text: 'Giriş Yap',
+              onPress: () => navigation.navigate('Login', {
+                redirectTo: 'Checkout',
+                params: route.params
+              })
+            }
+          ]
+        );
+      }, 500); // Small delay for better UX
     }
   }, [currentUser]);
 
   const handlePayment = async () => {
     console.log('💳 Starting payment process...');
+
+    // Check if user is logged in
+    if (!currentUser) {
+      Alert.alert(
+        'Giriş Yapın',
+        'Ödeme yapabilmek için lütfen giriş yapın.',
+        [
+          { text: 'İptal', style: 'cancel' },
+          {
+            text: 'Giriş Yap',
+            onPress: () => navigation.navigate('Login', {
+              redirectTo: 'Checkout',
+              params: route.params
+            })
+          }
+        ]
+      );
+      return;
+    }
 
     // Validate card data
     if (!cardData.values?.number || !cardData.values?.expiry || !cardData.values?.cvc) {
