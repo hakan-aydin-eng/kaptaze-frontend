@@ -582,6 +582,7 @@ class ApiService {
     return this.request('/payment/create', {
       method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${authToken}`
       },
       body: JSON.stringify(paymentData)
