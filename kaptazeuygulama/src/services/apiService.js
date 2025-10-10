@@ -71,10 +71,13 @@ class ApiService {
 
     try {
       const currentToken = await AsyncStorage.getItem('@kaptaze_user_token');
-      if (!currentToken) {
+      const userData = await AsyncStorage.getItem('@kaptaze_user_data');
+
+      if (!currentToken || !userData) {
         throw new Error('No token found');
       }
 
+      const user = JSON.parse(userData);
       console.log('🔄 Attempting to refresh token...');
 
       const response = await fetch(`${this.baseURL}/auth/refresh-token`, {
@@ -82,7 +85,10 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ token: currentToken }),
+        body: JSON.stringify({
+          userId: user.id || user._id,
+          oldToken: currentToken
+        }),
       });
 
       const data = await response.json();
