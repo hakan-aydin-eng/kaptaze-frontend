@@ -295,16 +295,23 @@ class ApiService {
     const authToken = await AsyncStorage.getItem('@kaptaze_user_token');
 
     if (!authToken) {
-      throw new Error('No authentication token found');
+      // Return silently if no auth token - user not logged in
+      console.log('📱 Push token save skipped - no auth token');
+      return { success: false, message: 'User not authenticated' };
     }
 
-    return this.request('/auth/push-token', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      },
-      body: JSON.stringify(tokenData)
-    });
+    try {
+      return await this.request('/auth/push-token', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(tokenData)
+      });
+    } catch (error) {
+      console.log('⚠️ Push token save failed:', error.message);
+      return { success: false, message: error.message };
+    }
   }
 
   // Favorites Management

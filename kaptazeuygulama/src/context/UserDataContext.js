@@ -331,7 +331,10 @@ export const UserDataProvider = ({ children }) => {
 
   // Send push token to backend
   const sendPushTokenToBackend = async (token) => {
-    if (!currentUser || !token) return;
+    if (!currentUser || !token) {
+      console.log('📱 Push token not sent - user not logged in or no token');
+      return;
+    }
 
     try {
       console.log('📤 Sending push token to backend');
@@ -352,7 +355,12 @@ export const UserDataProvider = ({ children }) => {
       console.log('✅ Push token saved to backend:', response);
 
     } catch (error) {
-      console.error('❌ Failed to save push token:', error);
+      // Don't log as error if user is not authenticated
+      if (error.message && error.message.includes('authentication')) {
+        console.log('📱 Push token requires login - skipping');
+      } else {
+        console.log('⚠️ Could not save push token:', error.message || 'Unknown error');
+      }
     }
   };
 
