@@ -501,10 +501,28 @@ export const UserDataProvider = ({ children }) => {
         setFavorites([]);
       }
 
+
       if (savedOrders) {
         const ordersData = JSON.parse(savedOrders);
         console.log('📦 Parsed orders count:', ordersData.length);
-        setOrders(ordersData);
+        
+        // Filter out old orders without backendOrderId
+        const validOrders = ordersData.filter(order => {
+          if (!order.backendOrderId) {
+            console.log(`🗑️ Removing old order without backendOrderId: ${order.id || order.pickupCode || 'undefined'}`);
+            return false;
+          }
+          return true;
+        });
+        
+        console.log('✅ Valid orders count:', validOrders.length);
+        setOrders(validOrders);
+        
+        // Update AsyncStorage if orders were removed
+        if (validOrders.length !== ordersData.length) {
+          console.log(`🧹 Cleaned ${ordersData.length - validOrders.length} old orders from storage`);
+          await AsyncStorage.setItem(userKeys.ORDERS, JSON.stringify(validOrders));
+        }
       } else {
         setOrders([]);
       }
