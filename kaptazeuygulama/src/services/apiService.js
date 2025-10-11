@@ -263,6 +263,12 @@ class ApiService {
     return this.get(endpoint);
   }
 
+  // Fetch user orders from backend (new Order schema)
+  async fetchUserOrders(userId) {
+    console.log("📱 Fetching orders for user:", userId);
+    return this.get(`/orders/user/${userId}`);
+  }
+
   async updateOrderStatus(orderId, status, note = '') {
     return this.patch(`/orders/${orderId}/status`, { status, note });
   }
