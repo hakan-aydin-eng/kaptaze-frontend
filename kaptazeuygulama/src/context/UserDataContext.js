@@ -106,6 +106,31 @@ export const UserDataProvider = ({ children }) => {
     }
   }, [orders, currentUser]);
 
+  // 🆕 Load orders from backend when user logs in
+  useEffect(() => {
+    if (currentUser?.id || currentUser?._id) {
+      console.log('👤 User logged in, loading orders from backend...');
+      loadOrdersFromBackend();
+
+      // Set up Socket.IO listener for real-time order updates
+      if (socketRef.current) {
+        const userId = currentUser.id || currentUser._id;
+
+        socketRef.current.on('order-created', (orderData) => {
+          console.log('🔔 Real-time order created event received:', orderData);
+          loadOrdersFromBackend(); // Refresh orders from backend
+        });
+
+        socketRef.current.on('order-status-updated', (data) => {
+          console.log('🔔 Order status updated:', data);
+          loadOrdersFromBackend(); // Refresh orders from backend
+        });
+
+        console.log('🔌 Socket.IO order listeners set up for user:', userId);
+      }
+    }
+  }, [currentUser?.id, currentUser?._id]);
+
   // Save notification to local storage
   const saveNotificationToStorage = async (notification) => {
     try {
