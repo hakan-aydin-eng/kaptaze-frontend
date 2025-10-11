@@ -773,7 +773,55 @@ export const UserDataProvider = ({ children }) => {
     }
   };
 
-  const updateOrderStatus = async (orderId, newStatus) => {
+  
+
+  // 🆕 SEÇENEK 2+3: Load orders from backend API
+  const loadOrdersFromBackend = async () => {
+    try {
+      if (!currentUser?.id && !currentUser?._id) {
+        console.log('⚠️ No user ID available, skipping backend order fetch');
+        return;
+      }
+
+      const userId = currentUser.id || currentUser._id;
+      console.log('📱 Fetching orders from backend for user:', userId);
+
+      const result = await apiService.fetchUserOrders(userId);
+      
+      if (result.success && result.data) {
+        console.log();
+        
+        // Transform backend orders to match local order structure
+        const transformedOrders = result.data.map(order => ({
+          id: order._id,
+          backendOrderId: order._id,
+          restaurant: {
+            id: order.restaurant.id,
+            name: order.restaurant.name,
+            phone: order.restaurant.phone || '',
+            address: order.restaurant.address || {}
+          },
+          items: order.items || [],
+          totalAmount: order.pricing?.total || 0,
+          status: order.status,
+          paymentMethod: order.payment?.method || 'unknown',
+          paymentStatus: order.payment?.status || 'pending',
+          pickupCode: order.pickupCode || order.orderId,
+          orderDate: order.orderDate || order.createdAt,
+          notes: order.notes || ''
+        }));
+
+        setOrders(transformedOrders);
+        await AsyncStorage.setItem('userOrders', JSON.stringify(transformedOrders));
+        console.log('💾 Orders saved to AsyncStorage');
+      } else {
+        console.log('ℹ️ No orders found in backend');
+      }
+    } catch (error) {
+      console.error('❌ Error loading orders from backend:', error);
+    }
+  };
+const updateOrderStatus = async (orderId, newStatus) => {
     const updatedOrders = orders.map(order =>
       order.id === orderId ? { ...order, status: newStatus } : order
     );
