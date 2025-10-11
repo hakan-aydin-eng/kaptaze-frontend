@@ -45,7 +45,8 @@ const MapScreen = ({ navigation, route }) => {
       try {
         const apiResponse = await apiService.getRestaurants();
         if (apiResponse.success && apiResponse.data) {
-          apiRestaurants = apiResponse.data;
+          // Backend returns { data: { restaurants: [...], pagination: {...} } }
+          apiRestaurants = apiResponse.data.restaurants || apiResponse.data;
           console.log('✅ Loaded', apiRestaurants.length, 'restaurants from API');
         }
       } catch (error) {
