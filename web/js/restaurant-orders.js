@@ -157,7 +157,7 @@ function handleNewOrder(order) {
 function showBrowserNotification(order) {
     if (Notification.permission === 'granted') {
         const notification = new Notification('🔔 Yeni Sipariş!', {
-            body: `${order.customer.name} - ₺${order.totalAmount.toFixed(2)}`,
+            body: `${order.customer.name} - ₺${order.totalPrice.toFixed(2)}`,
             icon: '/favicon.ico',
             requireInteraction: true
         });
@@ -212,7 +212,7 @@ function showPersistentOrderNotification(order) {
                 <strong>${order.customer.name}</strong>
                 <div class="phone">📞 ${order.customer.phone}</div>
             </div>
-            <div class="order-total">₺${order.totalAmount.toFixed(2)}</div>
+            <div class="order-total">₺${order.totalPrice.toFixed(2)}</div>
         </div>
         <div class="notification-actions">
             <button class="accept-btn" onclick="handleOrderAcceptance('${order._id}', this.parentElement.parentElement)">
@@ -493,16 +493,16 @@ function createOrderCard(order) {
             </div>
             
             <div class="order-items">
-                ${(order.packages || order.items || []).map(item => `
+                ${order.items.map(item => `
                     <div class="order-item">
-                        ${item.quantity}x ${item.packageName || item.name} - ₺${(item.price || item.total || 0).toFixed(2)}
+                        ${item.quantity}x ${item.name} - ₺${item.total.toFixed(2)}
                     </div>
                 `).join('')}
             </div>
             
             <div class="order-footer">
                 <div class="order-total">
-                    <strong>Toplam: ₺${(order.totalPrice || order.totalAmount || 0).toFixed(2)}</strong>
+                    <strong>Toplam: ₺${order.totalPrice.toFixed(2)}</strong>
                 </div>
                 <div class="order-actions">
                     ${order.status === 'pending' ?
