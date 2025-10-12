@@ -813,32 +813,70 @@ export const UserDataProvider = ({ children }) => {
 
       const result = await apiService.fetchUserOrders(userId);
       
+      console.log('🔍 API Result:', result);
+      console.log('🔍 Result success:', result?.success);
+      console.log('🔍 Result data:', result?.data);
+      console.log('🔍 Result data length:', result?.data?.length);
+      
       if (result.success && result.data) {
         console.log('📦 Found', result.data.length, 'orders from backend');
+        console.log('🔍 First order:', result.data[0]);
         
-        // Transform backend orders to match local order structure
-        const transformedOrders = result.data.map(order => ({
-          id: order._id,
-          backendOrderId: order._id,
-          restaurant: {
-            id: order.restaurant.id,
-            name: order.restaurant.name,
-            phone: order.restaurant.phone || '',
-            address: order.restaurant.address || {}
-          },
-          items: order.items || [],
-          totalAmount: order.pricing?.total || 0,
-          status: order.status,
-          paymentMethod: order.payment?.method || 'unknown',
-          paymentStatus: order.payment?.status || 'pending',
-          pickupCode: order.pickupCode || order.orderId,
-          orderDate: order.orderDate || order.createdAt,
-          notes: order.notes || ''
-        }));
+        // Transform backend orders to match OrdersScreen expectations
+        const transformedOrders = result.data.map(order => {
+          // Get first item as main package (most orders have 1 item)
+          const firstItem = order.items?.[0] || {};
+          const totalPrice = order.pricing?.total || order.totalPrice || 0;
+          const originalPrice = firstItem.originalPrice || firstItem.price || totalPrice;
+          
+          return {
+            id: order._id,
+            backendOrderId: order._id,
+            restaurant: {
+              id: order.restaurant.id,
+              name: order.restaurant.name,
+              phone: order.restaurant.phone || '',
+              address: order.restaurant.address || {},
+              location: order.restaurant.location
+            },
+            // IMPORTANT: OrdersScreen expects 'package' not 'items'
+            package: {
+              id: firstItem.packageId || firstItem._id,
+              name: firstItem.name || firstItem.packageName || 'Paket',
+              description: firstItem.description || '',
+              price: firstItem.price || totalPrice,
+              originalPrice: originalPrice
+            },
+            // IMPORTANT: OrdersScreen expects these fields at root level
+            quantity: firstItem.quantity || 1,
+            totalPrice: totalPrice,  // NOT totalAmount!
+            originalPrice: originalPrice * (firstItem.quantity || 1),
+            savings: (originalPrice * (firstItem.quantity || 1)) - totalPrice,
+            
+            // Order metadata
+            status: order.status || 'pending',
+            paymentMethod: order.payment?.method || order.paymentMethod || 'unknown',
+            paymentStatus: order.payment?.status || 'pending',
+            pickupCode: order.pickupCode || order.orderId || 'N/A',
+            pickupTime: order.pickupTime || '18:00 - 21:00',
+            orderDate: order.orderDate || order.createdAt || new Date().toISOString(),
+            notes: order.notes || '',
+            
+            // Keep items array for future use
+            items: order.items || []
+          };
+        });
 
-        setOrders(transformedOrders);
-        await AsyncStorage.setItem('userOrders', JSON.stringify(transformedOrders));
-        console.log('💾 Orders saved to AsyncStorage');
+        // Sort orders: newest first (by createdAt or orderDate)
+        const sortedOrders = transformedOrders.sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.orderDate || 0);
+          const dateB = new Date(b.createdAt || b.orderDate || 0);
+          return dateB - dateA; // DESC (newest first)
+        });
+
+        setOrders(sortedOrders);
+        await AsyncStorage.setItem('userOrders', JSON.stringify(sortedOrders));
+        console.log('💾 Orders saved to AsyncStorage (sorted newest first)');
       } else {
         console.log('ℹ️ No orders found in backend');
       }
@@ -881,8 +919,9 @@ const updateOrderStatus = async (orderId, newStatus) => {
 
   const getUserOrders = () => {
     if (!currentUser) return [];
-    const userId = currentUser.email || currentUser.id;
-    return orders.filter(order => order.userId === userId);
+    // Orders from backend don't have userId, just return all loaded orders
+    // (loadOrdersFromBackend already filters by user)
+    return orders;
   };
 
   const getUserFavorites = () => {
