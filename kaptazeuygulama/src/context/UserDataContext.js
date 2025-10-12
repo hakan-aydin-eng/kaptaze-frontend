@@ -814,7 +814,7 @@ export const UserDataProvider = ({ children }) => {
       const result = await apiService.fetchUserOrders(userId);
       
       if (result.success && result.data) {
-        console.log();
+        console.log('📦 Found', result.data.length, 'orders from backend');
         
         // Transform backend orders to match local order structure
         const transformedOrders = result.data.map(order => ({

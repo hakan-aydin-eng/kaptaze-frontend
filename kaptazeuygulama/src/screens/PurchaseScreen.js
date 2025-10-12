@@ -10,11 +10,13 @@ import {
   TextInput,
 } from 'react-native';
 import { useUserData } from '../context/UserDataContext';
+import apiService from '../services/apiService';
+import { Alert, ActivityIndicator } from 'react-native';
 
 const PurchaseScreen = ({ route, navigation }) => {
   const { restaurant, package: selectedPackage, quantity } = route.params;
   const { addOrder, currentUser } = useUserData();
-  const [paymentMethod, setPaymentMethod] = useState('online');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [notes, setNotes] = useState('');
 
   const totalPrice = selectedPackage.salePrice * quantity;
@@ -29,13 +31,13 @@ const PurchaseScreen = ({ route, navigation }) => {
     return '18:00 - 21:00'; // fallback
   };
 
-  // Sadece online ödeme
+  // Ödeme yöntemleri: Online (kartla) ve Nakit
   const paymentMethods = [
-    { id: 'online', name: 'Online Ödeme', icon: '📱' },
+    { id: 'online', name: 'Online Ödeme (Kart)', icon: '💳' },
+    { id: 'cash', name: 'Kapıda Nakit Ödeme', icon: '💵' },
   ];
 
   const confirmPurchase = async () => {
-    // Direkt online ödeme ekranına yönlendir
     const basketItems = [{
       _id: selectedPackage._id || selectedPackage.id,
       packageName: selectedPackage.name,
@@ -45,16 +47,67 @@ const PurchaseScreen = ({ route, navigation }) => {
       quantity: quantity
     }];
 
-    navigation.navigate('Checkout', {
-      basketItems,
-      totalAmount: totalPrice,
-      restaurant: {
-        _id: restaurant._id,
-        name: restaurant.name,
-        district: restaurant.district || restaurant.location?.district || 'Merkez',
-        city: restaurant.city || restaurant.location?.city || 'Antalya'
+    if (paymentMethod === 'cash') {
+      // Nakit ödeme - direkt sipariş oluştur
+      try {
+        console.log('💵 Creating cash order...');
+        
+        const paymentData = {
+          amount: totalPrice,
+          basketItems: basketItems.map(item => ({
+            packageId: item._id,
+            packageName: item.packageName,
+            quantity: item.quantity || 1,
+            price: item.discountedPrice || item.price
+          })),
+          restaurantId: restaurant._id,
+          paymentMethod: 'cash', // Nakit ödeme
+          billingInfo: {
+            name: currentUser?.name || '',
+            surname: currentUser?.surname || '',
+            email: currentUser?.email || '',
+            phone: currentUser?.phone || '',
+            address: '',
+            city: 'Antalya',
+            zipCode: '07000'
+          }
+        };
+
+        const result = await apiService.createPayment(paymentData);
+        
+        if (result.success) {
+          Alert.alert(
+            '✅ Sipariş Oluşturuldu!',
+            `Takip Kodunuz: ${result.orderCode || result.data?.orderCode}
+
+Restoranta gittiğinizde bu kodu gösterin.`,
+            [
+              {
+                text: 'Siparişlerim',
+                onPress: () => navigation.navigate('Orders')
+              }
+            ]
+          );
+        } else {
+          Alert.alert('Hata', result.error || 'Sipariş oluşturulamadı');
+        }
+      } catch (error) {
+        console.error('Cash order error:', error);
+        Alert.alert('Hata', 'Sipariş oluşturulamadı');
       }
-    });
+    } else {
+      // Online ödeme - Checkout sayfasına git
+      navigation.navigate('Checkout', {
+        basketItems,
+        totalAmount: totalPrice,
+        restaurant: {
+          _id: restaurant._id,
+          name: restaurant.name,
+          district: restaurant.district || restaurant.location?.district || 'Merkez',
+          city: restaurant.city || restaurant.location?.city || 'Antalya'
+        }
+      });
+    }
   };
 
   return (
