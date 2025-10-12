@@ -1473,11 +1473,11 @@ class RestaurantPanel {
             name: document.getElementById('packageName').value,
             category: document.getElementById('packageCategory').value,
             description: document.getElementById('packageDescription').value,
-            price: parseFloat(document.getElementById('discountedPrice').value), // Use discounted price as main price
+            price: parseFloat(document.getElementById('discountedPrice').value) || 0,
             
             // Additional frontend fields (stored but not validated by backend)
-            originalPrice: parseFloat(document.getElementById('originalPrice').value),
-            quantity: parseInt(document.getElementById('quantity').value),
+            originalPrice: parseFloat(document.getElementById('originalPrice').value) || 0,
+            quantity: parseInt(document.getElementById('quantity').value) || 1, // Default to 1 if empty
             // availableUntil field removed from system
             tags: document.getElementById('packageTags').value
                 .split(',')
