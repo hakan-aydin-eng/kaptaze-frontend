@@ -493,16 +493,16 @@ function createOrderCard(order) {
             </div>
             
             <div class="order-items">
-                ${order.items.map(item => `
+                ${(order.packages || order.items || []).map(item => `
                     <div class="order-item">
-                        ${item.quantity}x ${item.name} - ₺${item.total.toFixed(2)}
+                        ${item.quantity}x ${item.packageName || item.name} - ₺${(item.price || item.total || 0).toFixed(2)}
                     </div>
                 `).join('')}
             </div>
             
             <div class="order-footer">
                 <div class="order-total">
-                    <strong>Toplam: ₺${order.totalAmount.toFixed(2)}</strong>
+                    <strong>Toplam: ₺${(order.totalPrice || order.totalAmount || 0).toFixed(2)}</strong>
                 </div>
                 <div class="order-actions">
                     ${order.status === 'pending' ?
