@@ -35,9 +35,12 @@ const SurpriseStories = ({ userCity }) => {
 
       console.log('📸 Stories API response:', response);
       console.log('📸 Stories count:', response.stories ? response.stories.length : 0);
+      console.log('📸 Full response:', JSON.stringify(response, null, 2));
 
       if (response.success) {
         const stories = response.data?.stories || response.stories || [];
+        console.log('📸 Extracted stories:', stories);
+        console.log('📸 First story image:', stories[0]?.image);
         setStories(stories);
         console.log('📸 Stories updated in state:', stories.length);
       } else {
