@@ -14,7 +14,7 @@ import apiService from '../services/apiService';
 
 const PurchaseScreen = ({ route, navigation }) => {
   const { restaurant, package: selectedPackage, quantity } = route.params;
-  const { addOrder, currentUser } = useUserData();
+  const { addOrder, currentUser, loadOrdersFromBackend } = useUserData();
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [notes, setNotes] = useState('');
 
@@ -73,8 +73,14 @@ const PurchaseScreen = ({ route, navigation }) => {
         };
 
         const result = await apiService.createPayment(paymentData);
-        
+
         if (result.success) {
+          // ✅ Reload orders from backend immediately
+          console.log('🔄 Refreshing orders after successful cash payment...');
+          if (loadOrdersFromBackend) {
+            await loadOrdersFromBackend();
+          }
+
           Alert.alert(
             '✅ Sipariş Oluşturuldu!',
             `Takip Kodunuz: ${result.orderCode || result.data?.orderCode}

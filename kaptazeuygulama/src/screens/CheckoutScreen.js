@@ -21,7 +21,7 @@ import { useUserData } from '../context/UserDataContext';
 
 const CheckoutScreen = ({ route, navigation }) => {
   const { basketItems, totalAmount, restaurant } = route.params;
-  const { currentUser } = useUserData();
+  const { currentUser, loadOrdersFromBackend } = useUserData();
 
   const [loading, setLoading] = useState(false);
   const [cardData, setCardData] = useState({});
@@ -77,9 +77,14 @@ const CheckoutScreen = ({ route, navigation }) => {
 
   const handlePayment = async () => {
     console.log('💳 Starting payment process...');
+    console.log('👤 Current user:', currentUser ? `${currentUser.email} (${currentUser.id || currentUser._id})` : 'Not logged in');
+
+    // Check authentication token
+    const authToken = await AsyncStorage.getItem('@kaptaze_user_token');
+    console.log('🔑 Auth token exists:', !!authToken);
 
     // Check if user is logged in
-    if (!currentUser) {
+    if (!currentUser || !authToken) {
       Alert.alert(
         'Giriş Yapın',
         'Ödeme yapabilmek için lütfen giriş yapın.',
@@ -174,7 +179,12 @@ const CheckoutScreen = ({ route, navigation }) => {
 
           setShowWebView(true);
         } else {
-          // Payment successful - navigate to success screen
+          // Payment successful - reload orders and navigate
+          console.log('🔄 Refreshing orders after successful online payment...');
+          if (loadOrdersFromBackend) {
+            await loadOrdersFromBackend();
+          }
+
           Alert.alert(
             'Ödeme Başarılı! 🎉',
             `Sipariş kodunuz: ${result.orderCode}\n\nRestorana giderek siparişinizi teslim alabilirsiniz.`,
@@ -438,6 +448,11 @@ const CheckoutScreen = ({ route, navigation }) => {
                 if (navState.url.includes('kaptaze://payment-success')) {
                   setShowWebView(false);
 
+                  // Refresh orders from backend
+                  if (loadOrdersFromBackend) {
+                    loadOrdersFromBackend().catch(err => console.error('Failed to reload orders:', err));
+                  }
+
                   // Extract order details from URL
                   const urlParams = new URLSearchParams(navState.url.split('?')[1] || '');
                   const orderId = urlParams.get('orderId');
@@ -469,6 +484,11 @@ const CheckoutScreen = ({ route, navigation }) => {
                 // Handle deep links manually
                 if (request.url.includes('kaptaze://payment-success')) {
                   setShowWebView(false);
+
+                  // Refresh orders from backend
+                  if (loadOrdersFromBackend) {
+                    loadOrdersFromBackend().catch(err => console.error('Failed to reload orders:', err));
+                  }
 
                   // Extract order details from URL
                   const urlParams = new URLSearchParams(request.url.split('?')[1] || '');
@@ -506,6 +526,11 @@ const CheckoutScreen = ({ route, navigation }) => {
 
                   if (message.type === 'PAYMENT_SUCCESS' || message.type === 'PAYMENT_SUCCESS_AUTO_CLOSE') {
                     setShowWebView(false);
+
+                    // Refresh orders from backend
+                    if (loadOrdersFromBackend) {
+                      loadOrdersFromBackend().catch(err => console.error('Failed to reload orders:', err));
+                    }
 
                     Alert.alert(
                       'Ödeme Başarılı! 🎉',

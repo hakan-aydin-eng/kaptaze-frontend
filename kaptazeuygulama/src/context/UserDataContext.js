@@ -1005,24 +1005,25 @@ const updateOrderStatus = async (orderId, newStatus) => {
     currentUser,
     userToken,
     isLoading,
-    
+
     // User actions
     setUser,
     logout,
-    
+
     // Favorites
     favorites: getUserFavorites(),
     addToFavorites,
     removeFromFavorites,
     isFavorite,
     toggleFavorite,
-    
+
     // Orders
     orders: getUserOrders(),
     addOrder,
     updateOrderStatus,
     updateOrderRating,
-    
+    loadOrdersFromBackend, // ✅ Export for manual refresh after order creation
+
     // Stats
     getUserStats,
   };
