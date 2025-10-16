@@ -989,14 +989,21 @@ const updateOrderStatus = async (orderId, newStatus) => {
   const getUserStats = () => {
     const userOrders = getUserOrders();
     const completedOrders = userOrders.filter(order => order.status === 'completed');
-    
+
     return {
       totalOrders: userOrders.length,
       completedOrders: completedOrders.length,
-      totalSavings: completedOrders.reduce((sum, order) => sum + order.savings, 0),
-      totalSpent: completedOrders.reduce((sum, order) => sum + order.totalPrice, 0),
-      foodSaved: completedOrders.reduce((sum, order) => sum + (order.quantity * 1.2), 0), // Estimate kg
-      co2Saved: completedOrders.reduce((sum, order) => sum + (order.quantity * 3.5), 0), // Estimate kg CO2
+      totalSavings: completedOrders.reduce((sum, order) => sum + (order.savings || 0), 0),
+      totalSpent: completedOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
+      // Unified format: Calculate from order.items[].quantity
+      foodSaved: completedOrders.reduce((sum, order) => {
+        const quantity = order.items?.[0]?.quantity || 0;
+        return sum + (quantity * 1.2); // 1.2 kg per package (estimate)
+      }, 0),
+      co2Saved: completedOrders.reduce((sum, order) => {
+        const quantity = order.items?.[0]?.quantity || 0;
+        return sum + (quantity * 3.5); // 3.5 kg CO₂ per package (estimate)
+      }, 0),
     };
   };
 
