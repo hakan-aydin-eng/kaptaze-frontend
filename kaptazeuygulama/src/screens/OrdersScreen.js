@@ -86,14 +86,19 @@ const OrdersScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Siparişlerim</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity
+          style={styles.homeButton}
+          onPress={() => navigation.navigate('Main')}
+        >
+          <Text style={styles.homeIcon}>🏠</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
@@ -343,8 +348,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111827',
   },
-  placeholder: {
+  homeButton: {
     width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#16a34a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+  },
+  homeIcon: {
+    fontSize: 20,
   },
   content: {
     flex: 1,

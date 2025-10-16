@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useUserData } from '../context/UserDataContext';
 import apiService from '../services/apiService';
-import { Alert, ActivityIndicator } from 'react-native';
 
 const PurchaseScreen = ({ route, navigation }) => {
   const { restaurant, package: selectedPackage, quantity } = route.params;
@@ -31,10 +30,10 @@ const PurchaseScreen = ({ route, navigation }) => {
     return '18:00 - 21:00'; // fallback
   };
 
-  // Ödeme yöntemleri: Online (kartla) ve Nakit
+  // Ödeme yöntemleri: İlk Nakit, sonra Online
   const paymentMethods = [
-    { id: 'online', name: 'Online Ödeme (Kart)', icon: '💳' },
-    { id: 'cash', name: 'Kapıda Nakit Ödeme', icon: '💵' },
+    { id: 'cash', name: 'Nakit Ödeme', icon: '💵' },
+    { id: 'online', name: 'Online Ödeme', icon: '💳' },
   ];
 
   const confirmPurchase = async () => {

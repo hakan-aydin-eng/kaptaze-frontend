@@ -28,7 +28,7 @@ const PrivacyScreen = ({ navigation }) => {
           <Text style={styles.lastUpdated}>Son Güncelleme: 30 Ağustos 2025</Text>
           
           <Text style={styles.paragraph}>
-            KapTaze uygulaması olarak, gizliliğinizi korumayı taahhüt ediyoruz. Bu gizlilik politikası, kişisel bilgilerinizi nasıl topladığımızı, kullandığımızı ve koruduğumuzu açıklamaktadır.
+            KapKazan uygulaması olarak, gizliliğinizi korumayı taahhüt ediyoruz. Bu gizlilik politikası, kişisel bilgilerinizi nasıl topladığımızı, kullandığımızı ve koruduğumuzu açıklamaktadır.
           </Text>
 
           <Text style={styles.sectionTitle}>1. Topladığımız Bilgiler</Text>
@@ -52,7 +52,7 @@ const PrivacyScreen = ({ navigation }) => {
 
           <Text style={styles.sectionTitle}>3. Konum Verileri</Text>
           <Text style={styles.paragraph}>
-            KapTaze, yakınızda bulunan restoranları göstermek ve teslimat hizmetlerini optimize etmek için konum bilgilerinizi kullanır. Konum paylaşımını istediğiniz zaman cihaz ayarlarından devre dışı bırakabilirsiniz.
+            KapKazan, yakınızda bulunan restoranları göstermek ve sürpriz paket hizmetlerini optimize etmek için konum bilgilerinizi kullanır. Konum paylaşımını istediğiniz zaman cihaz ayarlarından devre dışı bırakabilirsiniz.
           </Text>
 
           <Text style={styles.sectionTitle}>4. Veri Paylaşımı</Text>
@@ -90,7 +90,7 @@ const PrivacyScreen = ({ navigation }) => {
 
           <Text style={styles.sectionTitle}>8. Çocukların Gizliliği</Text>
           <Text style={styles.paragraph}>
-            KapTaze, 13 yaş altındaki çocuklardan bilerek kişisel bilgi toplamaz. 13 yaş altında bir çocuğa ait bilgi topladığımızı öğrenirsek, bu bilgileri derhal sileriz.
+            KapKazan, 13 yaş altındaki çocuklardan bilerek kişisel bilgi toplamaz. 13 yaş altında bir çocuğa ait bilgi topladığımızı öğrenirsek, bu bilgileri derhal sileriz.
           </Text>
 
           <Text style={styles.sectionTitle}>9. Uluslararası Veri Aktarımı</Text>
@@ -106,7 +106,7 @@ const PrivacyScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>11. İletişim</Text>
           <Text style={styles.paragraph}>
             Gizlilik politikamızla ilgili sorularınız için bizimle iletişime geçebilirsiniz:
-            {'\n'}• E-posta: privacy@kaptaze.com
+            {'\n'}• E-posta: privacy@kapkazan.com
             {'\n'}• Telefon: +90 242 XXX XX XX
             {'\n'}• Adres: Antalya, Türkiye
           </Text>

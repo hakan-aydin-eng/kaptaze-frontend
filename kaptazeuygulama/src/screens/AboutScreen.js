@@ -33,29 +33,29 @@ const AboutScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.logoSection}>
             <Text style={styles.appIcon}>🍽️</Text>
-            <Text style={styles.appName}>KapTaze</Text>
+            <Text style={styles.appName}>KapKazan</Text>
             <Text style={styles.version}>Sürüm 1.0.3</Text>
-            <Text style={styles.tagline}>Kapıda taze, lezzet hep yanında!</Text>
+            <Text style={styles.tagline}>Sürpriz lezzetler, büyük tasarruf!</Text>
           </View>
 
           <Text style={styles.sectionTitle}>Uygulama Hakkında</Text>
           <Text style={styles.paragraph}>
-            KapTaze, Antalya'nın en hızlı ve güvenilir yemek sipariş uygulamasıdır. Sevdiğiniz restoranlardan kolayca sipariş verin, kapınıza kadar taze lezzetleri getirtelim.
+            KapKazan, Antalya'nın sürpriz paket uygulamasıdır. Restoranlardan indirimli sürpriz paketler alın, hem tasarruf edin hem lezzet keşfedin!
           </Text>
 
           <Text style={styles.paragraph}>
-            Uygulamımız, yerel restoranları desteklemek ve müşterilerimize en iyi deneyimi sunmak amacıyla geliştirilmiştir. Hızlı teslimat, kaliteli hizmet ve uygun fiyatlarla yanınızdayız.
+            Uygulamımız, gıda israfını önlemek, yerel restoranları desteklemek ve müşterilerimize en iyi fiyatları sunmak amacıyla geliştirilmiştir. Uygun fiyatlar, kaliteli lezzetler ve sürdürülebilir bir gelecek için yanınızdayız.
           </Text>
 
           <Text style={styles.sectionTitle}>Özellikler</Text>
           <View style={styles.featureList}>
-            <Text style={styles.feature}>🚀 Hızlı sipariş ve teslimat</Text>
+            <Text style={styles.feature}>🎁 Sürpriz paketler ile lezzet keşfedin</Text>
+            <Text style={styles.feature}>💰 %50'ye varan indirimler</Text>
             <Text style={styles.feature}>🎯 Konum tabanlı restoran önerileri</Text>
-            <Text style={styles.feature}>💰 Özel indirimler ve paketler</Text>
-            <Text style={styles.feature}>⭐ Değerlendirme ve yorumlar</Text>
+            <Text style={styles.feature}>⭐ Paket değerlendirme ve fotoğraf paylaşımı</Text>
+            <Text style={styles.feature}>📸 Sürpriz hikayeler</Text>
             <Text style={styles.feature}>📱 Kullanıcı dostu arayüz</Text>
             <Text style={styles.feature}>🔒 Güvenli ödeme sistemi</Text>
-            <Text style={styles.feature}>📍 Gerçek zamanlı sipariş takibi</Text>
             <Text style={styles.feature}>❤️ Favori restoran listesi</Text>
           </View>
 
@@ -63,26 +63,26 @@ const AboutScreen = ({ navigation }) => {
           <View style={styles.contactInfo}>
             <TouchableOpacity 
               style={styles.contactItem}
-              onPress={() => handleLinkPress('mailto:info@kaptaze.com')}
+              onPress={() => handleLinkPress('mailto:info@kapkazan.com')}
             >
               <Text style={styles.contactIcon}>📧</Text>
-              <Text style={styles.contactText}>info@kaptaze.com</Text>
+              <Text style={styles.contactText}>info@kapkazan.com</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.contactItem}
               onPress={() => handleLinkPress('tel:+902420000000')}
             >
               <Text style={styles.contactIcon}>📞</Text>
               <Text style={styles.contactText}>+90 242 XXX XX XX</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.contactItem}
-              onPress={() => handleLinkPress('https://www.kaptaze.com')}
+              onPress={() => handleLinkPress('https://www.kapkazan.com')}
             >
               <Text style={styles.contactIcon}>🌐</Text>
-              <Text style={styles.contactText}>www.kaptaze.com</Text>
+              <Text style={styles.contactText}>www.kapkazan.com</Text>
             </TouchableOpacity>
           </View>
 
@@ -90,23 +90,23 @@ const AboutScreen = ({ navigation }) => {
           <View style={styles.socialMedia}>
             <TouchableOpacity 
               style={styles.socialButton}
-              onPress={() => handleLinkPress('https://instagram.com/kaptaze')}
+              onPress={() => handleLinkPress('https://instagram.com/kapkazan')}
             >
               <Text style={styles.socialIcon}>📷</Text>
               <Text style={styles.socialText}>Instagram</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.socialButton}
-              onPress={() => handleLinkPress('https://twitter.com/kaptaze')}
+              onPress={() => handleLinkPress('https://twitter.com/kapkazan')}
             >
               <Text style={styles.socialIcon}>🐦</Text>
               <Text style={styles.socialText}>Twitter</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.socialButton}
-              onPress={() => handleLinkPress('https://facebook.com/kaptaze')}
+              onPress={() => handleLinkPress('https://facebook.com/kapkazan')}
             >
               <Text style={styles.socialIcon}>👥</Text>
               <Text style={styles.socialText}>Facebook</Text>
@@ -115,24 +115,24 @@ const AboutScreen = ({ navigation }) => {
 
           <Text style={styles.sectionTitle}>Yasal Bilgiler</Text>
           <Text style={styles.paragraph}>
-            KapTaze, Türkiye'de faaliyet gösteren bir teknoloji şirketidir. Tüm hakları saklıdır.
+            KapKazan, Türkiye'de faaliyet gösteren bir teknoloji şirketidir. Tüm hakları saklıdır.
           </Text>
-          
+
           <View style={styles.legalLinks}>
             <TouchableOpacity onPress={() => navigation.navigate('Privacy')}>
               <Text style={styles.legalLink}>Gizlilik Politikası</Text>
             </TouchableOpacity>
-            
+
             <Text style={styles.separator}>•</Text>
-            
-            <TouchableOpacity onPress={() => handleLinkPress('https://www.kaptaze.com/terms')}>
+
+            <TouchableOpacity onPress={() => handleLinkPress('https://www.kapkazan.com/terms')}>
               <Text style={styles.legalLink}>Kullanım Şartları</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Made with ❤️ in Antalya</Text>
-            <Text style={styles.copyright}>© 2025 KapTaze. Tüm hakları saklıdır.</Text>
+            <Text style={styles.copyright}>© 2025 KapKazan. Tüm hakları saklıdır.</Text>
           </View>
         </View>
       </ScrollView>
