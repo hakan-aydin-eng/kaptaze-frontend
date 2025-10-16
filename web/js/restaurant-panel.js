@@ -801,17 +801,62 @@ class RestaurantPanel {
 
     async loadDashboardData() {
         if (!this.restaurantProfile) return;
-        
-        // Load packages for statistics
-        // Use Render API instead of local DB
-        const packages = await this.getRestaurantPackages(this.restaurantProfile.id);
-        
-        // Update statistics
-        document.getElementById('active-packages').textContent = packages.length;
-        
-        // Load orders (placeholder for now)
-        document.getElementById('total-orders').textContent = '0';
-        document.getElementById('total-earnings').textContent = '₺0';
+
+        try {
+            console.log('📊 Loading dashboard data from API...');
+
+            // Fetch real-time stats from backend (unified format)
+            const response = await window.backendService.api('/restaurant/stats');
+
+            if (response && response.success && response.data) {
+                const stats = response.data;
+                console.log('✅ Dashboard stats loaded:', stats);
+
+                // Update stat cards
+                document.getElementById('total-earnings').textContent = `₺${stats.thisMonth.earnings.toFixed(0)}`;
+                document.getElementById('total-orders').textContent = stats.totalOrders;
+                document.getElementById('active-packages').textContent = stats.activePackages;
+                document.getElementById('restaurant-rating').textContent = stats.rating.toFixed(1);
+
+                // Update stat change indicators with real data
+                const earningsChange = document.querySelector('.stat-card.earning .stat-change');
+                if (earningsChange && stats.thisMonth.growth) {
+                    const growthText = stats.thisMonth.growth > 0
+                        ? `+${stats.thisMonth.growth.toFixed(1)}% geçen aya göre`
+                        : `${stats.thisMonth.growth.toFixed(1)}% geçen aya göre`;
+                    earningsChange.textContent = growthText;
+                    earningsChange.className = `stat-change ${stats.thisMonth.growth >= 0 ? 'positive' : 'negative'}`;
+                }
+
+                const ordersChange = document.querySelector('.stat-card.orders .stat-change');
+                if (ordersChange) {
+                    ordersChange.textContent = `+${stats.today.orders} bugün`;
+                }
+
+                const packagesChange = document.querySelector('.stat-card.packages .stat-change');
+                if (packagesChange) {
+                    packagesChange.textContent = `${stats.activePackages} aktif paket`;
+                    packagesChange.className = 'stat-change neutral';
+                }
+
+                const ratingChange = document.querySelector('.stat-card.rating .stat-change');
+                if (ratingChange) {
+                    ratingChange.textContent = `${stats.reviewCount} değerlendirme`;
+                }
+
+                // Store stats for other sections
+                this.dashboardStats = stats;
+
+            } else {
+                console.warn('⚠️ No dashboard data received from API');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading dashboard data:', error);
+            // Show fallback data
+            document.getElementById('total-orders').textContent = '0';
+            document.getElementById('total-earnings').textContent = '₺0';
+        }
     }
 
     async loadPackages() {
@@ -1592,6 +1637,106 @@ class RestaurantPanel {
         });
     }
 
+    async loadAnalyticsData() {
+        try {
+            console.log('📈 Loading analytics data from API...');
+
+            // Fetch analytics from backend (unified format)
+            const response = await window.backendService.api('/restaurant/analytics');
+
+            if (response && response.success && response.data) {
+                const analytics = response.data;
+                console.log('✅ Analytics loaded:', analytics);
+
+                // Update top packages list
+                const topPackagesContainer = document.getElementById('top-packages');
+                if (topPackagesContainer && analytics.topPackages) {
+                    if (analytics.topPackages.length === 0) {
+                        topPackagesContainer.innerHTML = '<p style="color: #999;">Henüz veri yok</p>';
+                    } else {
+                        topPackagesContainer.innerHTML = analytics.topPackages.map((pkg, index) => `
+                            <div class="package-item" style="display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee;">
+                                <div>
+                                    <span style="font-weight: 600;">${index + 1}. ${pkg.name}</span>
+                                    <div style="font-size: 0.9em; color: #666;">
+                                        ${pkg.sales} satış • ₺${pkg.revenue.toFixed(0)} gelir • ${pkg.avgRating}⭐
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                // Store analytics for other use
+                this.analyticsData = analytics;
+
+            } else {
+                console.warn('⚠️ No analytics data received');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading analytics:', error);
+        }
+    }
+
+    async loadPaymentsData() {
+        try {
+            console.log('💳 Loading payments data from API...');
+
+            // Fetch payments from backend (unified format)
+            const response = await window.backendService.api('/restaurant/payments');
+
+            if (response && response.success && response.data) {
+                const payments = response.data;
+                console.log('✅ Payments loaded:', payments);
+
+                // Update payment summary cards
+                const thisMonthCard = document.querySelector('.payment-card:nth-child(1) .amount');
+                if (thisMonthCard) {
+                    thisMonthCard.textContent = `₺${payments.summary.thisMonth.net.toFixed(0)}`;
+                }
+
+                const pendingCard = document.querySelector('.payment-card:nth-child(2) .amount');
+                if (pendingCard) {
+                    pendingCard.textContent = `₺${payments.summary.pending.net.toFixed(0)}`;
+                }
+
+                const nextPaymentCard = document.querySelector('.payment-card:nth-child(3) .amount');
+                if (nextPaymentCard) {
+                    nextPaymentCard.textContent = payments.summary.nextPaymentDate.split('-').reverse().join('/');
+                }
+
+                // Update transactions table
+                const tableBody = document.getElementById('payments-table-body');
+                if (tableBody && payments.transactions) {
+                    if (payments.transactions.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #999;">Henüz ödeme yok</td></tr>';
+                    } else {
+                        tableBody.innerHTML = payments.transactions.slice(0, 20).map(txn => `
+                            <tr>
+                                <td>${new Date(txn.date).toLocaleDateString('tr-TR')}</td>
+                                <td>${txn.orderId}</td>
+                                <td>₺${txn.amount.toFixed(2)}</td>
+                                <td>₺${txn.commission.toFixed(2)}</td>
+                                <td>₺${txn.net.toFixed(2)}</td>
+                                <td><span class="status-badge status-completed">✅ Tamamlandı</span></td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+
+                // Store payments for other use
+                this.paymentsData = payments;
+
+            } else {
+                console.warn('⚠️ No payments data received');
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading payments:', error);
+        }
+    }
+
     logout() {
         if (confirm('Çıkış yapmak istediğiniz emin misiniz?')) {
             localStorage.removeItem('restaurantToken');
@@ -1657,6 +1802,12 @@ window.showSection = function(sectionId, event) {
                 break;
             case 'dashboard':
                 window.restaurantPanel.loadDashboardData();
+                break;
+            case 'analytics':
+                window.restaurantPanel.loadAnalyticsData();
+                break;
+            case 'payments':
+                window.restaurantPanel.loadPaymentsData();
                 break;
         }
     }
