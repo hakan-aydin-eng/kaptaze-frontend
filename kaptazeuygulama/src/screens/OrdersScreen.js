@@ -104,9 +104,6 @@ const OrdersScreen = ({ navigation }) => {
       <ScrollView style={styles.content}>
         <View style={styles.pageHeader}>
           <Text style={styles.title}>📋 Siparişlerim</Text>
-          <Text style={styles.subtitle}>
-            {currentUser ? `${orders.length} sipariş` : 'Giriş yapın'}
-          </Text>
         </View>
         
         {!currentUser ? (
