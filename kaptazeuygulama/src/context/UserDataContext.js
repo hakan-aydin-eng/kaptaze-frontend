@@ -826,9 +826,32 @@ export const UserDataProvider = ({ children }) => {
         const transformedOrders = result.data.map(order => {
           // Get first item as main package (most orders have 1 item)
           const firstItem = order.items?.[0] || {};
-          const totalPrice = order.pricing?.total || order.totalPrice || 0;
-          const originalPrice = firstItem.originalPrice || firstItem.price || totalPrice;
-          
+          const totalPrice = order.totalPrice || order.pricing?.total || 0;
+
+          // Calculate savings from unified format
+          // Backend sends: items[].originalPrice, items[].price, items[].quantity
+          const itemOriginalPrice = firstItem.originalPrice || 0;
+          const itemDiscountedPrice = firstItem.price || 0;
+          const itemQuantity = firstItem.quantity || 1;
+
+          const orderTotalOriginal = itemOriginalPrice * itemQuantity;
+          const orderTotalDiscounted = totalPrice;
+          const calculatedSavings = orderTotalOriginal - orderTotalDiscounted;
+
+          // Use backend's savings if available, otherwise calculate
+          const savings = order.savings || calculatedSavings;
+
+          console.log('💰 Savings calculation:', {
+            itemOriginalPrice,
+            itemDiscountedPrice,
+            itemQuantity,
+            orderTotalOriginal,
+            orderTotalDiscounted,
+            calculatedSavings,
+            backendSavings: order.savings,
+            finalSavings: savings
+          });
+
           return {
             id: order._id,
             backendOrderId: order._id,
@@ -844,14 +867,14 @@ export const UserDataProvider = ({ children }) => {
               id: firstItem.packageId || firstItem._id,
               name: firstItem.name || firstItem.packageName || 'Paket',
               description: firstItem.description || '',
-              price: firstItem.price || totalPrice,
-              originalPrice: originalPrice
+              price: itemDiscountedPrice,
+              originalPrice: itemOriginalPrice
             },
             // IMPORTANT: OrdersScreen expects these fields at root level
-            quantity: firstItem.quantity || 1,
+            quantity: itemQuantity,
             totalPrice: totalPrice,  // NOT totalAmount!
-            originalPrice: originalPrice * (firstItem.quantity || 1),
-            savings: (originalPrice * (firstItem.quantity || 1)) - totalPrice,
+            originalPrice: orderTotalOriginal,
+            savings: savings,
             
             // Order metadata
             status: order.status || 'pending',
