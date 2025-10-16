@@ -240,24 +240,56 @@ function showBrowserNotification(order) {
     }
 }
 
-// Play enhanced notification sound
+// Play enhanced notification sound (Web Audio API - more reliable)
 function playNotificationSound() {
     try {
-        // Yumuşak bildirim sesi - 3 kez çalar
-        const playSound = (count = 0) => {
-            if (count < 3) {
-                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBi+Gy/LTgTAGKnjG8OGRQAoUXrTr7KlVFApGn+DxvmshBTCHzPLSgjEGJ3fH8OGRQAoUXrTq66hVFApGnuDyvmwiBTCGy/LTgjAGKXfH8OGQQAEIZO3kn0wQClatyuLa0bFc');
-                audio.volume = 0.3; // Yumuşak ses seviyesi
-                audio.play().catch(e => console.log('Sound play failed:', e));
-                
-                // 800ms sonra tekrar çal
-                setTimeout(() => playSound(count + 1), 800);
+        console.log('🔊 Playing notification sound...');
+
+        // Create AudioContext
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
+
+        // Play 5 beeps for better attention
+        const playBeep = (count = 0) => {
+            if (count < 5) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // Bell-like sound (higher frequency)
+                oscillator.frequency.value = 800; // 800 Hz - pleasant notification sound
+                oscillator.type = 'sine';
+
+                // Volume envelope (fade in/out for pleasant sound)
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+
+                console.log(`🔔 Beep ${count + 1}/5`);
+
+                // Play next beep after 400ms
+                setTimeout(() => playBeep(count + 1), 400);
             }
         };
-        
-        playSound();
+
+        playBeep();
+
     } catch (e) {
-        console.log('Enhanced sound not supported');
+        console.error('❌ Sound playback failed:', e);
+
+        // Fallback: Try simple beep
+        try {
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBi+Gy/LTgTAGKnjG8OGRQAoUXrTr7KlVFApGn+DxvmshBTCHzPLSgjEGJ3fH8OGRQAoUXrTq66hVFApGnuDyvmwiBTCGy/LTgjAGKXfH8OGQQAEIZO3kn0wQClatyuLa0bFc');
+            audio.volume = 0.5;
+            audio.play().catch(err => console.log('Fallback sound also failed:', err));
+        } catch (fallbackError) {
+            console.log('⚠️ All sound methods failed - browser may block audio');
+        }
     }
 }
 
@@ -283,8 +315,8 @@ function showPersistentOrderNotification(order) {
             <div class="order-total">₺${order.totalPrice.toFixed(2)}</div>
         </div>
         <div class="notification-actions">
-            <button class="accept-btn" onclick="handleOrderAcceptance('${order._id}', this.parentElement.parentElement)">
-                ✅ Siparişi Onayla
+            <button class="acknowledge-btn" onclick="handleOrderAcknowledgment('${order._id}', this.parentElement.parentElement)">
+                👁️ GÖRDÜM
             </button>
             <button class="details-btn" onclick="showOrderDetails('${order._id}')">
                 📋 Detaylar
@@ -380,7 +412,7 @@ function showPersistentOrderNotification(order) {
                 display: flex;
                 gap: 10px;
             }
-            .persistent-order-notification .accept-btn {
+            .persistent-order-notification .acknowledge-btn {
                 flex: 1;
                 padding: 12px;
                 background: #ffffff;
@@ -392,7 +424,7 @@ function showPersistentOrderNotification(order) {
                 font-size: 14px;
                 transition: all 0.3s ease;
             }
-            .persistent-order-notification .accept-btn:hover {
+            .persistent-order-notification .acknowledge-btn:hover {
                 background: #f0f9ff;
                 transform: translateY(-2px);
             }
@@ -419,18 +451,57 @@ function showPersistentOrderNotification(order) {
 }
 
 // Sipariş onaylama işlemi
+// Handle order acknowledgment (GÖRDÜM butonu)
+async function handleOrderAcknowledgment(orderId, notificationElement) {
+    console.log('👁️ Acknowledging order (GÖRDÜM):', orderId);
+
+    try {
+        // Backend'e siparişi gördüğünü bildir (unified format)
+        const response = await fetch(`${API_URL}/restaurant/orders/${orderId}/acknowledge`, {
+            method: 'PATCH',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to acknowledge order');
+        }
+
+        const result = await response.json();
+        console.log('✅ Order acknowledged:', result);
+
+        // Persistent notification'ı kapat
+        notificationElement.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+            notificationElement.remove();
+        }, 300);
+
+        // Başarı mesajı
+        showToast('👁️ Sipariş görüldü olarak işaretlendi', 'success');
+
+        // Siparişler listesini yenile
+        loadOrders();
+
+    } catch (error) {
+        console.error('❌ Error acknowledging order:', error);
+        showToast('❌ Sipariş işaretlenirken hata oluştu', 'error');
+    }
+}
+
 function handleOrderAcceptance(orderId, notificationElement) {
     console.log('✅ Accepting order:', orderId);
-    
+
     // Siparişi onayla (mevcut fonksiyonu kullan)
     updateOrderStatus(orderId, 'confirmed');
-    
+
     // Bildirimi kapat
     notificationElement.style.animation = 'slideOut 0.3s ease-in';
     setTimeout(() => {
         notificationElement.remove();
     }, 300);
-    
+
     // Başarı mesajı
     showToast('✅ Sipariş onaylandı ve hazırlanmaya başlandı!', 'success');
 }
