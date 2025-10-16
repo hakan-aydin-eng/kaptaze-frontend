@@ -163,23 +163,41 @@ function initializeSocket() {
             // Handle different data formats from backend
             let order = null;
             if (data.order) {
-                // Format 1: { order: {...}, message: "..." }
+                // Format 1: { order: {...}, message: "..." } ✅ FULL ORDER (preferred!)
+                console.log('✅ Received FULL order object with customer phone');
                 order = data.order;
             } else if (data.orderId && data.customerName) {
-                // Format 2: { orderId, customerName, totalAmount, ... } (from payment.js)
-                // Need to fetch full order details
-                console.log('⚠️ Received minimal order data, fetching full details...');
-                loadOrders(); // Reload orders list
-                return; // Don't show notification for minimal data
-            } else {
+                // Format 2: MINIMAL DATA (legacy - shouldn't happen with new backend)
+                console.warn('⚠️ Received minimal order data (legacy format) - creating fallback');
+
+                // Create pseudo-order for popup (better than no notification!)
+                order = {
+                    _id: data.orderId,
+                    customer: {
+                        name: data.customerName,
+                        phone: data.customerPhone || 'N/A' // May not be available
+                    },
+                    totalPrice: data.totalAmount || 0,
+                    items: data.items || [],
+                    paymentMethod: data.paymentMethod || 'online'
+                };
+
+                console.log('🔨 Created pseudo-order for popup:', order);
+
+                // Still reload orders to get full details
+                loadOrders();
+            } else if (data._id && data.customer) {
                 // Format 3: Direct order object
+                console.log('✅ Received direct order object');
                 order = data;
+            } else {
+                console.error('❌ Invalid order data format:', data);
             }
 
             if (order) {
                 handleNewOrder(order);
             } else {
-                console.error('❌ Invalid order data format:', data);
+                console.error('❌ Could not process order notification');
             }
         });
 
