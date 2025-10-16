@@ -31,7 +31,9 @@ const SurpriseStories = ({ userCity }) => {
     try {
       setLoading(true);
       console.log('📸 Loading surprise stories for city:', userCity || 'all cities');
-      const response = await apiService.getSurpriseStories(10, userCity);
+      // Don't filter by city for now - show all stories
+      // TODO: Fix geocoding to return proper city name (Antalya not Duraliler)
+      const response = await apiService.getSurpriseStories(10, null);
 
       console.log('📸 Stories API response:', response);
       console.log('📸 Stories count:', response.stories ? response.stories.length : 0);
