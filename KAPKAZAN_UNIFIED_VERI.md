@@ -70,6 +70,10 @@
   "notes": "Acısız olsun lütfen",
   "pickupTime": "18:00-21:00",
 
+  // === RESTAURANT ACKNOWLEDGMENT (GÖRDÜM) ===
+  "acknowledged": false,               // Restaurant saw the order notification
+  "acknowledgedAt": null,              // When restaurant clicked GÖRDÜM button
+
   // === RATING & REVIEW (AFTER COMPLETION) ===
   "review": {
     "rating": 5,                           // 1-5 stars
@@ -523,5 +527,185 @@ Restaurant {
 | `category: "fast-food"` (kebab-case) | `category: "Fast Food"` |
 | `category: { id: 1, name: "Fast Food" }` | `category: "Fast Food"` |
 | `categoryId: 10` | `category: "Fast Food"` |
+
+---
+
+## 🔔 **SOCKET.IO REAL-TIME NOTIFICATIONS (RESTAURANT PANEL)**
+
+### **Purpose:**
+Send instant notifications to restaurant panel when new order arrives.
+
+### **Event Name:**
+```javascript
+socket.emit('new-order', data);
+```
+
+### **Data Format (UNIFIED!):**
+```javascript
+{
+  order: {
+    _id: "68f0e9af20a03239d19081b3",
+    orderId: "ORD-20251016-001",
+    customer: {
+      id: "68afb1efd6ac55f499cf6f71",
+      name: "Demo Kullanıcı",
+      email: "demo@kaptaze.com",
+      phone: "05551234567"              // ⚠️ MUST INCLUDE for popup!
+    },
+    restaurant: {
+      id: "68c56a07733021f03aae6bd7",
+      name: "Nurtekin Şah Burger"
+    },
+    items: [{
+      packageId: "1760272848777",
+      name: "Sürpriz Paket",
+      quantity: 1,
+      price: 2223,
+      total: 2223
+    }],
+    totalPrice: 2223,
+    paymentMethod: "cash",              // or "online"
+    status: "pending",
+    createdAt: "2025-10-16T12:52:00Z"
+  },
+  message: "Yeni online sipariş! Demo Kullanıcı - ₺22.23"
+}
+```
+
+### **Room Format:**
+```javascript
+const roomName = `restaurant-${restaurantId}`;
+io.to(roomName).emit('new-order', notification);
+```
+
+### **Backend Implementations:**
+
+#### 1. Cash Payment (routes/orders.js:198)
+```javascript
+io.to(`restaurant-${restaurantId}`).emit('new-order', {
+    order: savedOrder,
+    message: 'Yeni sipariş aldınız!'
+});
+```
+
+#### 2. Online Payment (routes/payment.js:266)
+```javascript
+const notification = {
+    order: {
+        _id: order._id,
+        customer: {
+            phone: consumer.phone  // ⚠️ CRITICAL for popup!
+        },
+        // ... full order data
+    }
+};
+io.to(roomName).emit('new-order', notification);
+```
+
+#### 3. 3DS Callback (routes/payment.js:586)
+```javascript
+const transformedOrder = transformOrderToUnified(order);
+io.to(roomName).emit('new-order', {
+    order: transformedOrder
+});
+```
+
+### **Frontend Handling (restaurant-orders.js):**
+
+```javascript
+socket.on('new-order', (data) => {
+    let order = null;
+
+    // Preferred: Full order object
+    if (data.order) {
+        order = data.order;  // ✅ Has customer.phone!
+    }
+    // Fallback: Minimal data (legacy)
+    else if (data.orderId && data.customerName) {
+        order = {
+            _id: data.orderId,
+            customer: { name: data.customerName, phone: 'N/A' },
+            totalPrice: data.totalAmount
+        };
+    }
+
+    if (order) {
+        handleNewOrder(order);  // Shows popup + plays sound
+    }
+});
+```
+
+### **Popup Notification Triggers:**
+
+1. ✅ **Sound**: 5 beeps (800 Hz) via Web Audio API
+2. ✅ **Visual Popup**: Green animated card (top-right)
+3. ✅ **Customer Info**: Name + Phone displayed
+4. ✅ **GÖRDÜM Button**: Acknowledges order (PATCH /restaurant/orders/:id/acknowledge)
+5. ✅ **Detaylar Button**: Opens order details modal
+
+### **Critical Fields for Popup:**
+
+| Field | Required? | Used For |
+|-------|-----------|----------|
+| `order._id` | ✅ YES | GÖRDÜM button API call |
+| `order.customer.name` | ✅ YES | Display customer name |
+| `order.customer.phone` | ✅ YES | Display contact info |
+| `order.totalPrice` | ✅ YES | Display order amount |
+| `order.items` | ⚠️ Optional | Show order details |
+
+### **Common Mistakes:**
+
+| ❌ WRONG | ✅ CORRECT |
+|----------|-----------|
+| `{orderId, customerName, totalAmount}` | `{order: {...}}` with full data |
+| `customer.phone` missing | Always include `customer.phone` |
+| Sending minimal data | Send full order object |
+| `return;` on minimal data | Create fallback popup |
+
+### **Acknowledgment Endpoint:**
+
+```javascript
+PATCH /restaurant/orders/:orderId/acknowledge
+
+Response:
+{
+  success: true,
+  data: {
+    orderId: "68f0e9af20a03239d19081b3",
+    acknowledged: true,
+    acknowledgedAt: "2025-10-16T12:52:24Z"
+  }
+}
+```
+
+### **Order Schema Fields:**
+
+```javascript
+{
+  acknowledged: false,        // Restaurant clicked GÖRDÜM
+  acknowledgedAt: null        // Timestamp of acknowledgment
+}
+```
+
+### **Testing:**
+
+1. Mobile app: Place order (cash or online)
+2. Restaurant panel: Watch for:
+   - 🔊 Sound (5 beeps)
+   - 🎨 Green popup (animated)
+   - 👤 Customer name + phone
+   - 💰 Total price
+   - 👁️ GÖRDÜM button (clickable)
+
+### **Debug Console Logs:**
+
+```
+✅ Received FULL order object with customer phone
+🎯 Processing new order (unified format)
+🎨 Showing persistent popup notification...
+✅ Persistent notification added to DOM!
+👁️ Acknowledging order (GÖRDÜM): 68f0e9af...
+✅ Order acknowledged successfully
+```
 
 ---
