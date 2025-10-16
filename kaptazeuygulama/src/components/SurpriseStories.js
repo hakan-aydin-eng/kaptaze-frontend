@@ -31,8 +31,12 @@ const SurpriseStories = ({ userCity }) => {
     try {
       setLoading(true);
       console.log('📸 Loading surprise stories for city:', userCity || 'all cities');
-      // Filter by city - geocoding now returns city name (Antalya) not district (Duraliler)
-      const response = await apiService.getSurpriseStories(10, userCity);
+      // Show all stories for now (city filtering will be re-enabled after testing)
+      const response = await apiService.getSurpriseStories(10, null);
+      console.log('📸 API Response stories:', response.stories?.length || 0);
+      if (response.stories && response.stories.length > 0) {
+        console.log('📸 First story image URL:', response.stories[0].image);
+      }
 
       if (response.success) {
         const stories = response.data?.stories || response.stories || [];
