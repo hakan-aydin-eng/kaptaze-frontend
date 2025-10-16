@@ -73,12 +73,15 @@ async function initializeOrdersSystem() {
     
     // Request notification permission
     requestNotificationPermission();
-    
+
     // Initialize Socket.IO connection
     initializeSocket();
-    
+
     // Load existing orders
     await loadOrders();
+
+    // Initialize notification badge (start with 0)
+    updateNotificationBadge();
 }
 
 // Request browser notification permission
@@ -136,21 +139,86 @@ function initializeSocket() {
     }
 }
 
-// Handle new order notification
+// Handle new order notification (unified format)
 function handleNewOrder(order) {
-    console.log('Processing new order:', order);
-    
+    console.log('Processing new order (unified format):', order);
+
     // Show browser notification
     showBrowserNotification(order);
-    
+
     // Play notification sound (enhanced)
     playNotificationSound();
-    
+
     // Reload orders list
     loadOrders();
-    
+
     // Show PERSISTENT toast notification (doesn't auto-close)
     showPersistentOrderNotification(order);
+
+    // Add to notification panel (unified format)
+    addNotificationToPanel(order);
+
+    // Update notification badge count
+    updateNotificationBadge();
+}
+
+// Add notification to panel (unified format)
+function addNotificationToPanel(order) {
+    const notificationList = document.getElementById('notification-list');
+    if (!notificationList) return;
+
+    // Remove "no notifications" message if exists
+    const emptyMessage = notificationList.querySelector('[style*="text-align: center"]');
+    if (emptyMessage) {
+        emptyMessage.remove();
+    }
+
+    // Create notification item (unified format: order.customer.name, order.totalPrice)
+    const notificationItem = document.createElement('div');
+    notificationItem.className = 'notification-item unread';
+    notificationItem.innerHTML = `
+        <i class="fas fa-shopping-cart"></i>
+        <div>
+            <p>Yeni sipariş: ${order.customer?.name || 'Müşteri'} - ₺${(order.totalPrice || 0).toFixed(2)}</p>
+            <span>Şimdi</span>
+        </div>
+    `;
+
+    // Add click handler to navigate to orders
+    notificationItem.onclick = () => {
+        if (window.showSection) {
+            window.showSection('orders', null);
+        }
+        notificationItem.classList.remove('unread');
+        updateNotificationBadge();
+    };
+
+    // Add to top of list
+    notificationList.insertBefore(notificationItem, notificationList.firstChild);
+
+    // Keep only last 20 notifications
+    const notifications = notificationList.querySelectorAll('.notification-item');
+    if (notifications.length > 20) {
+        notifications[notifications.length - 1].remove();
+    }
+}
+
+// Update notification badge count
+function updateNotificationBadge() {
+    const badge = document.getElementById('notification-count');
+    if (!badge) return;
+
+    const notificationList = document.getElementById('notification-list');
+    if (!notificationList) return;
+
+    const unreadCount = notificationList.querySelectorAll('.notification-item.unread').length;
+
+    if (unreadCount > 0) {
+        badge.textContent = unreadCount;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
 }
 
 // Show browser notification
