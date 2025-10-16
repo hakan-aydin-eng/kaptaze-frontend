@@ -523,7 +523,7 @@ class ApiService {
         });
       }
 
-      const response = await this.request('/auth/orders/rating', {
+      const response = await this.request('/orders/rating', {
         method: 'POST',
         headers,
         body: requestBody,
