@@ -30,13 +30,8 @@ const SurpriseStories = ({ userCity }) => {
   const loadStories = async () => {
     try {
       setLoading(true);
-      console.log('📸 Loading surprise stories for city:', userCity || 'all cities');
-      // Show all stories for now (city filtering will be re-enabled after testing)
-      const response = await apiService.getSurpriseStories(10, null);
-      console.log('📸 API Response stories:', response.stories?.length || 0);
-      if (response.stories && response.stories.length > 0) {
-        console.log('📸 First story image URL:', response.stories[0].image);
-      }
+      // Filter by city - shows local restaurant stories only
+      const response = await apiService.getSurpriseStories(10, userCity);
 
       if (response.success) {
         const stories = response.data?.stories || response.stories || [];
