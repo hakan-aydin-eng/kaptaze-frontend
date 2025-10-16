@@ -480,7 +480,7 @@ function createOrderCard(order) {
     return `
         <div class="order-card">
             <div class="order-header">
-                <span class="order-id">#${order._id.slice(-6)}</span>
+                <span class="order-id">#${order.orderId || order._id}</span>
                 <span class="order-status" style="background: ${statusColors[order.status]}">
                     ${statusTexts[order.status]}
                 </span>
