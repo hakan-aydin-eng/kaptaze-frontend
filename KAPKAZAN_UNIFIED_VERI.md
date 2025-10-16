@@ -31,6 +31,7 @@
   "restaurant": {
     "id": "68c56a07733021f03aae6bd7",  // ⚠️ STRING! (NOT ObjectId)
     "name": "Nurtekin Şah Burger",
+    "category": "Fast Food",             // ⚠️ Exact match from registration form
     "address": "Kadıköy, İstanbul"
   },
 
@@ -471,3 +472,56 @@ const orders = await Order.find(query);
 **Sonraki İnceleme:** Sorun olduğunda bu belgeyi oku!
 
 🎯 **UNIFIED FORMAT = TEK GERÇEK!**
+
+---
+
+## 🏷️ **RESTAURANT CATEGORIES (UNIFIED)**
+
+**Registration Form → Mobile App → Database**
+
+### **Category List (ASLA DEĞİŞMEYECEK!):**
+```javascript
+[
+  "Türk Mutfağı",        // Turkish Cuisine
+  "Yerel Lezzetler",     // Local Delicacies
+  "Unlu Mamüller",       // Bakery Products
+  "Tatlı",               // Desserts
+  "Manav",               // Grocery/Produce
+  "Çiçek",               // Flowers
+  "Uzakdoğu Mutfağı",    // Asian Cuisine
+  "Vegan",               // Vegan
+  "Vejeteryan",          // Vegetarian
+  "Fast Food"            // Fast Food
+]
+```
+
+### **Data Flow:**
+```
+1. Restaurant registers at https://www.kapkazan.com/customer-registration-v2
+   └─ Selects: "Fast Food" from dropdown
+   
+2. Saved to MongoDB: Restaurant.category = "Fast Food"
+
+3. Mobile app filters:
+   └─ User clicks "Fast Food" category
+   └─ Shows only restaurants where category === "Fast Food"
+   
+4. ✅ Perfect match - no translation needed!
+```
+
+### **Unified Format:**
+```javascript
+Restaurant {
+  category: "Fast Food",  // Exact string from registration form
+  // NO category IDs, NO mapping, NO translation
+}
+```
+
+| ❌ WRONG | ✅ CORRECT |
+|----------|-----------|
+| `category: "fastfood"` (lowercase ID) | `category: "Fast Food"` |
+| `category: "fast-food"` (kebab-case) | `category: "Fast Food"` |
+| `category: { id: 1, name: "Fast Food" }` | `category: "Fast Food"` |
+| `categoryId: 10` | `category: "Fast Food"` |
+
+---
