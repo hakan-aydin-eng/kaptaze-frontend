@@ -57,7 +57,8 @@ const PurchaseScreen = ({ route, navigation }) => {
             packageId: item._id,
             packageName: item.packageName,
             quantity: item.quantity || 1,
-            price: item.discountedPrice || item.price
+            originalPrice: item.originalPrice, // ✅ İndirim öncesi fiyat
+            price: item.discountedPrice || item.price // ✅ İndirimli fiyat
           })),
           restaurantId: restaurant._id,
           paymentMethod: 'cash', // Nakit ödeme
