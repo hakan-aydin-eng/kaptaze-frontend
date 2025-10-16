@@ -84,7 +84,7 @@ async function initializeOrdersSystem() {
     updateNotificationBadge();
 }
 
-// Request browser notification permission
+// Request browser notification permission and audio permission
 function requestNotificationPermission() {
     if ('Notification' in window) {
         if (Notification.permission === 'default') {
@@ -93,6 +93,39 @@ function requestNotificationPermission() {
             });
         }
     }
+
+    // Initialize AudioContext on user interaction to unlock audio
+    // This prevents "NotAllowedError: play() failed because the user didn't interact with the document first"
+    const unlockAudio = () => {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const audioContext = new AudioContext();
+
+            // Play silent sound to unlock audio
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            gainNode.gain.value = 0; // Silent
+            oscillator.start(0);
+            oscillator.stop(0.1);
+
+            console.log('✅ Audio unlocked - notifications will have sound');
+
+            // Store AudioContext for later use
+            window.restaurantAudioContext = audioContext;
+
+            // Remove listener after first interaction
+            document.removeEventListener('click', unlockAudio);
+            document.removeEventListener('keydown', unlockAudio);
+        } catch (e) {
+            console.log('Audio unlock failed:', e);
+        }
+    };
+
+    // Wait for user interaction
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('keydown', unlockAudio, { once: true });
 }
 
 // Initialize Socket.IO connection
@@ -126,15 +159,41 @@ function initializeSocket() {
             console.log('❌ Socket.IO disconnected');
         });
         
-        // Listen for new orders (support both event names for compatibility)
+        // Listen for new orders (support both event names and formats for compatibility)
         socket.on('new-order', (data) => {
             console.log('🔔 New order received (new-order):', data);
-            handleNewOrder(data.order);
+
+            // Handle different data formats from backend
+            let order = null;
+            if (data.order) {
+                // Format 1: { order: {...}, message: "..." }
+                order = data.order;
+            } else if (data.orderId && data.customerName) {
+                // Format 2: { orderId, customerName, totalAmount, ... } (from payment.js)
+                // Need to fetch full order details
+                console.log('⚠️ Received minimal order data, fetching full details...');
+                loadOrders(); // Reload orders list
+                return; // Don't show notification for minimal data
+            } else {
+                // Format 3: Direct order object
+                order = data;
+            }
+
+            if (order) {
+                handleNewOrder(order);
+            } else {
+                console.error('❌ Invalid order data format:', data);
+            }
         });
 
         socket.on('newOrder', (data) => {
             console.log('🔔 New order received (newOrder):', data);
-            handleNewOrder(data.order);
+
+            // Same handling for newOrder event
+            let order = data.order || data;
+            if (order) {
+                handleNewOrder(order);
+            }
         });
     }
 }
@@ -245,9 +304,9 @@ function playNotificationSound() {
     try {
         console.log('🔊 Playing notification sound...');
 
-        // Create AudioContext
+        // Use stored AudioContext or create new one
         const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioContext = new AudioContext();
+        const audioContext = window.restaurantAudioContext || new AudioContext();
 
         // Play 5 beeps for better attention
         const playBeep = (count = 0) => {
