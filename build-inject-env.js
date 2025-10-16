@@ -58,9 +58,22 @@ if (hasPlaceholders) {
     console.log('🎯 All placeholders successfully replaced');
 }
 
+// Add build timestamp for cache busting
+const buildTimestamp = new Date().toISOString();
+const buildId = Date.now();
+
+console.log('\n🔖 Adding cache-busting build info...');
+console.log(`   Build ID: ${buildId}`);
+console.log(`   Build Time: ${buildTimestamp}`);
+
+// Add build info comment to env-inject.js
+const buildComment = `\n// Build Info (for cache busting)\n// Build ID: ${buildId}\n// Build Time: ${buildTimestamp}\n`;
+fs.appendFileSync(envInjectPath, buildComment);
+
 // Summary
 console.log('\n📊 Build Summary:');
 console.log(`✅ Environment variables: ${Object.keys(envVars).length} processed`);
 console.log(`✅ File updated: ${envInjectPath}`);
 console.log(`✅ Placeholders replaced: ${hasPlaceholders ? 'NO' : 'YES'}`);
+console.log(`✅ Cache-busting build ID: ${buildId}`);
 console.log('🚀 Ready for deployment!\n');
