@@ -246,15 +246,15 @@ const StoryModal = ({
             <View style={styles.userInfo}>
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>
-                  {(story.consumer?.name || 'A')[0].toUpperCase()}
+                  {(story.customerName || story.userName || story.consumer?.name || 'K')[0].toUpperCase()}
                 </Text>
               </View>
               <View style={styles.userDetails}>
                 <Text style={styles.userName}>
-                  {story.userName || story.consumer?.name || 'Anonim'}
+                  {story.customerName || story.userName || story.consumer?.name || 'Kullanıcı'}
                 </Text>
                 <Text style={styles.timestamp}>
-                  {new Date(story.createdAt).toLocaleDateString('tr-TR')}
+                  {story.reviewedAt ? new Date(story.reviewedAt).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR')}
                 </Text>
               </View>
             </View>

@@ -154,7 +154,7 @@ const SurpriseStories = ({ userCoordinates }) => {
               {/* User info */}
               <View style={styles.storyInfo}>
                 <Text style={styles.storyUserName} numberOfLines={1}>
-                  {story.userName || story.consumer?.name || 'Anonim'}
+                  {story.customerName || story.userName || story.consumer?.name || 'Kullanıcı'}
                 </Text>
                 <Text style={styles.storyRestaurant} numberOfLines={1}>
                   {story.restaurantName || story.restaurant?.name || 'Restaurant'}
