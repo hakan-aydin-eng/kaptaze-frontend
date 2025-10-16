@@ -197,25 +197,33 @@ function initializeSocket() {
 
 // Handle new order notification (unified format)
 function handleNewOrder(order) {
-    console.log('Processing new order (unified format):', order);
+    console.log('🎯 Processing new order (unified format):', order);
 
     // Show browser notification
+    console.log('📢 Showing browser notification...');
     showBrowserNotification(order);
 
     // Play notification sound (enhanced)
+    console.log('🔊 Playing notification sound...');
     playNotificationSound();
 
     // Reload orders list
+    console.log('🔄 Reloading orders list...');
     loadOrders();
 
     // Show PERSISTENT toast notification (doesn't auto-close)
+    console.log('🎨 Showing persistent popup notification...');
     showPersistentOrderNotification(order);
 
     // Add to notification panel (unified format)
+    console.log('🔔 Adding to notification panel...');
     addNotificationToPanel(order);
 
     // Update notification badge count
+    console.log('🔢 Updating notification badge...');
     updateNotificationBadge();
+
+    console.log('✅ All notification handlers completed!');
 }
 
 // Add notification to panel (unified format)
@@ -351,10 +359,13 @@ function playNotificationSound() {
 
 // Kalıcı sipariş bildirimi (otomatik kapanmaz)
 function showPersistentOrderNotification(order) {
+    console.log('🎨 Creating persistent popup for order:', order._id);
+
     // Mevcut bildirimleri temizle
     const existingNotifications = document.querySelectorAll('.persistent-order-notification');
+    console.log('🧹 Removing', existingNotifications.length, 'existing notifications');
     existingNotifications.forEach(notification => notification.remove());
-    
+
     const notification = document.createElement('div');
     notification.className = 'persistent-order-notification';
     notification.innerHTML = `
@@ -365,35 +376,38 @@ function showPersistentOrderNotification(order) {
         </div>
         <div class="notification-content">
             <div class="customer-info">
-                <strong>${order.customer.name}</strong>
-                <div class="phone">📞 ${order.customer.phone}</div>
+                <strong>${order.customer?.name || 'Müşteri'}</strong>
+                <div class="phone">📞 ${order.customer?.phone || 'N/A'}</div>
             </div>
-            <div class="order-total">₺${order.totalPrice.toFixed(2)}</div>
+            <div class="order-total">₺${(order.totalPrice || 0).toFixed(2)}</div>
         </div>
         <div class="notification-actions">
             <button class="acknowledge-btn" onclick="handleOrderAcknowledgment('${order._id}', this.parentElement.parentElement)">
                 👁️ GÖRDÜM
             </button>
-            <button class="details-btn" onclick="showOrderDetails('${order._id}')">
+            <button class="details-btn" onclick="showOrderDetails('${order._id}'); this.parentElement.parentElement.remove();">
                 📋 Detaylar
             </button>
         </div>
     `;
-    
+
+    // MUCH MORE VISIBLE STYLING
     notification.style.cssText = `
         position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 350px;
-        background: linear-gradient(135deg, #16a34a, #15803d);
+        top: 80px;
+        right: 30px;
+        width: 400px;
+        max-width: 90vw;
+        background: linear-gradient(135deg, #059669, #047857);
         color: white;
-        border-radius: 15px;
-        box-shadow: 0 8px 32px rgba(22, 163, 74, 0.4);
-        z-index: 10000;
-        font-family: Arial, sans-serif;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(5, 150, 105, 0.6), 0 0 0 4px rgba(16, 185, 129, 0.4);
+        z-index: 999999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
         overflow: hidden;
-        animation: slideIn 0.5s ease-out, pulse 2s infinite;
-        border: 2px solid #22c55e;
+        animation: slideInBounce 0.6s ease-out, pulseBorder 2s infinite;
+        border: 3px solid #10b981;
+        backdrop-filter: blur(10px);
     `;
     
     // Animasyon stilleri ekle
@@ -401,61 +415,80 @@ function showPersistentOrderNotification(order) {
         const styles = document.createElement('style');
         styles.id = 'notification-styles';
         styles.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
+            @keyframes slideInBounce {
+                0% { transform: translateX(120%) scale(0.8); opacity: 0; }
+                60% { transform: translateX(-10px) scale(1.05); opacity: 1; }
+                80% { transform: translateX(5px) scale(0.98); }
+                100% { transform: translateX(0) scale(1); opacity: 1; }
             }
             @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
+                from { transform: translateX(0) scale(1); opacity: 1; }
+                to { transform: translateX(120%) scale(0.8); opacity: 0; }
             }
-            @keyframes pulse {
-                0%, 100% { box-shadow: 0 8px 32px rgba(22, 163, 74, 0.4); }
-                50% { box-shadow: 0 8px 32px rgba(22, 163, 74, 0.8); }
+            @keyframes pulseBorder {
+                0%, 100% {
+                    box-shadow: 0 20px 60px rgba(5, 150, 105, 0.6), 0 0 0 4px rgba(16, 185, 129, 0.4);
+                }
+                50% {
+                    box-shadow: 0 20px 60px rgba(5, 150, 105, 0.9), 0 0 0 6px rgba(16, 185, 129, 0.7);
+                    transform: scale(1.02);
+                }
             }
             .persistent-order-notification .notification-header {
                 display: flex;
                 align-items: center;
-                padding: 15px;
-                background: rgba(0, 0, 0, 0.1);
+                padding: 20px;
+                background: rgba(0, 0, 0, 0.15);
                 font-weight: bold;
             }
             .persistent-order-notification .notification-icon {
-                font-size: 24px;
-                margin-right: 10px;
+                font-size: 32px;
+                margin-right: 12px;
+                animation: ring 1s ease-in-out infinite;
+            }
+            @keyframes ring {
+                0%, 100% { transform: rotate(0deg); }
+                10%, 30% { transform: rotate(-10deg); }
+                20%, 40% { transform: rotate(10deg); }
             }
             .persistent-order-notification .notification-title {
                 flex: 1;
-                font-size: 16px;
-                font-weight: bold;
+                font-size: 20px;
+                font-weight: 900;
+                letter-spacing: 0.5px;
             }
             .persistent-order-notification .notification-close {
-                font-size: 24px;
+                font-size: 28px;
                 cursor: pointer;
-                padding: 0 5px;
+                padding: 5px 10px;
                 border-radius: 50%;
                 background: rgba(255, 255, 255, 0.2);
+                line-height: 1;
+                transition: all 0.2s;
             }
             .persistent-order-notification .notification-close:hover {
-                background: rgba(255, 255, 255, 0.3);
+                background: rgba(255, 255, 255, 0.4);
+                transform: rotate(90deg);
             }
             .persistent-order-notification .notification-content {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 15px;
+                padding: 20px;
+                gap: 15px;
             }
             .persistent-order-notification .customer-info {
                 flex: 1;
             }
             .persistent-order-notification .customer-info strong {
-                font-size: 16px;
+                font-size: 18px;
                 display: block;
-                margin-bottom: 5px;
+                margin-bottom: 8px;
+                font-weight: 700;
             }
             .persistent-order-notification .phone {
-                font-size: 14px;
-                opacity: 0.9;
+                font-size: 15px;
+                opacity: 0.95;
             }
             .persistent-order-notification .order-total {
                 font-size: 24px;
@@ -463,47 +496,69 @@ function showPersistentOrderNotification(order) {
                 text-align: right;
             }
             .persistent-order-notification .notification-actions {
-                padding: 15px;
+                padding: 20px;
                 border-top: 1px solid rgba(255, 255, 255, 0.2);
                 display: flex;
-                gap: 10px;
+                gap: 12px;
             }
             .persistent-order-notification .acknowledge-btn {
                 flex: 1;
-                padding: 12px;
+                padding: 16px;
                 background: #ffffff;
-                color: #16a34a;
+                color: #059669;
                 border: none;
-                border-radius: 8px;
-                font-weight: bold;
+                border-radius: 12px;
+                font-weight: 900;
                 cursor: pointer;
-                font-size: 14px;
+                font-size: 16px;
                 transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }
             .persistent-order-notification .acknowledge-btn:hover {
-                background: #f0f9ff;
-                transform: translateY(-2px);
+                background: #f0fdf4;
+                transform: translateY(-3px) scale(1.05);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            }
+            .persistent-order-notification .acknowledge-btn:active {
+                transform: translateY(-1px) scale(1.02);
             }
             .persistent-order-notification .details-btn {
-                padding: 12px 20px;
+                padding: 16px 24px;
                 background: rgba(255, 255, 255, 0.2);
                 color: white;
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                border-radius: 8px;
+                border: 2px solid rgba(255, 255, 255, 0.4);
+                border-radius: 12px;
                 cursor: pointer;
-                font-size: 14px;
+                font-size: 15px;
+                font-weight: 700;
                 transition: all 0.3s ease;
             }
             .persistent-order-notification .details-btn:hover {
-                background: rgba(255, 255, 255, 0.3);
+                background: rgba(255, 255, 255, 0.35);
+                border-color: rgba(255, 255, 255, 0.6);
+                transform: translateY(-2px);
             }
         `;
         document.head.appendChild(styles);
     }
     
     document.body.appendChild(notification);
-    
-    console.log('🔔 Persistent notification created for order:', order._id);
+
+    console.log('✅ Persistent notification added to DOM!');
+    console.log('📍 Notification position:', {
+        top: notification.style.top,
+        right: notification.style.right,
+        zIndex: notification.style.zIndex,
+        display: notification.style.display || 'block'
+    });
+    console.log('🎯 Notification element:', notification);
+
+    // Force reflow to ensure animation triggers
+    notification.offsetHeight;
+
+    console.log('🔔 Persistent notification fully rendered for order:', order._id);
 }
 
 // Sipariş onaylama işlemi
