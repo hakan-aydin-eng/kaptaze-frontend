@@ -151,7 +151,7 @@ const MainScreen = ({ navigation }) => {
       console.log('📍 Requesting location permission...');
       let { status } = await Location.requestForegroundPermissionsAsync();
       setLocationPermissionStatus(status);
-      
+
       if (status !== 'granted') {
         console.log('❌ Location permission denied');
         setUserLocation('Antalya'); // Fallback to default
@@ -163,29 +163,66 @@ const MainScreen = ({ navigation }) => {
         accuracy: Location.Accuracy.Balanced,
         maximumAge: 30000, // Cache for 30 seconds
       });
-      
+
       const { latitude, longitude } = location.coords;
       setUserCoordinates({ latitude, longitude });
       console.log('📍 User coordinates:', { latitude, longitude });
-      
-      // Reverse geocoding to get city name
-      const reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude,
-      });
-      
-      if (reverseGeocode.length > 0) {
-        const address = reverseGeocode[0];
-        const districtName = address.district || address.subregion || address.city || 'Konum Tespit Edildi';
-        setUserLocation(districtName);
-        console.log('🏙️ User district:', districtName);
-      } else {
-        setUserLocation('Konum Tespit Edildi');
+
+      // Check cached location first (rate limit fix)
+      const cachedLocation = await AsyncStorage.getItem('@kaptaze_cached_location');
+      const cachedTime = await AsyncStorage.getItem('@kaptaze_location_time');
+
+      const now = Date.now();
+      const CACHE_DURATION = 1000 * 60 * 60 * 24; // 24 hours
+
+      if (cachedLocation && cachedTime && (now - parseInt(cachedTime)) < CACHE_DURATION) {
+        console.log('✅ Using cached location:', cachedLocation);
+        setUserLocation(cachedLocation);
+        return;
       }
-      
+
+      // Only call reverseGeocode if cache expired or doesn't exist
+      try {
+        console.log('🌍 Calling reverseGeocodeAsync (cache expired)...');
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude,
+          longitude,
+        });
+
+        if (reverseGeocode.length > 0) {
+          const address = reverseGeocode[0];
+          const districtName = address.district || address.subregion || address.city || 'Konum Tespit Edildi';
+          setUserLocation(districtName);
+
+          // Cache the location
+          await AsyncStorage.setItem('@kaptaze_cached_location', districtName);
+          await AsyncStorage.setItem('@kaptaze_location_time', now.toString());
+
+          console.log('🏙️ User district:', districtName, '(cached for 24h)');
+        } else {
+          setUserLocation('Konum Tespit Edildi');
+        }
+      } catch (geocodeError) {
+        console.warn('⚠️ ReverseGeocode failed (rate limit?), using fallback:', geocodeError.message);
+        // Use cached location if available, otherwise fallback to Antalya
+        if (cachedLocation) {
+          setUserLocation(cachedLocation);
+        } else {
+          setUserLocation('Antalya');
+        }
+      }
+
     } catch (error) {
       console.error('📍 Location error:', error);
-      setUserLocation('Antalya'); // Fallback to default
+
+      // Try to use cached location on error
+      const cachedLocation = await AsyncStorage.getItem('@kaptaze_cached_location');
+      if (cachedLocation) {
+        console.log('✅ Using cached location on error:', cachedLocation);
+        setUserLocation(cachedLocation);
+      } else {
+        setUserLocation('Antalya'); // Fallback to default
+      }
     }
   };
 
