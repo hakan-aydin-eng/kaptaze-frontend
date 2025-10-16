@@ -1,4 +1,5 @@
 // Restaurant Orders Management System - Production Version
+const API_URL = 'https://kaptaze-backend-api.onrender.com';
 let socket = null;
 let restaurantId = null;
 
@@ -130,8 +131,6 @@ function requestNotificationPermission() {
 
 // Initialize Socket.IO connection
 function initializeSocket() {
-    const API_URL = 'https://kaptaze-backend-api.onrender.com';
-    
     // Load Socket.IO from CDN
     if (!window.io) {
         const script = document.createElement('script');
