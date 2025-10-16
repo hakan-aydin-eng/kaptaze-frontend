@@ -502,14 +502,8 @@ class ApiService {
           formData.append('comment', ratingData.comment);
         }
 
-        // Add photos
-        ratingData.photos.forEach((photo, index) => {
-          formData.append('photos', {
-            uri: photo.uri,
-            type: photo.type || 'image/jpeg',
-            name: photo.name || `rating_photo_${index}.jpg`,
-          });
-        });
+        // Add photos as JSON string (backend will parse it)
+        formData.append('photos', JSON.stringify(ratingData.photos));
 
         requestBody = formData;
         // Don't set Content-Type header, let fetch handle it for FormData
