@@ -33,19 +33,14 @@ const SupportScreen = ({ navigation }) => {
       answer: 'Siparişiniz henüz hazırlanmaya başlamadıysa "Siparişlerim" bölümünden iptal edebilirsiniz. Hazırlık başladıysa lütfen bizimle iletişime geçin.',
     },
     {
-      id: 2,
-      question: 'Teslimat süresi ne kadar?',
-      answer: 'Ortalama teslimat süremiz 25-45 dakikadır. Hava durumu ve sipariş yoğunluğu teslimat süresini etkileyebilir.',
-    },
-    {
       id: 3,
-      question: 'Minimum sipariş tutarı var mı?',
-      answer: 'Restoranların çoğunda 50₺ minimum sipariş tutarı bulunmaktadır. Bu tutar restorandan restoran değişebilir.',
+      question: 'Sürpriz paketler nedir?',
+      answer: 'Sürpriz paketler, restoranların gün sonunda kalan kaliteli yemeklerini %50\'ye varan indirimlerle sunduğu paketlerdir. Ne olduğunu önceden bilemezsiniz ama her zaman taze ve lezzetlidir!',
     },
     {
       id: 4,
       question: 'Ödeme yöntemleri nelerdir?',
-      answer: 'Kredi kartı, nakit, havale/EFT ve dijital cüzdan ödeme seçeneklerini kabul ediyoruz.',
+      answer: 'Nakit ödeme ve online ödeme (kredi kartı) seçeneklerini kabul ediyoruz.',
     },
     {
       id: 5,
@@ -53,19 +48,14 @@ const SupportScreen = ({ navigation }) => {
       answer: 'Evet! Siparişiniz onaylandıktan sonra "Siparişlerim" bölümünden gerçek zamanlı olarak takip edebilirsiniz.',
     },
     {
-      id: 6,
-      question: 'Yanlış adres girdiysem ne yapmalıyım?',
-      answer: 'Hemen bizimle iletişime geçin. Sipariş hazırlanmaya başlamadıysa adres değişikliği yapabiliriz.',
-    },
-    {
-      id: 7,
-      question: 'Gelen sipariş yanlışsa ne yapmam gerekir?',
-      answer: 'Lütfen fotoğraf çekin ve hemen bizimle iletişime geçin. Sorunu en kısa sürede çözeriz.',
-    },
-    {
       id: 8,
-      question: 'Puanlarım ne işe yarar?',
-      answer: 'Her siparişinizde puan kazanırsınız. Bu puanları gelecek siparişlerinizde indirim olarak kullanabilirsiniz.',
+      question: 'Paketimi nereden teslim alırım?',
+      answer: 'Siparişinizi verdiğiniz restorana giderek teslim alırsınız. Restoran adresi ve yol tarifi uygulama içinde mevcuttur.',
+    },
+    {
+      id: 9,
+      question: 'Paket fotoğrafı nasıl paylaşırım?',
+      answer: 'Siparişinizi teslim aldıktan sonra "Siparişlerim" bölümünden puanlama yapabilir ve aldığınız sürpriz paketin fotoğrafını paylaşabilirsiniz. Fotoğraflarınız "Sürpriz Hikayeler" bölümünde görünür!',
     },
   ];
 
