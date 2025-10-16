@@ -150,9 +150,6 @@ function initializeSocket() {
             console.log('🏪 Connecting to restaurant room:', restaurantId);
             // Connect to restaurant room
             socket.emit('restaurant-connect', restaurantId);
-
-            // Show connection status in UI
-            showToast('✅ Real-time notifications active', 'success');
         });
         
         socket.on('disconnect', () => {

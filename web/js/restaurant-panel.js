@@ -806,7 +806,9 @@ class RestaurantPanel {
             console.log('📊 Loading dashboard data from API...');
 
             // Fetch real-time stats from backend (unified format)
-            const response = await window.backendService.api('/restaurant/stats');
+            const response = await window.backendService.makeRequest('/restaurant/stats', {
+                method: 'GET'
+            });
 
             if (response && response.success && response.data) {
                 const stats = response.data;
@@ -1642,7 +1644,9 @@ class RestaurantPanel {
             console.log('📈 Loading analytics data from API...');
 
             // Fetch analytics from backend (unified format)
-            const response = await window.backendService.api('/restaurant/analytics');
+            const response = await window.backendService.makeRequest('/restaurant/analytics', {
+                method: 'GET'
+            });
 
             if (response && response.success && response.data) {
                 const analytics = response.data;
@@ -1684,7 +1688,9 @@ class RestaurantPanel {
             console.log('💳 Loading payments data from API...');
 
             // Fetch payments from backend (unified format)
-            const response = await window.backendService.api('/restaurant/payments');
+            const response = await window.backendService.makeRequest('/restaurant/payments', {
+                method: 'GET'
+            });
 
             if (response && response.success && response.data) {
                 const payments = response.data;
