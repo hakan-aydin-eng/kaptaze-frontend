@@ -25,13 +25,13 @@ const SurpriseStories = ({ userCity }) => {
 
   useEffect(() => {
     loadStories();
-  }, [userCity]);
+  }, []); // Load once on mount, not dependent on userCity
 
   const loadStories = async () => {
     try {
       setLoading(true);
-      // Filter by city - shows local restaurant stories only
-      const response = await apiService.getSurpriseStories(10, userCity);
+      // Show all stories - users can order from any city anyway
+      const response = await apiService.getSurpriseStories(10, null);
 
       if (response.success) {
         const stories = response.data?.stories || response.stories || [];
