@@ -31,20 +31,12 @@ const SurpriseStories = ({ userCity }) => {
     try {
       setLoading(true);
       console.log('📸 Loading surprise stories for city:', userCity || 'all cities');
-      // Don't filter by city for now - show all stories
-      // TODO: Fix geocoding to return proper city name (Antalya not Duraliler)
-      const response = await apiService.getSurpriseStories(10, null);
-
-      console.log('📸 Stories API response:', response);
-      console.log('📸 Stories count:', response.stories ? response.stories.length : 0);
-      console.log('📸 Full response:', JSON.stringify(response, null, 2));
+      // Filter by city - geocoding now returns city name (Antalya) not district (Duraliler)
+      const response = await apiService.getSurpriseStories(10, userCity);
 
       if (response.success) {
         const stories = response.data?.stories || response.stories || [];
-        console.log('📸 Extracted stories:', stories);
-        console.log('📸 First story image:', stories[0]?.image);
         setStories(stories);
-        console.log('📸 Stories updated in state:', stories.length);
       } else {
         console.warn('Failed to load surprise stories:', response.message);
       }
@@ -105,9 +97,6 @@ const SurpriseStories = ({ userCity }) => {
           <Text style={styles.emptySubtext}>
             İlk sen bir paket sipariş et ve puanlarken fotoğraf ekle! 🎁
           </Text>
-          <Text style={styles.emptySubtext}>
-            DEBUG: stories.length = {stories?.length || 0}
-          </Text>
         </View>
       </View>
     );
@@ -117,7 +106,7 @@ const SurpriseStories = ({ userCity }) => {
     <View style={styles.container}>
       <Text style={styles.title}>📸 Sürpriz Hikayeler</Text>
       <Text style={styles.subtitle}>
-        Kullanıcılarımızın aldığı sürpriz paketler! 😍 (DEBUG: {stories.length} stories)
+        Kullanıcılarımızın aldığı sürpriz paketler! 😍
       </Text>
 
       <ScrollView
@@ -254,8 +243,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: '60%',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    height: '30%',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   ratingBadge: {
     position: 'absolute',

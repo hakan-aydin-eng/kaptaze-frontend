@@ -191,14 +191,15 @@ const MainScreen = ({ navigation }) => {
 
         if (reverseGeocode.length > 0) {
           const address = reverseGeocode[0];
-          const districtName = address.district || address.subregion || address.city || 'Konum Tespit Edildi';
-          setUserLocation(districtName);
+          // Use city instead of district for broader matching
+          const cityName = address.city || address.region || address.subregion || 'Konum Tespit Edildi';
+          setUserLocation(cityName);
 
           // Cache the location
-          await AsyncStorage.setItem('@kaptaze_cached_location', districtName);
+          await AsyncStorage.setItem('@kaptaze_cached_location', cityName);
           await AsyncStorage.setItem('@kaptaze_location_time', now.toString());
 
-          console.log('🏙️ User district:', districtName, '(cached for 24h)');
+          console.log('🏙️ User city:', cityName, '(cached for 24h)');
         } else {
           setUserLocation('Konum Tespit Edildi');
         }
