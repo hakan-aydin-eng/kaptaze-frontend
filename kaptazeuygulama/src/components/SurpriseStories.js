@@ -134,7 +134,7 @@ const SurpriseStories = ({ userCity }) => {
           >
             <View style={styles.storyImageContainer}>
               <Image
-                source={{ uri: story.photoUrl || story.photos?.[0]?.url }}
+                source={{ uri: story.image || story.photoUrl || story.photos?.[0]?.url }}
                 style={styles.storyImage}
                 resizeMode="cover"
               />

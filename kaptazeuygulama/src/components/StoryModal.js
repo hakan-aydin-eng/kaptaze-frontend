@@ -271,7 +271,7 @@ const StoryModal = ({
             activeOpacity={1}
           >
             <Image
-              source={{ uri: story.photoUrl || story.photos?.[0]?.url }}
+              source={{ uri: story.image || story.photoUrl || story.photos?.[0]?.url }}
               style={styles.storyImage}
               resizeMode="contain"
             />
@@ -302,7 +302,7 @@ const StoryModal = ({
                 📍 {story.restaurantName || story.restaurant?.name || 'Restaurant'}
               </Text>
               <Text style={styles.packageName}>
-                🎁 {story.packageName || story.packageInfo?.packageName || 'Sürpriz Paket'}
+                🎁 {story.title || story.packageName || story.packageInfo?.packageName || 'Sürpriz Paket'}
               </Text>
               {story.packageInfo?.packagePrice && (
                 <Text style={styles.packagePrice}>
