@@ -103,6 +103,9 @@ const SurpriseStories = ({ userCity }) => {
           <Text style={styles.emptySubtext}>
             İlk sen bir paket sipariş et ve puanlarken fotoğraf ekle! 🎁
           </Text>
+          <Text style={styles.emptySubtext}>
+            DEBUG: stories.length = {stories?.length || 0}
+          </Text>
         </View>
       </View>
     );
@@ -112,7 +115,7 @@ const SurpriseStories = ({ userCity }) => {
     <View style={styles.container}>
       <Text style={styles.title}>📸 Sürpriz Hikayeler</Text>
       <Text style={styles.subtitle}>
-        Kullanıcılarımızın aldığı sürpriz paketler! 😍
+        Kullanıcılarımızın aldığı sürpriz paketler! 😍 (DEBUG: {stories.length} stories)
       </Text>
 
       <ScrollView
