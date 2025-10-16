@@ -16,7 +16,7 @@ import StoryModal from './StoryModal';
 const { width } = Dimensions.get('window');
 const STORY_SIZE = (width - 48) / 4; // 4 stories per row with padding
 
-const SurpriseStories = ({ userCity }) => {
+const SurpriseStories = ({ userCoordinates }) => {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -24,14 +24,16 @@ const SurpriseStories = ({ userCity }) => {
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
-    loadStories();
-  }, []); // Load once on mount, not dependent on userCity
+    if (userCoordinates) {
+      loadStories();
+    }
+  }, [userCoordinates]);
 
   const loadStories = async () => {
     try {
       setLoading(true);
-      // Show all stories - users can order from any city anyway
-      const response = await apiService.getSurpriseStories(10, null);
+      // Get stories within 50km radius
+      const response = await apiService.getSurpriseStories(10, null, userCoordinates);
 
       if (response.success) {
         const stories = response.data?.stories || response.stories || [];

@@ -537,15 +537,18 @@ class ApiService {
     }
   }
 
-  // Get surprise stories for main page
-  async getSurpriseStories(limit = 10, city = null) {
+  // Get surprise stories for main page (within 50km radius)
+  async getSurpriseStories(limit = 10, city = null, userCoordinates = null) {
     try {
       let url = `/auth/surprise-stories?limit=${limit}`;
       if (city) {
         url += `&city=${encodeURIComponent(city)}`;
       }
+      if (userCoordinates) {
+        url += `&lat=${userCoordinates.latitude}&lng=${userCoordinates.longitude}&radius=50`;
+      }
 
-      console.log('🌍 Fetching stories for:', { limit, city, url });
+      console.log('🌍 Fetching stories within 50km:', { limit, coordinates: userCoordinates, url });
       const response = await this.get(url);
 
       if (response.success && response.stories) {

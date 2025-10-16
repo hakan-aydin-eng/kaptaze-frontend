@@ -738,7 +738,7 @@ const MainScreen = ({ navigation }) => {
         </LinearGradient>
 
         {/* Surprise Stories Section */}
-        <SurpriseStories userCity={userLocation} />
+        <SurpriseStories userCoordinates={userCoordinates} />
 
         {/* Featured Restaurants Section */}
         <View style={styles.featuredSection}>
