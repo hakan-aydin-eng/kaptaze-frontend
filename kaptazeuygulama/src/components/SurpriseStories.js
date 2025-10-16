@@ -134,7 +134,15 @@ const SurpriseStories = ({ userCity }) => {
           >
             <View style={styles.storyImageContainer}>
               <Image
-                source={{ uri: story.image || story.photoUrl || story.photos?.[0]?.url }}
+                source={{
+                  uri: (story.image && story.image.startsWith('http'))
+                    ? story.image
+                    : story.photoUrl?.startsWith('http')
+                    ? story.photoUrl
+                    : story.photos?.[0]?.url?.startsWith('http')
+                    ? story.photos?.[0]?.url
+                    : 'https://picsum.photos/400/300?random=' + (story.id || Math.random())
+                }}
                 style={styles.storyImage}
                 resizeMode="cover"
               />

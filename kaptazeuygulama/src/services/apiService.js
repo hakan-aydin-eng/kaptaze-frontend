@@ -494,7 +494,7 @@ class ApiService {
       };
 
       if (ratingData.photos && ratingData.photos.length > 0) {
-        // Use FormData for photo uploads
+        // Use FormData for photo uploads with actual file data
         const formData = new FormData();
         formData.append('orderId', ratingData.orderId);
         formData.append('rating', ratingData.rating.toString());
@@ -502,8 +502,14 @@ class ApiService {
           formData.append('comment', ratingData.comment);
         }
 
-        // Add photos as JSON string (backend will parse it)
-        formData.append('photos', JSON.stringify(ratingData.photos));
+        // Add photos as actual files (not JSON) so multer can process them
+        ratingData.photos.forEach((photo, index) => {
+          formData.append('photos', {
+            uri: photo.uri,
+            type: photo.type || 'image/jpeg',
+            name: photo.name || `rating_photo_${Date.now()}_${index}.jpg`,
+          });
+        });
 
         requestBody = formData;
         // Don't set Content-Type header, let fetch handle it for FormData
