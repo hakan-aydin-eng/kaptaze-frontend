@@ -25,6 +25,7 @@ import { useUserData } from '../context/UserDataContext';
 import SurpriseStories from '../components/SurpriseStories';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Get emoji icon for restaurant category (unified with registration form)
 const getRestaurantIcon = (category) => {
   const icons = {
     'Türk Mutfağı': '🇹🇷',
@@ -36,12 +37,7 @@ const getRestaurantIcon = (category) => {
     'Uzakdoğu Mutfağı': '🥢',
     'Vegan': '🌱',
     'Vejeteryan': '🥗',
-    'Fast Food': '🍔',
-    // Legacy support for old categories
-    'Pizza & Fast Food': '🍕',
-    'Kahve & Atıştırmalık': '☕',
-    'Vegan & Sağlıklı': '🥗',
-    'Özel Kahve': '☕'
+    'Fast Food': '🍔'
   };
   return icons[category] || '🍽️';
 };
@@ -505,15 +501,25 @@ const MainScreen = ({ navigation }) => {
   };
 
   const filteredRestaurants = restaurants.filter(restaurant => {
-    // Only category filter - search is now handled by backend API
+    // Category filter - matches exact category name from registration form
     if (activeFilter === 'all') return true;
+
+    // Map filter IDs to exact category names from registration form
     const categoryMap = {
-      'coffee': ['Kahve & Atıştırmalık', 'Özel Kahve'],
-      'fastfood': ['Pizza & Fast Food', 'Fast Food'],
-      'turkish': ['Türk Mutfağı', 'Turkish Cuisine'],
-      'vegan': ['Vegan & Sağlıklı']
+      'turkish': 'Türk Mutfağı',
+      'local': 'Yerel Lezzetler',
+      'bakery': 'Unlu Mamüller',
+      'dessert': 'Tatlı',
+      'grocery': 'Manav',
+      'flower': 'Çiçek',
+      'asian': 'Uzakdoğu Mutfağı',
+      'vegan': 'Vegan',
+      'vegetarian': 'Vejeteryan',
+      'fastfood': 'Fast Food'
     };
-    return categoryMap[activeFilter]?.includes(restaurant.category);
+
+    const targetCategory = categoryMap[activeFilter];
+    return restaurant.category === targetCategory;
   });
 
   // Filter değiştiğinde displayed restaurants'ı sıfırla
