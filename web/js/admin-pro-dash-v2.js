@@ -3627,39 +3627,22 @@ class AdminProDashboardV2 {
             const statusText = this.currentReviewStatus === 'pending' ? 'bekleyen' :
                              this.currentReviewStatus === 'approved' ? 'onaylanan' : 'reddedilen';
             container.innerHTML = `
-                <div class="table-container">
-                    <div style="padding: 3rem; text-align: center; color: var(--gray-500);">
-                        <i class="fas fa-star" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                        <p style="font-size: 1.1rem; margin: 0;">Henüz ${statusText} puanlama bulunmuyor</p>
-                    </div>
+                <div style="padding: 3rem; text-align: center; color: var(--gray-500);">
+                    <i class="fas fa-star" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p style="font-size: 1.1rem; margin: 0;">Henüz ${statusText} puanlama bulunmuyor</p>
                 </div>
             `;
             return;
         }
 
         const html = `
-            <div class="table-container">
-                <div class="table-header">
-                    <h3 class="table-title">Puanlama Listesi</h3>
-                    <span class="record-count">${reviews.length} puanlama</span>
+            <div style="padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.1rem; color: var(--gray-700);">📸 Fotoğraflı Puanlamalar</h3>
+                    <span style="color: var(--gray-500); font-size: 0.9rem;">${reviews.length} puanlama</span>
                 </div>
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Fotoğraf</th>
-                                <th>Müşteri</th>
-                                <th>Restaurant</th>
-                                <th>Yıldız</th>
-                                <th>Yorum</th>
-                                <th>Tarih</th>
-                                <th>İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${reviews.map(review => this.renderReviewRow(review)).join('')}
-                        </tbody>
-                    </table>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                    ${reviews.map(review => this.renderReviewCard(review)).join('')}
                 </div>
             </div>
         `;
@@ -3667,33 +3650,67 @@ class AdminProDashboardV2 {
         container.innerHTML = html;
     }
 
-    renderReviewRow(review) {
+    renderReviewCard(review) {
         const stars = '⭐'.repeat(review.review?.rating || 0);
         const photo = review.review?.photos[0];
         const comment = review.review?.comment || 'Yorum yok';
-        const commentShort = comment.length > 50 ? comment.substring(0, 50) + '...' : comment;
+        const commentShort = comment.length > 100 ? comment.substring(0, 100) + '...' : comment;
+        const date = new Date(review.review?.reviewedAt || review.createdAt).toLocaleDateString('tr-TR');
+
+        // Photo approval status badge
+        let statusBadge = '';
+        if (this.currentReviewStatus === 'approved') {
+            statusBadge = '<span style="position: absolute; top: 8px; right: 8px; background: var(--success); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">✓ Onaylı</span>';
+        } else if (this.currentReviewStatus === 'rejected') {
+            statusBadge = '<span style="position: absolute; top: 8px; right: 8px; background: var(--danger); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">✗ Reddedildi</span>';
+        }
+
+        // Action buttons (only for pending reviews)
+        const actionButtons = this.currentReviewStatus === 'pending' ? `
+            <div class="review-card-actions" style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 1rem 0.5rem 0.5rem; opacity: 0; transition: opacity 0.2s; display: flex; gap: 0.5rem; justify-content: center;">
+                <button onclick="adminDashboard.approvePhotoQuick('${review._id}', 0); event.stopPropagation();" style="flex: 1; padding: 0.5rem 1rem; background: var(--success); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: transform 0.2s;">
+                    <i class="fas fa-check"></i> Onayla
+                </button>
+                <button onclick="adminDashboard.rejectPhotoQuick('${review._id}', 0); event.stopPropagation();" style="flex: 1; padding: 0.5rem 1rem; background: var(--danger); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: transform 0.2s;">
+                    <i class="fas fa-times"></i> Reddet
+                </button>
+            </div>
+        ` : '';
 
         return `
-            <tr>
-                <td>
-                    ${photo ? `<img src="${photo.url}" alt="Review" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="adminDashboard.viewReviewDetails('${review._id}')">` : '<span style="color: var(--gray-400);">Fotoğraf yok</span>'}
-                </td>
-                <td>
-                    <div style="font-weight: 600;">${review.customer?.name || 'Unknown'}</div>
-                    <div style="font-size: 0.85rem; color: var(--gray-500);">${review.customer?.email || ''}</div>
-                </td>
-                <td>${review.restaurant?.name || 'Unknown Restaurant'}</td>
-                <td><span style="font-size: 1.2rem;">${stars}</span></td>
-                <td style="max-width: 200px;">
-                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${commentShort}</div>
-                </td>
-                <td>${new Date(review.review?.reviewedAt || review.createdAt).toLocaleDateString('tr-TR')}</td>
-                <td>
-                    <button class="btn-icon" onclick="adminDashboard.viewReviewDetails('${review._id}')" title="Detayları Görüntüle">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </td>
-            </tr>
+            <div class="review-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-md); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; position: relative;"
+                 onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.15)'; this.querySelector('.review-card-actions')?.style.setProperty('opacity', '1');"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-md)'; this.querySelector('.review-card-actions')?.style.setProperty('opacity', '0');">
+
+                <!-- Photo Container -->
+                <div onclick="window.open('${photo?.url}', '_blank')" style="position: relative; width: 100%; height: 200px; background: var(--gray-100); overflow: hidden;">
+                    ${photo ? `<img src="${photo.url}" alt="Review Photo" style="width: 100%; height: 100%; object-fit: cover;">` : '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--gray-400);"><i class="fas fa-image" style="font-size: 3rem;"></i></div>'}
+                    ${statusBadge}
+                    ${actionButtons}
+                </div>
+
+                <!-- Card Content -->
+                <div style="padding: 1rem;">
+                    <!-- Customer & Restaurant -->
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                        <div>
+                            <div style="font-weight: 600; color: var(--gray-800); margin-bottom: 0.25rem;">${review.customer?.name || 'Unknown'}</div>
+                            <div style="font-size: 0.85rem; color: var(--gray-500);">${review.restaurant?.name || 'Unknown Restaurant'}</div>
+                        </div>
+                        <div style="font-size: 1.2rem;">${stars}</div>
+                    </div>
+
+                    <!-- Comment -->
+                    <div style="font-size: 0.9rem; color: var(--gray-600); line-height: 1.5; margin-bottom: 0.75rem;">
+                        ${commentShort}
+                    </div>
+
+                    <!-- Date -->
+                    <div style="font-size: 0.8rem; color: var(--gray-400);">
+                        <i class="fas fa-clock"></i> ${date}
+                    </div>
+                </div>
+            </div>
         `;
     }
 
@@ -3846,6 +3863,56 @@ class AdminProDashboardV2 {
         } catch (error) {
             console.error('❌ Reject error:', error);
             alert('Reddetme sırasında hata oluştu: ' + error.message);
+        }
+    }
+
+    // Quick approve from card view (no modal)
+    async approvePhotoQuick(reviewId, photoIndex) {
+        console.log(`⚡ Quick approve - Review: ${reviewId}, Index: ${photoIndex}`);
+
+        try {
+            const response = await window.KapTazeAPIService.request(
+                `/admin/reviews/${reviewId}/photos/${photoIndex}/approve`,
+                { method: 'POST' }
+            );
+
+            if (response.success) {
+                this.showToast('✅ Fotoğraf onaylandı!', 'success');
+                // Reload reviews
+                await this.loadReviewsData();
+            }
+        } catch (error) {
+            console.error('❌ Quick approve error:', error);
+            this.showToast('❌ Onaylama hatası: ' + error.message, 'error');
+        }
+    }
+
+    // Quick reject from card view (no modal, optional reason)
+    async rejectPhotoQuick(reviewId, photoIndex) {
+        console.log(`⚡ Quick reject - Review: ${reviewId}, Index: ${photoIndex}`);
+
+        const reason = prompt('Reddedilme sebebi (opsiyonel - boş bırakabilirsiniz):');
+        if (reason === null) {
+            return; // User cancelled
+        }
+
+        try {
+            const response = await window.KapTazeAPIService.request(
+                `/admin/reviews/${reviewId}/photos/${photoIndex}/reject`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ reason: reason || undefined })
+                }
+            );
+
+            if (response.success) {
+                this.showToast('❌ Fotoğraf reddedildi.', 'success');
+                // Reload reviews
+                await this.loadReviewsData();
+            }
+        } catch (error) {
+            console.error('❌ Quick reject error:', error);
+            this.showToast('❌ Reddetme hatası: ' + error.message, 'error');
         }
     }
 
