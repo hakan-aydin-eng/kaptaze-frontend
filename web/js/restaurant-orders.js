@@ -584,17 +584,31 @@ async function handleOrderAcknowledgment(orderId, notificationElement) {
     console.log('👁️ Acknowledging order (GÖRDÜM):', orderId);
 
     try {
+        // Get token from backendService or localStorage
+        const token = window.backendService?.authToken ||
+                     localStorage.getItem('kaptaze_auth_token') ||
+                     localStorage.getItem('kaptaze_token');
+
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        console.log('🔑 Using token for acknowledgment:', token.substring(0, 20) + '...');
+
         // Backend'e siparişi gördüğünü bildir (unified format)
         const response = await fetch(`${API_URL}/restaurant/orders/${orderId}/acknowledge`, {
             method: 'PATCH',
             credentials: 'include',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             }
         });
 
         if (!response.ok) {
-            throw new Error('Failed to acknowledge order');
+            const errorData = await response.json().catch(() => ({}));
+            console.error('❌ Acknowledge failed:', response.status, errorData);
+            throw new Error(errorData.error || errorData.message || 'Failed to acknowledge order');
         }
 
         const result = await response.json();
@@ -614,7 +628,7 @@ async function handleOrderAcknowledgment(orderId, notificationElement) {
 
     } catch (error) {
         console.error('❌ Error acknowledging order:', error);
-        showToast('❌ Sipariş işaretlenirken hata oluştu', 'error');
+        showToast('❌ Sipariş işaretlenirken hata oluştu: ' + error.message, 'error');
     }
 }
 
