@@ -1330,131 +1330,175 @@ class AdminProDashboardV2 {
     // Restaurant management functions
     displayRestaurants(restaurants) {
         console.log('🎨 Displaying restaurants:', restaurants.length, restaurants);
-        
+
         // Get restaurants table container (fix for existing HTML structure)
         let container = document.getElementById('restaurantsTable');
-        
+
         if (!container) {
             // Fallback to dataContainer approach
             const activeSection = document.querySelector('.content-section.active');
             container = activeSection ? activeSection.querySelector('#dataContainer') : null;
         }
-        
+
         if (!container) {
             console.error('❌ No suitable container found for restaurants');
             return;
         }
-        
+
         console.log('✅ Using container:', container.id);
 
         const html = `
-            <div class="section-header">
-                <h2 class="section-title">Kayıtlı Restoranlar (${restaurants.length})</h2>
-                <div class="section-actions">
-                    <button class="btn btn-secondary" onclick="adminDashboard.refreshRestaurants()">
-                        <i class="fas fa-sync-alt"></i> Yenile
-                    </button>
+            <div style="padding: 1rem;">
+                <!-- Stats Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                    <div style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Toplam Restaurant</div>
+                        <div style="font-size: 2.5rem; font-weight: 700;">${restaurants.length}</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Aktif</div>
+                        <div style="font-size: 2.5rem; font-weight: 700;">${restaurants.filter(r => r.status === 'active').length}</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Pasif</div>
+                        <div style="font-size: 2.5rem; font-weight: 700;">${restaurants.filter(r => r.status === 'inactive').length}</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Askıda</div>
+                        <div style="font-size: 2.5rem; font-weight: 700;">${restaurants.filter(r => r.status === 'suspended').length}</div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Restoran Adı</th>
-                            <th>Kategori</th>
-                            <th>Sahip</th>
-                            <th>İletişim</th>
-                            <th>Lokasyon</th>
-                            <th>Durum</th>
-                            <th>Kayıt Tarihi</th>
-                            <th>İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${restaurants.map(restaurant => this.renderRestaurantRow(restaurant)).join('')}
-                    </tbody>
-                </table>
+                <!-- Restaurant Cards Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+                    ${restaurants.map(restaurant => this.renderRestaurantCard(restaurant)).join('')}
+                </div>
             </div>
         `;
 
         container.innerHTML = html;
-        console.log('✅ Restaurant table HTML set, container:', container);
+        console.log('✅ Restaurant cards HTML set, container:', container);
     }
 
-    renderRestaurantRow(restaurant) {
+    renderRestaurantCard(restaurant) {
         // Safe data access with fallbacks
         const name = restaurant.name || 'Bilinmeyen Restoran';
         const category = restaurant.category || 'Kategori Yok';
         const status = restaurant.status || 'active';
         const email = restaurant.email || 'Email Yok';
         const phone = restaurant.phone || 'Telefon Yok';
-        
+
         // Safe owner access
         const owner = restaurant.owner || {};
         const ownerName = `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || 'Sahip Bilgisi Yok';
-        
+
         // Safe address access with full address
         const address = restaurant.address || {};
-        const fullAddress = address.street ? 
+        const fullAddress = address.street ?
             `${address.street}, ${address.district || 'Bilinmeyen'}, ${address.city || 'Bilinmeyen'}` :
             `${address.district || 'Bilinmeyen'}, ${address.city || 'Bilinmeyen'}`;
         const location = fullAddress;
-        
+
         // Safe date handling
-        const date = restaurant.createdAt ? 
-            new Date(restaurant.createdAt).toLocaleDateString('tr-TR') : 
+        const date = restaurant.createdAt ?
+            new Date(restaurant.createdAt).toLocaleDateString('tr-TR') :
             'Tarih Bilinmiyor';
-        
+
         const statusBadge = this.getRestaurantStatusBadge(status);
-        
+
+        // Status colors
+        const statusColors = {
+            'active': { bg: '#dcfce7', text: '#16a34a', border: '#16a34a' },
+            'inactive': { bg: '#fef3c7', text: '#d97706', border: '#d97706' },
+            'suspended': { bg: '#fee2e2', text: '#dc2626', border: '#dc2626' }
+        };
+        const statusColor = statusColors[status] || statusColors['inactive'];
+
         return `
-            <tr>
-                <td>
-                    <div>
-                        <strong style="color: var(--gray-900);">${name}</strong>
-                        ${restaurant.application ? `<br><small style="color: var(--gray-600);">Başvuru: ${restaurant.application.applicationId}</small>` : ''}
+            <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; position: relative;"
+                 onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.15)';"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)';">
+
+                <!-- Status Badge (Top Right) -->
+                <div style="position: absolute; top: 1rem; right: 1rem; z-index: 2;">
+                    ${statusBadge}
+                </div>
+
+                <!-- Card Header -->
+                <div style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb;">
+                    <div style="display: flex; align-items: start; gap: 1rem;">
+                        <div style="flex: 1;">
+                            <h3 style="font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">${name}</h3>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #f3f4f6; border-radius: 6px; font-size: 0.875rem; font-weight: 500; color: #4b5563;">
+                                    ${category}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                </td>
-                <td>
-                    <span class="category-badge">${category}</span>
-                </td>
-                <td>
-                    <div>
-                        <strong>${ownerName}</strong>
+                </div>
+
+                <!-- Card Body -->
+                <div style="padding: 1.5rem;">
+                    <!-- Owner Info -->
+                    <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;">
+                        <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">Sahip</div>
+                        <div style="font-weight: 600; color: #111827;">${ownerName}</div>
                     </div>
-                </td>
-                <td>
-                    <div style="font-size: 0.875rem;">
-                        <div><i class="fas fa-envelope" style="width: 12px;"></i> ${email}</div>
-                        <div><i class="fas fa-phone" style="width: 12px;"></i> ${phone}</div>
+
+                    <!-- Contact Info -->
+                    <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;">
+                        <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">İletişim</div>
+                        <div style="font-size: 0.875rem; color: #4b5563; margin-bottom: 0.25rem;">
+                            <i class="fas fa-envelope" style="width: 16px; color: #9ca3af;"></i> ${email}
+                        </div>
+                        <div style="font-size: 0.875rem; color: #4b5563;">
+                            <i class="fas fa-phone" style="width: 16px; color: #9ca3af;"></i> ${phone}
+                        </div>
                     </div>
-                </td>
-                <td>
-                    <div style="font-size: 0.875rem; color: var(--gray-600);">
-                        ${location}
+
+                    <!-- Location -->
+                    <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #f3f4f6;">
+                        <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">Adres</div>
+                        <div style="font-size: 0.875rem; color: #4b5563; line-height: 1.4;">
+                            <i class="fas fa-map-marker-alt" style="width: 16px; color: #9ca3af;"></i> ${location}
+                        </div>
                     </div>
-                </td>
-                <td>${statusBadge}</td>
-                <td style="font-size: 0.875rem;">${date}</td>
-                <td>
-                    <div style="display: flex; gap: 0.25rem;">
-                        <button class="action-btn action-view" onclick="adminDashboard.viewRestaurant('${restaurant._id || restaurant.id}')" title="Detay">
-                            <i class="fas fa-eye"></i>
+
+                    <!-- Registration Date -->
+                    <div style="margin-bottom: 1rem;">
+                        <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">Kayıt Tarihi</div>
+                        <div style="font-size: 0.875rem; color: #4b5563;">
+                            <i class="fas fa-calendar" style="width: 16px; color: #9ca3af;"></i> ${date}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Footer (Actions) -->
+                <div style="padding: 1rem 1.5rem; background: #f9fafb; border-top: 1px solid #e5e7eb; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button class="btn btn-sm btn-secondary" onclick="adminDashboard.viewRestaurant('${restaurant._id || restaurant.id}')"
+                            style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-eye"></i> Detay
+                    </button>
+                    ${status === 'suspended' ? `
+                        <button class="btn btn-sm btn-success" onclick="adminDashboard.resumeRestaurant('${restaurant._id || restaurant.id}')"
+                                style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-play"></i> Devam Ettir
                         </button>
-                        ${status === 'suspended' ? `
-                            <button class="action-btn action-approve" onclick="adminDashboard.resumeRestaurant('${restaurant._id || restaurant.id}')" title="Devam Ettir">
-                                <i class="fas fa-play"></i>
-                            </button>
-                        ` : `
-                            <button class="action-btn action-reject" onclick="adminDashboard.suspendRestaurant('${restaurant._id || restaurant.id}')" title="Askıya Al">
-                                <i class="fas fa-pause"></i>
-                            </button>
-                        `}
-                    </div>
-                </td>
-            </tr>
+                    ` : `
+                        <button class="btn btn-sm btn-danger" onclick="adminDashboard.suspendRestaurant('${restaurant._id || restaurant.id}')"
+                                style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-pause"></i> Askıya Al
+                        </button>
+                    `}
+                </div>
+            </div>
         `;
+    }
+
+    renderRestaurantRow(restaurant) {
+        // Kept for backward compatibility
+        return this.renderRestaurantCard(restaurant);
     }
 
     getRestaurantStatusBadge(status) {
@@ -1474,9 +1518,146 @@ class AdminProDashboardV2 {
     viewRestaurant(restaurantId) {
         console.log('👁️ Viewing restaurant:', restaurantId);
         const restaurant = this.data.restaurants.find(r => r._id === restaurantId || r.id === restaurantId);
-        if (restaurant) {
-            alert(`Restoran Detayları:\n\nAdı: ${restaurant.name}\nKategori: ${restaurant.category}\nSahip: ${restaurant.owner.firstName} ${restaurant.owner.lastName}\nDurum: ${restaurant.status}`);
+
+        if (!restaurant) {
+            this.showToast('❌ Restaurant bulunamadı', 'error');
+            return;
         }
+
+        const owner = restaurant.owner || {};
+        const address = restaurant.address || {};
+        const socialMedia = restaurant.socialMedia || {};
+        const stats = restaurant.stats || {};
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h3>🏪 Restaurant Detayları</h3>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                    <!-- Status Badge -->
+                    <div style="margin-bottom: 1.5rem; text-align: center;">
+                        ${this.getRestaurantStatusBadge(restaurant.status)}
+                    </div>
+
+                    <!-- Restaurant Info -->
+                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <h4 style="font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">${restaurant.name}</h4>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                            <span style="display: inline-block; padding: 0.25rem 0.75rem; background: white; border-radius: 6px; font-size: 0.875rem; font-weight: 500; color: #4b5563;">
+                                ${restaurant.category}
+                            </span>
+                        </div>
+                        ${restaurant.description ? `
+                            <p style="color: #6b7280; font-size: 0.875rem; line-height: 1.5;">${restaurant.description}</p>
+                        ` : ''}
+                    </div>
+
+                    <!-- Two Column Layout -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <!-- Owner Info -->
+                        <div style="background: white; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px;">
+                            <div style="font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">👤 Sahip Bilgileri</div>
+                            <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">
+                                <strong style="color: #111827;">${owner.firstName || ''} ${owner.lastName || ''}</strong>
+                            </div>
+                            <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">
+                                <i class="fas fa-envelope" style="width: 16px; color: #9ca3af;"></i> ${owner.email || '-'}
+                            </div>
+                            <div style="font-size: 0.875rem; color: #6b7280;">
+                                <i class="fas fa-phone" style="width: 16px; color: #9ca3af;"></i> ${owner.phone || '-'}
+                            </div>
+                        </div>
+
+                        <!-- Contact Info -->
+                        <div style="background: white; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px;">
+                            <div style="font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">📞 İletişim</div>
+                            <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">
+                                <i class="fas fa-envelope" style="width: 16px; color: #9ca3af;"></i> ${restaurant.email || '-'}
+                            </div>
+                            <div style="font-size: 0.875rem; color: #6b7280;">
+                                <i class="fas fa-phone" style="width: 16px; color: #9ca3af;"></i> ${restaurant.phone || '-'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div style="background: white; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <div style="font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">📍 Adres</div>
+                        <div style="font-size: 0.875rem; color: #6b7280; line-height: 1.4;">
+                            ${address.street ? `${address.street}<br>` : ''}
+                            ${address.district || ''} ${address.city || ''} ${address.postalCode || ''}
+                        </div>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.75rem; font-weight: 700;">${stats.totalOrders || 0}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.9;">Toplam Sipariş</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.75rem; font-weight: 700;">₺${(stats.totalRevenue || 0).toFixed(0)}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.9;">Toplam Gelir</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 1.75rem; font-weight: 700;">${stats.activeMenuItems || 0}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.9;">Aktif Paket</div>
+                        </div>
+                    </div>
+
+                    <!-- Social Media -->
+                    ${socialMedia.website || socialMedia.instagram || socialMedia.facebook ? `
+                        <div style="background: white; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <div style="font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">🔗 Sosyal Medya</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                ${socialMedia.website ? `
+                                    <a href="${socialMedia.website}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; background: #f3f4f6; border-radius: 6px; font-size: 0.875rem; color: #4b5563; text-decoration: none;">
+                                        <i class="fas fa-globe"></i> Website
+                                    </a>
+                                ` : ''}
+                                ${socialMedia.instagram ? `
+                                    <a href="${socialMedia.instagram}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; background: #fce7f3; border-radius: 6px; font-size: 0.875rem; color: #be185d; text-decoration: none;">
+                                        <i class="fab fa-instagram"></i> Instagram
+                                    </a>
+                                ` : ''}
+                                ${socialMedia.facebook ? `
+                                    <a href="${socialMedia.facebook}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; background: #dbeafe; border-radius: 6px; font-size: 0.875rem; color: #1e40af; text-decoration: none;">
+                                        <i class="fab fa-facebook"></i> Facebook
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Dates -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="background: #f9fafb; padding: 1rem; border-radius: 8px;">
+                            <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Kayıt Tarihi</div>
+                            <div style="font-size: 0.875rem; font-weight: 600; color: #111827;">
+                                ${restaurant.createdAt ? new Date(restaurant.createdAt).toLocaleDateString('tr-TR') : '-'}
+                            </div>
+                        </div>
+                        <div style="background: #f9fafb; padding: 1rem; border-radius: 8px;">
+                            <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Son Güncelleme</div>
+                            <div style="font-size: 0.875rem; font-weight: 600; color: #111827;">
+                                ${restaurant.updatedAt ? new Date(restaurant.updatedAt).toLocaleDateString('tr-TR') : '-'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Kapat</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
     }
 
     async suspendRestaurant(restaurantId) {
