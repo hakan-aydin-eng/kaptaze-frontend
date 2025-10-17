@@ -2435,32 +2435,32 @@ class AdminProDashboardV2 {
         const tableHTML = `
             <!-- Modern Stats Dashboard -->
             <div class="packages-stats-modern">
-                <div class="stat-card pending">
-                    <div class="stat-icon">⏳</div>
-                    <div class="stat-content">
-                        <div class="stat-number">${packages.filter(p => p.status === 'pending').length}</div>
-                        <div class="stat-label">Bekleyen</div>
-                    </div>
-                </div>
-                <div class="stat-card approved">
+                <div class="stat-card active">
                     <div class="stat-icon">✅</div>
                     <div class="stat-content">
-                        <div class="stat-number">${packages.filter(p => p.status === 'approved').length}</div>
-                        <div class="stat-label">Onaylı</div>
+                        <div class="stat-number">${packages.filter(p => p.status === 'active').length}</div>
+                        <div class="stat-label">Aktif</div>
                     </div>
                 </div>
-                <div class="stat-card rejected">
-                    <div class="stat-icon">❌</div>
+                <div class="stat-card inactive">
+                    <div class="stat-icon">⏸️</div>
                     <div class="stat-content">
-                        <div class="stat-number">${packages.filter(p => p.status === 'rejected').length}</div>
-                        <div class="stat-label">Reddedilen</div>
+                        <div class="stat-number">${packages.filter(p => p.status === 'inactive').length}</div>
+                        <div class="stat-label">İnaktif</div>
                     </div>
                 </div>
-                <div class="stat-card out-of-stock">
-                    <div class="stat-icon">📦</div>
+                <div class="stat-card sold-out">
+                    <div class="stat-icon">🚫</div>
                     <div class="stat-content">
-                        <div class="stat-number">${packages.filter(p => p.quantity === 0).length}</div>
-                        <div class="stat-label">Tükenen</div>
+                        <div class="stat-number">${packages.filter(p => p.status === 'sold_out').length}</div>
+                        <div class="stat-label">Tükendi</div>
+                    </div>
+                </div>
+                <div class="stat-card expired">
+                    <div class="stat-icon">⏰</div>
+                    <div class="stat-content">
+                        <div class="stat-number">${packages.filter(p => p.status === 'expired').length}</div>
+                        <div class="stat-label">Süresi Doldu</div>
                     </div>
                 </div>
             </div>
@@ -2474,9 +2474,10 @@ class AdminProDashboardV2 {
                 <div class="filter-container">
                     <select class="filter-select" id="statusFilter">
                         <option value="">Tüm Durumlar</option>
-                        <option value="pending">Bekleyen</option>
-                        <option value="approved">Onaylı</option>
-                        <option value="rejected">Reddedilen</option>
+                        <option value="active">Aktif</option>
+                        <option value="inactive">İnaktif</option>
+                        <option value="sold_out">Tükendi</option>
+                        <option value="expired">Süresi Doldu</option>
                     </select>
                     <select class="filter-select" id="categoryFilter">
                         <option value="">Tüm Kategoriler</option>
