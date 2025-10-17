@@ -12,6 +12,7 @@ class AdminProDashboardV2 {
             applications: [],
             restaurants: [],
             packages: [],
+            orders: [],
             consumers: [],
             stats: {}
         };
@@ -179,6 +180,9 @@ class AdminProDashboardV2 {
                 break;
             case 'packages':
                 await this.loadPackagesData();
+                break;
+            case 'orders':
+                await this.loadOrdersData();
                 break;
             case 'consumers':
                 await this.loadConsumersData();
@@ -3173,16 +3177,318 @@ class AdminProDashboardV2 {
         this.refreshCurrentSection();
     }
 
+    // ============================================================================
+    // ORDER MANAGEMENT METHODS
+    // ============================================================================
+
+    async loadOrdersData() {
+        console.log('📦 Loading orders data...');
+        try {
+            const statusFilter = document.getElementById('orderStatusFilter')?.value || 'all';
+            const paymentFilter = document.getElementById('orderPaymentFilter')?.value || 'all';
+            const startDate = document.getElementById('startDateFilter')?.value || '';
+            const endDate = document.getElementById('endDateFilter')?.value || '';
+            const searchQuery = document.getElementById('orderSearchInput')?.value || '';
+
+            const params = {
+                status: statusFilter,
+                paymentMethod: paymentFilter,
+                startDate,
+                endDate,
+                search: searchQuery,
+                page: 1,
+                limit: 50
+            };
+
+            const response = await window.KapTazeAPIService.request('/admin/orders', {
+                method: 'GET',
+                params
+            });
+
+            if (response.success) {
+                this.data.orders = response.data.orders;
+                console.log(`✅ Loaded ${this.data.orders.length} orders`);
+                this.displayOrders(this.data.orders, response.data.pagination);
+            } else {
+                throw new Error('Failed to load orders data');
+            }
+        } catch (error) {
+            console.error('❌ Orders load error:', error);
+            this.showError('ordersDataContainer', 'Siparişler yüklenirken hata oluştu: ' + error.message);
+        }
+    }
+
+    displayOrders(orders, pagination) {
+        console.log('📦 Displaying orders:', orders.length);
+
+        const container = document.getElementById('ordersDataContainer');
+        if (!container) {
+            console.error('❌ Orders container not found');
+            return;
+        }
+
+        if (!orders || orders.length === 0) {
+            container.innerHTML = `
+                <div class="table-container">
+                    <div style="padding: 3rem; text-align: center; color: var(--gray-500);">
+                        <i class="fas fa-shopping-cart" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                        <p style="font-size: 1.1rem; margin: 0;">Henüz sipariş bulunmuyor</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        const html = `
+            <div class="table-container">
+                <div class="table-header">
+                    <h3 class="table-title">Sipariş Listesi</h3>
+                    <span class="record-count">${orders.length} sipariş</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Sipariş ID</th>
+                                <th>Müşteri</th>
+                                <th>Restaurant</th>
+                                <th>Ürünler</th>
+                                <th>Tutar</th>
+                                <th>Tasarruf</th>
+                                <th>Ödeme</th>
+                                <th>Durum</th>
+                                <th>Tarih</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orders.map(order => this.renderOrderRow(order)).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
+    renderOrderRow(order) {
+        const statusColors = {
+            'pending': 'warning',
+            'confirmed': 'info',
+            'completed': 'success',
+            'cancelled': 'danger'
+        };
+
+        const statusTexts = {
+            'pending': 'Beklemede',
+            'confirmed': 'Onaylandı',
+            'completed': 'Tamamlandı',
+            'cancelled': 'İptal'
+        };
+
+        const paymentBadge = order.paymentMethod === 'online'
+            ? '<span class="badge badge-info">Online</span>'
+            : '<span class="badge badge-secondary">Nakit</span>';
+
+        const itemsCount = order.items?.length || 0;
+        const itemsText = itemsCount > 0 ? `${itemsCount} ürün` : 'Ürün yok';
+
+        return `
+            <tr>
+                <td><strong>#${order.orderCode || order.orderId}</strong></td>
+                <td>
+                    <div style="font-weight: 600;">${order.customer?.name || 'Unknown'}</div>
+                    <div style="font-size: 0.85rem; color: var(--gray-500);">${order.customer?.phone || ''}</div>
+                </td>
+                <td>${order.restaurant?.name || 'Unknown Restaurant'}</td>
+                <td>${itemsText}</td>
+                <td><strong>₺${(order.totalPrice || 0).toFixed(2)}</strong></td>
+                <td style="color: var(--success);">₺${(order.savings || 0).toFixed(2)}</td>
+                <td>${paymentBadge}</td>
+                <td>
+                    <span class="badge badge-${statusColors[order.status] || 'secondary'}">
+                        ${statusTexts[order.status] || order.status}
+                    </span>
+                </td>
+                <td>${new Date(order.createdAt).toLocaleString('tr-TR')}</td>
+                <td>
+                    <button class="btn-icon" onclick="adminDashboard.viewOrderDetails('${order._id}')"
+                            title="Detayları Görüntüle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+
+    async viewOrderDetails(orderId) {
+        console.log('👁️ Viewing order details:', orderId);
+        try {
+            const response = await window.KapTazeAPIService.request(`/admin/orders/${orderId}`);
+
+            if (response.success) {
+                const order = response.data;
+                this.showOrderDetailsModal(order);
+            } else {
+                alert('Sipariş detayları yüklenemedi');
+            }
+        } catch (error) {
+            console.error('❌ Error loading order details:', error);
+            alert('Sipariş detayları yüklenirken hata oluştu: ' + error.message);
+        }
+    }
+
+    showOrderDetailsModal(order) {
+        const itemsHTML = order.items?.map(item => `
+            <div style="display: flex; justify-content: space-between; padding: 0.75rem; border-bottom: 1px solid var(--gray-200);">
+                <div>
+                    <div style="font-weight: 600;">${item.name || item.title || 'Item'}</div>
+                    <div style="font-size: 0.85rem; color: var(--gray-500);">Miktar: ${item.quantity || 1}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 600;">₺${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</div>
+                    ${item.originalPrice ? `<div style="font-size: 0.85rem; color: var(--gray-500); text-decoration: line-through;">₺${(item.originalPrice * item.quantity).toFixed(2)}</div>` : ''}
+                </div>
+            </div>
+        `).join('') || '<p>Ürün bilgisi yok</p>';
+
+        const modalHTML = `
+            <div class="modal-overlay" onclick="this.remove()">
+                <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h2>📦 Sipariş Detayları</h2>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                            <div>
+                                <h4 style="margin-bottom: 1rem; color: var(--primary);">👤 Müşteri Bilgileri</h4>
+                                <p><strong>Ad:</strong> ${order.customer?.name || 'N/A'}</p>
+                                <p><strong>Telefon:</strong> ${order.customer?.phone || 'N/A'}</p>
+                                <p><strong>Email:</strong> ${order.customer?.email || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <h4 style="margin-bottom: 1rem; color: var(--primary);">🏪 Restaurant Bilgileri</h4>
+                                <p><strong>Ad:</strong> ${order.restaurant?.name || 'N/A'}</p>
+                                <p><strong>Telefon:</strong> ${order.restaurant?.phone || 'N/A'}</p>
+                            </div>
+                        </div>
+
+                        <h4 style="margin-bottom: 1rem; color: var(--primary);">🛒 Sipariş Ürünleri</h4>
+                        <div style="border: 1px solid var(--gray-200); border-radius: 8px; margin-bottom: 2rem;">
+                            ${itemsHTML}
+                        </div>
+
+                        <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Toplam Tutar:</span>
+                                <strong style="font-size: 1.2rem;">₺${(order.totalPrice || 0).toFixed(2)}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; color: var(--success);">
+                                <span>Tasarruf:</span>
+                                <strong>₺${(order.savings || 0).toFixed(2)}</strong>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <p><strong>Sipariş ID:</strong> #${order.orderCode || order.orderId}</p>
+                                <p><strong>Ödeme:</strong> ${order.paymentMethod === 'online' ? 'Online' : 'Nakit'}</p>
+                            </div>
+                            <div>
+                                <p><strong>Durum:</strong> ${order.status}</p>
+                                <p><strong>Tarih:</strong> ${new Date(order.createdAt).toLocaleString('tr-TR')}</p>
+                            </div>
+                        </div>
+
+                        ${order.pickupCode ? `<p style="margin-top: 1rem;"><strong>Teslim Kodu:</strong> ${order.pickupCode}</p>` : ''}
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+                            Kapat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    filterOrders() {
+        console.log('🔍 Filtering orders...');
+        this.loadOrdersData();
+    }
+
+    searchOrders(query) {
+        console.log('🔍 Searching orders:', query);
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+            this.loadOrdersData();
+        }, 500);
+    }
+
+    async refreshOrders() {
+        console.log('🔄 Refreshing orders...');
+        await this.loadOrdersData();
+    }
+
+    async exportOrders() {
+        console.log('📥 Exporting orders to CSV...');
+        try {
+            if (!this.data.orders || this.data.orders.length === 0) {
+                alert('Export edilecek sipariş bulunamadı');
+                return;
+            }
+
+            // CSV header
+            let csv = 'Sipariş ID,Müşteri,Telefon,Restaurant,Ürün Sayısı,Toplam,Tasarruf,Ödeme,Durum,Tarih\n';
+
+            // CSV rows
+            this.data.orders.forEach(order => {
+                const row = [
+                    order.orderCode || order.orderId,
+                    order.customer?.name || '',
+                    order.customer?.phone || '',
+                    order.restaurant?.name || '',
+                    order.items?.length || 0,
+                    (order.totalPrice || 0).toFixed(2),
+                    (order.savings || 0).toFixed(2),
+                    order.paymentMethod === 'online' ? 'Online' : 'Nakit',
+                    order.status || '',
+                    new Date(order.createdAt).toLocaleString('tr-TR')
+                ].map(val => `"${val}"`).join(',');
+
+                csv += row + '\n';
+            });
+
+            // Download
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `siparisler_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+
+            console.log('✅ Orders exported successfully');
+        } catch (error) {
+            console.error('❌ Export error:', error);
+            alert('Export sırasında hata oluştu: ' + error.message);
+        }
+    }
+
     cleanup() {
         // Cleanup function called on page unload
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
         }
-        
+
         if (this.notificationTimeout) {
             clearTimeout(this.notificationTimeout);
         }
-        
+
         console.log('🧹 Dashboard cleanup completed');
     }
 }
@@ -3198,6 +3504,8 @@ window.addEventListener('error', (e) => {
     console.error('🚨 Dashboard Error:', e.error);
 });
 
+window.adminDashboard = new AdminProDashboardV2();
+
 // Handle page visibility changes
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && window.adminDashboard) {
@@ -3207,15 +3515,15 @@ document.addEventListener('visibilitychange', () => {
 
 // Console branding
 console.log(`
-    🎯 KapTaze Admin Professional Dashboard V2
+    🎯 kapkazan Admin Professional Dashboard V2
     ⚡ Ultra Modern Restaurant Management System
     🔒 Security Level: Maximum
     📊 Real-time Data: Active
     🚀 Status: Production Ready
-    
+
     Commands:
     - adminDashboard.refreshAllData()
-    - adminDashboard.showSection('applications')
+    - adminDashboard.showSection('orders')
     - adminDashboard.setupSendGrid()
     - adminDashboard.logout()
 `);

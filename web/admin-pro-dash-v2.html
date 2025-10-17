@@ -1174,6 +1174,12 @@
                         </a>
                     </div>
                     <div class="nav-item">
+                        <a href="#orders" class="nav-link" data-section="orders">
+                            <i class="fas fa-shopping-cart nav-icon"></i>
+                            <span class="nav-text">Siparişler</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
                         <a href="#consumers" class="nav-link" data-section="consumers">
                             <i class="fas fa-users nav-icon"></i>
                             <span class="nav-text">Tüketiciler</span>
@@ -1653,6 +1659,65 @@
                     </div>
                 </section>
 
+                <!-- Orders Section -->
+                <section id="orders" class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">📦 Sipariş Yönetimi</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-secondary" onclick="adminDashboard.refreshOrders()">
+                                <i class="fas fa-sync"></i>
+                                Yenile
+                            </button>
+                            <button class="btn btn-success" onclick="adminDashboard.exportOrders()">
+                                <i class="fas fa-download"></i>
+                                Export CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filters Toolbar -->
+                    <div class="packages-toolbar">
+                        <div class="search-container">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="orderSearchInput" class="search-input"
+                                   placeholder="Sipariş ID, müşteri adı, telefon, restaurant ara..."
+                                   onkeyup="adminDashboard.searchOrders(this.value)">
+                        </div>
+
+                        <div class="filter-container">
+                            <select id="orderStatusFilter" class="filter-select" onchange="adminDashboard.filterOrders()">
+                                <option value="all">Tüm Durumlar</option>
+                                <option value="pending">Beklemede</option>
+                                <option value="confirmed">Onaylandı</option>
+                                <option value="completed">Tamamlandı</option>
+                                <option value="cancelled">İptal</option>
+                            </select>
+
+                            <select id="orderPaymentFilter" class="filter-select" onchange="adminDashboard.filterOrders()">
+                                <option value="all">Tüm Ödemeler</option>
+                                <option value="cash">Nakit</option>
+                                <option value="online">Online</option>
+                            </select>
+
+                            <input type="date" id="startDateFilter" class="filter-select"
+                                   onchange="adminDashboard.filterOrders()"
+                                   placeholder="Başlangıç">
+
+                            <input type="date" id="endDateFilter" class="filter-select"
+                                   onchange="adminDashboard.filterOrders()"
+                                   placeholder="Bitiş">
+                        </div>
+                    </div>
+
+                    <!-- Orders Data Container -->
+                    <div id="ordersDataContainer">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <span>Siparişler yükleniyor...</span>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Consumers Section -->
                 <section id="consumers" class="content-section">
                     <div id="dataContainer">
@@ -1683,7 +1748,7 @@
     </div>
 
     <!-- Load Admin Dashboard JavaScript -->
-    <script src="./js/admin-pro-dash-v2.js?v=2025.08.28"></script>
+    <script src="./js/admin-pro-dash-v2.js?v=2025.10.17.1"></script>
     <script src="./js/notification-manager.js?v=2025.09.18"></script>
 </body>
 </html>
