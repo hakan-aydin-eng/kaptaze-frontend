@@ -1524,6 +1524,9 @@ class AdminProDashboardV2 {
             return;
         }
 
+        // Scroll to top for better modal visibility
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
         const owner = restaurant.owner || {};
         const address = restaurant.address || {};
         const socialMedia = restaurant.socialMedia || {};
@@ -1532,6 +1535,7 @@ class AdminProDashboardV2 {
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.style.display = 'flex';
+        modal.style.zIndex = '999999';  // Ensure modal is on top
         modal.innerHTML = `
             <div class="modal-content" style="max-width: 700px;">
                 <div class="modal-header">
@@ -1653,11 +1657,23 @@ class AdminProDashboardV2 {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Kapat</button>
+                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove(); document.body.style.overflow = 'auto';">Kapat</button>
                 </div>
             </div>
         `;
+
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+
         document.body.appendChild(modal);
+
+        // Close modal on overlay click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+                document.body.style.overflow = 'auto';
+            }
+        });
     }
 
     async suspendRestaurant(restaurantId) {
