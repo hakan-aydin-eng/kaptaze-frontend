@@ -1186,6 +1186,13 @@
                         </a>
                     </div>
                     <div class="nav-item">
+                        <a href="#reviews" class="nav-link" data-section="reviews">
+                            <i class="fas fa-star nav-icon"></i>
+                            <span class="nav-text">Puanlamalar</span>
+                            <span class="nav-badge" id="pendingReviewsCount">0</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
                         <a href="#notifications" class="nav-link" data-section="notifications">
                             <i class="fas fa-bell nav-icon"></i>
                             <span class="nav-text">Bildirimler</span>
@@ -1458,6 +1465,43 @@
                         <div class="loading">
                             <div class="spinner"></div>
                             <span>Tüketiciler yükleniyor...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Reviews Section -->
+                <section id="reviews" class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">⭐ Puanlama Yönetimi</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-secondary" onclick="adminDashboard.refreshReviews()">
+                                <i class="fas fa-sync"></i>
+                                Yenile
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Review Filter Tabs -->
+                    <div class="packages-toolbar">
+                        <div class="filter-container">
+                            <button class="filter-btn active" data-status="pending" onclick="adminDashboard.filterReviewsByStatus('pending')">
+                                <i class="fas fa-clock"></i> Bekleyen
+                                <span class="badge badge-warning" id="pendingReviewsBadge">0</span>
+                            </button>
+                            <button class="filter-btn" data-status="approved" onclick="adminDashboard.filterReviewsByStatus('approved')">
+                                <i class="fas fa-check"></i> Onaylanan
+                            </button>
+                            <button class="filter-btn" data-status="rejected" onclick="adminDashboard.filterReviewsByStatus('rejected')">
+                                <i class="fas fa-times"></i> Reddedilen
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Reviews Data Container -->
+                    <div id="reviewsDataContainer">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <span>Puanlamalar yükleniyor...</span>
                         </div>
                     </div>
                 </section>
@@ -1744,7 +1788,7 @@
     </div>
 
     <!-- Load Admin Dashboard JavaScript -->
-    <script src="./js/admin-pro-dash-v2.js?v=2025.10.17.3"></script>
+    <script src="./js/admin-pro-dash-v2.js?v=2025.10.17.4"></script>
     <script src="./js/notification-manager.js?v=2025.09.18"></script>
 </body>
 </html>

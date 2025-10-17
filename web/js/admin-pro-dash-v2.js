@@ -14,8 +14,10 @@ class AdminProDashboardV2 {
             packages: [],
             orders: [],
             consumers: [],
+            reviews: [],
             stats: {}
         };
+        this.currentReviewStatus = 'pending'; // Track current review filter
         this.refreshInterval = null;
         this.sidebarCollapsed = false;
         
@@ -186,6 +188,9 @@ class AdminProDashboardV2 {
                 break;
             case 'consumers':
                 await this.loadConsumersData();
+                break;
+            case 'reviews':
+                await this.loadReviewsData();
                 break;
         }
     }
@@ -3575,6 +3580,292 @@ class AdminProDashboardV2 {
             console.error('❌ Export error:', error);
             alert('Export sırasında hata oluştu: ' + error.message);
         }
+    }
+
+    // ==========================================
+    // REVIEWS MANAGEMENT FUNCTIONS
+    // ==========================================
+
+    async loadReviewsData() {
+        console.log(`⭐ Loading ${this.currentReviewStatus} reviews...`);
+        try {
+            const endpoint = `/admin/reviews/${this.currentReviewStatus}`;
+            const response = await window.KapTazeAPIService.request(endpoint, {
+                method: 'GET',
+                params: { page: 1, limit: 50 }
+            });
+
+            if (response.success) {
+                this.data.reviews = response.data.reviews;
+                console.log(`✅ Loaded ${this.data.reviews.length} ${this.currentReviewStatus} reviews`);
+                this.displayReviews(this.data.reviews, response.data.pagination);
+
+                // Update badge
+                if (this.currentReviewStatus === 'pending') {
+                    const badge = document.getElementById('pendingReviewsBadge');
+                    const navBadge = document.getElementById('pendingReviewsCount');
+                    if (badge) badge.textContent = this.data.reviews.length;
+                    if (navBadge) navBadge.textContent = this.data.reviews.length;
+                }
+            }
+        } catch (error) {
+            console.error('❌ Reviews load error:', error);
+            this.showError('reviewsDataContainer', 'Puanlamalar yüklenirken hata oluştu: ' + error.message);
+        }
+    }
+
+    displayReviews(reviews, pagination) {
+        console.log(`📋 Displaying ${reviews.length} reviews`);
+
+        const container = document.getElementById('reviewsDataContainer');
+        if (!container) {
+            console.error('❌ Reviews container not found');
+            return;
+        }
+
+        if (!reviews || reviews.length === 0) {
+            const statusText = this.currentReviewStatus === 'pending' ? 'bekleyen' :
+                             this.currentReviewStatus === 'approved' ? 'onaylanan' : 'reddedilen';
+            container.innerHTML = `
+                <div class="table-container">
+                    <div style="padding: 3rem; text-align: center; color: var(--gray-500);">
+                        <i class="fas fa-star" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                        <p style="font-size: 1.1rem; margin: 0;">Henüz ${statusText} puanlama bulunmuyor</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        const html = `
+            <div class="table-container">
+                <div class="table-header">
+                    <h3 class="table-title">Puanlama Listesi</h3>
+                    <span class="record-count">${reviews.length} puanlama</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Fotoğraf</th>
+                                <th>Müşteri</th>
+                                <th>Restaurant</th>
+                                <th>Yıldız</th>
+                                <th>Yorum</th>
+                                <th>Tarih</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${reviews.map(review => this.renderReviewRow(review)).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
+    renderReviewRow(review) {
+        const stars = '⭐'.repeat(review.review?.rating || 0);
+        const photo = review.review?.photos[0];
+        const comment = review.review?.comment || 'Yorum yok';
+        const commentShort = comment.length > 50 ? comment.substring(0, 50) + '...' : comment;
+
+        return `
+            <tr>
+                <td>
+                    ${photo ? `<img src="${photo.url}" alt="Review" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="adminDashboard.viewReviewDetails('${review._id}')">` : '<span style="color: var(--gray-400);">Fotoğraf yok</span>'}
+                </td>
+                <td>
+                    <div style="font-weight: 600;">${review.customer?.name || 'Unknown'}</div>
+                    <div style="font-size: 0.85rem; color: var(--gray-500);">${review.customer?.email || ''}</div>
+                </td>
+                <td>${review.restaurant?.name || 'Unknown Restaurant'}</td>
+                <td><span style="font-size: 1.2rem;">${stars}</span></td>
+                <td style="max-width: 200px;">
+                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${commentShort}</div>
+                </td>
+                <td>${new Date(review.review?.reviewedAt || review.createdAt).toLocaleDateString('tr-TR')}</td>
+                <td>
+                    <button class="btn-icon" onclick="adminDashboard.viewReviewDetails('${review._id}')" title="Detayları Görüntüle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+
+    async viewReviewDetails(reviewId) {
+        console.log('👁️ Viewing review details:', reviewId);
+        const review = this.data.reviews.find(r => r._id === reviewId);
+
+        if (!review) {
+            alert('Puanlama bulunamadı');
+            return;
+        }
+
+        this.showReviewDetailsModal(review);
+    }
+
+    showReviewDetailsModal(review) {
+        const photos = review.review?.photos || [];
+        const stars = '⭐'.repeat(review.review?.rating || 0);
+
+        const modalHTML = `
+            <div class="modal-overlay" onclick="this.remove()">
+                <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h2>⭐ Puanlama Detayları</h2>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display: grid; gap: 1.5rem;">
+                            <!-- Photos -->
+                            <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">📸 Fotoğraflar (${photos.length})</h3>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem;">
+                                    ${photos.map((photo, index) => `
+                                        <div style="position: relative;">
+                                            <img src="${photo.url}" alt="Photo ${index + 1}"
+                                                 style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; cursor: pointer;"
+                                                 onclick="window.open('${photo.url}', '_blank')">
+                                            ${photo.isApproved ? '<span class="badge badge-success" style="position: absolute; top: 5px; right: 5px;">Onaylı</span>' :
+                                              photo.rejectedReason ? '<span class="badge badge-danger" style="position: absolute; top: 5px; right: 5px;">Reddedildi</span>' :
+                                              '<span class="badge badge-warning" style="position: absolute; top: 5px; right: 5px;">Beklemede</span>'}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <!-- Review Info -->
+                            <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">⭐ Puanlama Bilgileri</h3>
+                                <div style="display: grid; gap: 0.5rem;">
+                                    <div><strong>Yıldız:</strong> <span style="font-size: 1.3rem;">${stars}</span></div>
+                                    <div><strong>Yorum:</strong> ${review.review?.comment || 'Yorum yapılmamış'}</div>
+                                    <div><strong>Tarih:</strong> ${new Date(review.review?.reviewedAt).toLocaleString('tr-TR')}</div>
+                                </div>
+                            </div>
+
+                            <!-- Customer & Restaurant -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">👤 Müşteri</h3>
+                                    <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
+                                        <div><strong>İsim:</strong> ${review.customer?.name || 'Unknown'}</div>
+                                        <div><strong>Email:</strong> ${review.customer?.email || 'N/A'}</div>
+                                    </div>
+                                </div>
+                                <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">🏪 Restaurant</h3>
+                                    <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
+                                        <div><strong>İsim:</strong> ${review.restaurant?.name || 'Unknown'}</div>
+                                        <div><strong>Sipariş ID:</strong> ${review.orderId}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        ${this.currentReviewStatus === 'pending' ? `
+                            ${photos.map((photo, index) => !photo.isApproved ? `
+                                <button class="btn btn-danger" onclick="adminDashboard.rejectPhoto('${review._id}', ${index})">
+                                    <i class="fas fa-times"></i> Reddet (#${index + 1})
+                                </button>
+                                <button class="btn btn-success" onclick="adminDashboard.approvePhoto('${review._id}', ${index})">
+                                    <i class="fas fa-check"></i> Onayla (#${index + 1})
+                                </button>
+                            ` : '').join('')}
+                        ` : ''}
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+                            Kapat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    async approvePhoto(reviewId, photoIndex) {
+        console.log(`✅ Approving photo - Review: ${reviewId}, Index: ${photoIndex}`);
+
+        if (!confirm(`Bu fotoğrafı onaylamak istediğinizden emin misiniz?`)) {
+            return;
+        }
+
+        try {
+            const response = await window.KapTazeAPIService.request(
+                `/admin/reviews/${reviewId}/photos/${photoIndex}/approve`,
+                { method: 'POST' }
+            );
+
+            if (response.success) {
+                alert('✅ Fotoğraf başarıyla onaylandı!');
+                // Close modal
+                document.querySelector('.modal-overlay')?.remove();
+                // Reload reviews
+                await this.loadReviewsData();
+            }
+        } catch (error) {
+            console.error('❌ Approve error:', error);
+            alert('Onaylama sırasında hata oluştu: ' + error.message);
+        }
+    }
+
+    async rejectPhoto(reviewId, photoIndex) {
+        console.log(`❌ Rejecting photo - Review: ${reviewId}, Index: ${photoIndex}`);
+
+        const reason = prompt('Reddedilme sebebi (opsiyonel):');
+        // Allow empty reason - user can cancel or leave empty
+        if (reason === null) {
+            return; // User cancelled
+        }
+
+        try {
+            const response = await window.KapTazeAPIService.request(
+                `/admin/reviews/${reviewId}/photos/${photoIndex}/reject`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ reason: reason || undefined })
+                }
+            );
+
+            if (response.success) {
+                alert('❌ Fotoğraf reddedildi.');
+                // Close modal
+                document.querySelector('.modal-overlay')?.remove();
+                // Reload reviews
+                await this.loadReviewsData();
+            }
+        } catch (error) {
+            console.error('❌ Reject error:', error);
+            alert('Reddetme sırasında hata oluştu: ' + error.message);
+        }
+    }
+
+    filterReviewsByStatus(status) {
+        console.log(`🔍 Filtering reviews by status: ${status}`);
+        this.currentReviewStatus = status;
+
+        // Update active button
+        document.querySelectorAll('.filter-btn[data-status]').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`.filter-btn[data-status="${status}"]`)?.classList.add('active');
+
+        // Reload data
+        this.loadReviewsData();
+    }
+
+    async refreshReviews() {
+        console.log('🔄 Refreshing reviews...');
+        await this.loadReviewsData();
     }
 
     cleanup() {
