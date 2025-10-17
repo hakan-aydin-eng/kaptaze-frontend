@@ -1544,71 +1544,52 @@ class AdminProDashboardV2 {
 
     // Package management functions
     displayPackages(packages) {
-        console.log('📦 Displaying packages:', packages.length, packages);
-        
-        // Get packages table container (try different container IDs)
-        let container = document.getElementById('packagesTable') || 
-                       document.getElementById('dataContainer');
-        
+        console.log('📦 Displaying packages:', packages.length);
+
+        const container = document.getElementById('packagesTable');
         if (!container) {
-            // Fallback to active section approach
-            const activeSection = document.querySelector('.content-section.active');
-            container = activeSection ? activeSection.querySelector('#dataContainer') : null;
-        }
-        
-        if (!container) {
-            console.error('❌ No suitable container found for packages');
+            console.error('❌ Packages container not found');
             return;
         }
-        
-        console.log('✅ Using packages container:', container.id);
+
+        if (!packages || packages.length === 0) {
+            container.innerHTML = `
+                <div class="table-container">
+                    <div style="padding: 3rem; text-align: center; color: var(--gray-500);">
+                        <i class="fas fa-box" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                        <p style="font-size: 1.1rem; margin: 0;">Henüz paket bulunmuyor</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
 
         const html = `
-            <div class="section-header">
-                <h2 class="section-title">Tüm Paketler (${packages.length})</h2>
-                <div class="section-actions">
-                    <button class="btn btn-secondary" onclick="adminDashboard.refreshPackages()">
-                        <i class="fas fa-sync-alt"></i> Yenile
-                    </button>
-                    <button class="btn btn-primary" onclick="adminDashboard.exportPackages()">
-                        <i class="fas fa-download"></i> Export
-                    </button>
-                </div>
-            </div>
-
-            <div class="filter-bar">
-                <div class="search-container">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-input" placeholder="Paket ara..." 
-                           onkeyup="adminDashboard.filterPackages(this.value)">
-                </div>
-                <div class="filter-buttons">
-                    <button class="filter-btn active" data-status="all">Tümü</button>
-                    <button class="filter-btn" data-status="active">Aktif</button>
-                    <button class="filter-btn" data-status="sold_out">Tükendi</button>
-                    <button class="filter-btn" data-status="expired">Süresi Doldu</button>
-                </div>
-            </div>
-
             <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Paket Adı</th>
-                            <th>Restoran</th>
-                            <th>Kategori</th>
-                            <th>Fiyat</th>
-                            <th>Miktar</th>
-                            <th>Durum</th>
-                            <th>Son Teslim</th>
-                            <th>Oluşturulma</th>
-                            <th>İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${packages.map(pkg => this.renderPackageRow(pkg)).join('')}
-                    </tbody>
-                </table>
+                <div class="table-header">
+                    <h3 class="table-title">Paket Listesi</h3>
+                    <span class="record-count">${packages.length} paket</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Paket Adı</th>
+                                <th>Restoran</th>
+                                <th>Kategori</th>
+                                <th>Fiyat</th>
+                                <th>Miktar</th>
+                                <th>Durum</th>
+                                <th>Son Teslim</th>
+                                <th>Oluşturulma</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${packages.map(pkg => this.renderPackageRow(pkg)).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
 
@@ -1685,73 +1666,58 @@ class AdminProDashboardV2 {
     }
 
     renderPackageRow(pkg) {
-        const statusBadge = this.getPackageStatusBadge(pkg.status);
+        const statusColors = {
+            'active': 'success',
+            'inactive': 'secondary',
+            'sold_out': 'danger',
+            'expired': 'warning'
+        };
+
+        const statusTexts = {
+            'active': 'Aktif',
+            'inactive': 'Pasif',
+            'sold_out': 'Tükendi',
+            'expired': 'Süresi Doldu'
+        };
+
         const createdDate = new Date(pkg.createdAt).toLocaleDateString('tr-TR');
         const availableUntil = new Date(pkg.availableUntil).toLocaleDateString('tr-TR');
-        
+
         return `
             <tr>
                 <td>
-                    <div>
-                        <strong style="color: var(--gray-900);">${pkg.name}</strong>
-                        ${pkg.description ? `<br><small style="color: var(--gray-600);">${pkg.description}</small>` : ''}
-                    </div>
+                    <div style="font-weight: 600;">${pkg.name}</div>
+                    ${pkg.description ? `<div style="font-size: 0.85rem; color: var(--gray-500);">${pkg.description.substring(0, 50)}${pkg.description.length > 50 ? '...' : ''}</div>` : ''}
                 </td>
                 <td>
-                    <div>
-                        <strong style="color: var(--primary); font-size: 0.9rem;">${pkg.restaurant.name}</strong>
-                        <br><small style="color: var(--gray-600);">${pkg.restaurant.category}</small>
-                        ${pkg.restaurant.phone ? `<br><small style="color: var(--gray-500); font-size: 0.75rem;">${pkg.restaurant.phone}</small>` : ''}
-                    </div>
+                    <div style="font-weight: 600;">${pkg.restaurant?.name || 'N/A'}</div>
+                    <div style="font-size: 0.85rem; color: var(--gray-500);">${pkg.restaurant?.category || ''}</div>
+                </td>
+                <td><span class="badge badge-info">${pkg.category || 'N/A'}</span></td>
+                <td>
+                    ${pkg.originalPrice ? `<div style="font-size: 0.85rem; color: var(--gray-500); text-decoration: line-through;">₺${pkg.originalPrice.toFixed(2)}</div>` : ''}
+                    <strong style="color: var(--success);">₺${(pkg.discountedPrice || pkg.price || 0).toFixed(2)}</strong>
                 </td>
                 <td>
-                    <span class="category-badge">${pkg.category}</span>
+                    <span style="color: ${pkg.quantity > 0 ? 'var(--success)' : 'var(--danger)'};">
+                        ${pkg.quantity} adet
+                    </span>
                 </td>
                 <td>
-                    <div style="font-size: 0.875rem;">
-                        ${pkg.originalPrice ? `<span style="text-decoration: line-through; color: var(--gray-500);">₺${pkg.originalPrice}</span><br>` : ''}
-                        <strong style="color: var(--success);">₺${pkg.discountedPrice || pkg.price}</strong>
-                    </div>
+                    <span class="badge badge-${statusColors[pkg.status] || 'secondary'}">
+                        ${statusTexts[pkg.status] || pkg.status}
+                    </span>
                 </td>
+                <td>${availableUntil}</td>
+                <td>${createdDate}</td>
                 <td>
-                    <div style="font-size: 0.875rem;">
-                        <span style="color: ${pkg.quantity > 0 ? 'var(--success)' : 'var(--danger)'};">
-                            ${pkg.quantity} adet
-                        </span>
-                    </div>
-                </td>
-                <td>${statusBadge}</td>
-                <td style="font-size: 0.875rem;">${availableUntil}</td>
-                <td style="font-size: 0.875rem;">${createdDate}</td>
-                <td>
-                    <div style="display: flex; gap: 0.25rem;">
-                        <button class="action-btn action-view" onclick="adminDashboard.viewPackage('${pkg._id || pkg.id}')" title="Detay">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        ${pkg.status === 'active' ? `
-                            <button class="action-btn action-suspend" onclick="adminDashboard.suspendPackage('${pkg._id || pkg.id}')" title="Askıya Al">
-                                <i class="fas fa-pause"></i>
-                            </button>
-                        ` : ''}
-                    </div>
+                    <button class="btn-icon" onclick="adminDashboard.viewPackageDetails('${pkg._id || pkg.id}')"
+                            title="Detayları Görüntüle">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </td>
             </tr>
         `;
-    }
-
-    getPackageStatusBadge(status) {
-        const statusConfig = {
-            'active': { class: 'status-approved', text: 'Aktif', icon: 'check' },
-            'sold_out': { class: 'status-rejected', text: 'Tükendi', icon: 'times' },
-            'expired': { class: 'status-pending', text: 'Süresi Doldu', icon: 'clock' },
-            'inactive': { class: 'status-pending', text: 'Pasif', icon: 'pause' }
-        };
-
-        const config = statusConfig[status] || statusConfig['inactive'];
-        return `<span class="status-badge ${config.class}">
-            <i class="fas fa-${config.icon}"></i>
-            ${config.text}
-        </span>`;
     }
 
     getConsumerStatusBadge(status) {
@@ -1827,12 +1793,97 @@ class AdminProDashboardV2 {
         `;
     }
 
-    viewPackage(packageId) {
-        console.log('👁️ Viewing package:', packageId);
+    viewPackageDetails(packageId) {
+        console.log('👁️ Viewing package details:', packageId);
         const pkg = this.data.packages.find(p => (p._id || p.id) === packageId);
-        if (pkg) {
-            alert(`Paket Detayları:\n\nAdı: ${pkg.name}\nRestoran: ${pkg.restaurant.name}\nFiyat: ₺${pkg.discountedPrice || pkg.price}\nMiktar: ${pkg.quantity} adet\nDurum: ${pkg.status}`);
+
+        if (!pkg) {
+            alert('Paket bulunamadı');
+            return;
         }
+
+        this.showPackageDetailsModal(pkg);
+    }
+
+    showPackageDetailsModal(pkg) {
+        const statusColors = {
+            'active': 'success',
+            'inactive': 'secondary',
+            'sold_out': 'danger',
+            'expired': 'warning'
+        };
+
+        const statusTexts = {
+            'active': 'Aktif',
+            'inactive': 'Pasif',
+            'sold_out': 'Tükendi',
+            'expired': 'Süresi Doldu'
+        };
+
+        const modalHTML = `
+            <div class="modal-overlay" onclick="this.remove()">
+                <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h2>📦 Paket Detayları</h2>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display: grid; gap: 1.5rem;">
+                            <!-- Package Info -->
+                            <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">📦 Paket Bilgileri</h3>
+                                <div style="display: grid; gap: 0.5rem;">
+                                    <div><strong>Paket Adı:</strong> ${pkg.name}</div>
+                                    ${pkg.description ? `<div><strong>Açıklama:</strong> ${pkg.description}</div>` : ''}
+                                    <div><strong>Kategori:</strong> <span class="badge badge-info">${pkg.category || 'N/A'}</span></div>
+                                    <div><strong>Durum:</strong> <span class="badge badge-${statusColors[pkg.status] || 'secondary'}">${statusTexts[pkg.status] || pkg.status}</span></div>
+                                </div>
+                            </div>
+
+                            <!-- Restaurant Info -->
+                            <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">🏪 Restoran Bilgileri</h3>
+                                <div style="display: grid; gap: 0.5rem;">
+                                    <div><strong>Restoran:</strong> ${pkg.restaurant?.name || 'N/A'}</div>
+                                    <div><strong>Kategori:</strong> ${pkg.restaurant?.category || 'N/A'}</div>
+                                    ${pkg.restaurant?.phone ? `<div><strong>Telefon:</strong> ${pkg.restaurant.phone}</div>` : ''}
+                                </div>
+                            </div>
+
+                            <!-- Price Info -->
+                            <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">💰 Fiyat Bilgileri</h3>
+                                <div style="display: grid; gap: 0.5rem;">
+                                    ${pkg.originalPrice ? `<div><strong>Orijinal Fiyat:</strong> <span style="text-decoration: line-through; color: var(--gray-500);">₺${pkg.originalPrice.toFixed(2)}</span></div>` : ''}
+                                    <div><strong>İndirimli Fiyat:</strong> <strong style="color: var(--success); font-size: 1.2rem;">₺${(pkg.discountedPrice || pkg.price || 0).toFixed(2)}</strong></div>
+                                    ${pkg.originalPrice && pkg.discountedPrice ? `<div><strong>İndirim:</strong> <span style="color: var(--success);">%${Math.round((1 - pkg.discountedPrice / pkg.originalPrice) * 100)}</span></div>` : ''}
+                                </div>
+                            </div>
+
+                            <!-- Quantity & Dates -->
+                            <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">📊 Stok & Tarihler</h3>
+                                <div style="display: grid; gap: 0.5rem;">
+                                    <div><strong>Miktar:</strong> <span style="color: ${pkg.quantity > 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">${pkg.quantity} adet</span></div>
+                                    <div><strong>Son Teslim:</strong> ${new Date(pkg.availableUntil).toLocaleString('tr-TR')}</div>
+                                    <div><strong>Oluşturulma:</strong> ${new Date(pkg.createdAt).toLocaleString('tr-TR')}</div>
+                                    ${pkg.updatedAt ? `<div><strong>Güncellenme:</strong> ${new Date(pkg.updatedAt).toLocaleString('tr-TR')}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+                            Kapat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
 
     // Consumer action functions

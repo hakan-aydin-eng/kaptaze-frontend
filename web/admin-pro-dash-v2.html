@@ -1423,8 +1423,8 @@
                 <!-- Packages Section -->
                 <section id="packages" class="content-section">
                     <div class="section-header">
-                        <h2 class="section-title">Paket Yönetimi</h2>
-                        <div class="table-actions">
+                        <h2 class="section-title">📦 Paket Yönetimi</h2>
+                        <div class="section-actions">
                             <button class="btn btn-secondary" onclick="adminDashboard.refreshPackages()">
                                 <i class="fas fa-sync"></i>
                                 Yenile
@@ -1432,11 +1432,9 @@
                         </div>
                     </div>
 
-                    <div class="table-container">
-                        <div class="table-header">
-                            <h3 class="table-title">Tüm Restaurant Paketleri</h3>
-                        </div>
-                        <div id="packagesTable" class="loading">
+                    <!-- Packages Data Container -->
+                    <div id="packagesTable">
+                        <div class="loading">
                             <div class="spinner"></div>
                             <span>Paketler yükleniyor...</span>
                         </div>
@@ -1748,7 +1746,7 @@
     </div>
 
     <!-- Load Admin Dashboard JavaScript -->
-    <script src="./js/admin-pro-dash-v2.js?v=2025.10.17.1"></script>
+    <script src="./js/admin-pro-dash-v2.js?v=2025.10.17.2"></script>
     <script src="./js/notification-manager.js?v=2025.09.18"></script>
 </body>
 </html>
