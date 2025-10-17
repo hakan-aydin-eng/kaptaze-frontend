@@ -70,15 +70,25 @@ class ApiService {
     this.isRefreshing = true;
 
     try {
+      console.log('🔍 [DEBUG] Checking AsyncStorage for token...');
       const currentToken = await AsyncStorage.getItem('@kaptaze_user_token');
       const userData = await AsyncStorage.getItem('@kaptaze_user_data');
 
+      console.log('🔍 [DEBUG] Token exists:', !!currentToken);
+      console.log('🔍 [DEBUG] Token length:', currentToken?.length);
+      console.log('🔍 [DEBUG] UserData exists:', !!userData);
+
       if (!currentToken || !userData) {
+        console.error('❌ [DEBUG] Missing data in AsyncStorage:', {
+          hasToken: !!currentToken,
+          hasUserData: !!userData
+        });
         throw new Error('No token found');
       }
 
       const user = JSON.parse(userData);
       console.log('🔄 Attempting to refresh token...');
+      console.log('👤 [DEBUG] User ID:', user.id || user._id);
 
       const response = await fetch(`${this.baseURL}/auth/refresh-token`, {
         method: 'POST',
@@ -91,7 +101,9 @@ class ApiService {
         }),
       });
 
+      console.log('📨 [DEBUG] Refresh response status:', response.status);
       const data = await response.json();
+      console.log('📨 [DEBUG] Refresh response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Token refresh failed');
