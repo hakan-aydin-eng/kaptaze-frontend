@@ -1524,8 +1524,8 @@ class AdminProDashboardV2 {
             return;
         }
 
-        // Scroll to top for better modal visibility
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Scroll to top instantly
+        window.scrollTo(0, 0);
 
         const owner = restaurant.owner || {};
         const address = restaurant.address || {};
@@ -1535,7 +1535,12 @@ class AdminProDashboardV2 {
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.style.display = 'flex';
-        modal.style.zIndex = '999999';  // Ensure modal is on top
+        modal.style.zIndex = '999999';
+        modal.style.position = 'fixed';  // Fixed positioning
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
         modal.innerHTML = `
             <div class="modal-content" style="max-width: 700px;">
                 <div class="modal-header">
