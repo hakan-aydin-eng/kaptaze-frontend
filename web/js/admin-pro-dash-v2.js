@@ -2360,7 +2360,7 @@ class AdminProDashboardV2 {
     }
 
     generateDemoPackages() {
-        // Demo packages for testing
+        // Demo packages for testing (using correct Package model status values)
         this.data.packages = [
             {
                 id: 'pkg001',
@@ -2373,13 +2373,13 @@ class AdminProDashboardV2 {
                 discount: 47,
                 quantity: 5,
                 category: 'Ana Yemek',
-                status: 'pending',
+                status: 'active', // ✅ Correct: Package model enum value
                 createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
                 expiryTime: '22:00',
                 image: 'https://via.placeholder.com/300x200?text=Margherita+Pizza'
             },
             {
-                id: 'pkg002', 
+                id: 'pkg002',
                 restaurantId: 'rest002',
                 restaurantName: 'Burger House',
                 packageName: 'Classic Burger Combo',
@@ -2389,7 +2389,7 @@ class AdminProDashboardV2 {
                 discount: 50,
                 quantity: 3,
                 category: 'Fast Food',
-                status: 'approved',
+                status: 'inactive', // ✅ Correct: Package model enum value
                 createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
                 expiryTime: '23:00',
                 image: 'https://via.placeholder.com/300x200?text=Classic+Burger'
@@ -2405,10 +2405,26 @@ class AdminProDashboardV2 {
                 discount: 46,
                 quantity: 0,
                 category: 'Tatlı & İçecek',
-                status: 'rejected',
+                status: 'sold_out', // ✅ Correct: Package model enum value
                 createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
                 expiryTime: '20:00',
                 image: 'https://via.placeholder.com/300x200?text=Coffee+Cake'
+            },
+            {
+                id: 'pkg004',
+                restaurantId: 'rest004',
+                restaurantName: 'Sushi Bar',
+                packageName: 'Sushi Platter',
+                description: 'Mix sushi ve maki combo',
+                originalPrice: 150,
+                discountPrice: 90,
+                discount: 40,
+                quantity: 2,
+                category: 'Ana Yemek',
+                status: 'expired', // ✅ Correct: Package model enum value
+                createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+                expiryTime: '19:00',
+                image: 'https://via.placeholder.com/300x200?text=Sushi+Platter'
             }
         ];
         
