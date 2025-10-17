@@ -192,6 +192,9 @@ class AdminProDashboardV2 {
             case 'reviews':
                 await this.loadReviewsData();
                 break;
+            case 'treasury':
+                await this.loadTreasuryData();
+                break;
         }
     }
 
@@ -3950,6 +3953,452 @@ class AdminProDashboardV2 {
     async refreshReviews() {
         console.log('🔄 Refreshing reviews...');
         await this.loadReviewsData();
+    }
+
+    // ============================================================
+    // TREASURY (KASA) METHODS
+    // ============================================================
+
+    async loadTreasuryData() {
+        try {
+            console.log('💰 Loading treasury data...');
+
+            // Load overview
+            const overviewResponse = await window.KapTazeAPIService.request('/admin/treasury/overview', {
+                method: 'GET'
+            });
+
+            if (overviewResponse.success) {
+                this.data.treasuryOverview = overviewResponse.data;
+                this.updateTreasuryKPIs(overviewResponse.data);
+            }
+
+            // Load settlements based on current tab
+            await this.loadSettlementsData();
+
+        } catch (error) {
+            console.error('❌ Error loading treasury data:', error);
+            this.showToast('❌ Kasa verileri yüklenirken hata oluştu', 'error');
+        }
+    }
+
+    updateTreasuryKPIs(data) {
+        // Update KPI cards
+        document.getElementById('treasuryTotalRevenue').textContent = '₺' + data.overview.totalRevenue;
+        document.getElementById('treasuryTotalOrders').textContent = data.overview.totalOrders + ' sipariş';
+        document.getElementById('treasuryTotalPayout').textContent = '₺' + data.overview.totalRestaurantPayout;
+        document.getElementById('treasuryPendingAmount').textContent = '₺' + data.pending.totalAmount;
+        document.getElementById('treasuryPendingCount').textContent = data.pending.restaurantCount + ' restaurant';
+        document.getElementById('treasuryPendingBadge').textContent = data.pending.restaurantCount;
+        document.getElementById('treasuryCompletedAmount').textContent = '₺' + data.completed.last30Days;
+        document.getElementById('treasuryCompletedCount').textContent = data.completed.count + ' ödeme';
+    }
+
+    async loadSettlementsData() {
+        const status = this.currentTreasuryTab || 'pending';
+
+        if (status === 'settings') {
+            await this.loadCommissionSettings();
+            return;
+        }
+
+        try {
+            const response = await window.KapTazeAPIService.request('/admin/treasury/settlements', {
+                method: 'GET',
+                params: {
+                    status: status === 'pending' ? 'pending' : 'completed',
+                    page: 1,
+                    limit: 100
+                }
+            });
+
+            if (response.success) {
+                this.data.settlements = response.data.settlements;
+                this.displaySettlements(response.data.settlements, status);
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading settlements:', error);
+            this.showToast('❌ Ödemeler yüklenirken hata oluştu', 'error');
+        }
+    }
+
+    displaySettlements(settlements, status) {
+        const container = document.getElementById('treasuryDataContainer');
+
+        if (!settlements || settlements.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: #6b7280;">
+                    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p style="font-size: 1.125rem; font-weight: 500;">Henüz ${status === 'pending' ? 'bekleyen ödeme' : 'tamamlanan ödeme'} yok</p>
+                </div>
+            `;
+            return;
+        }
+
+        const html = `
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Restaurant</th>
+                            <th>Tutar</th>
+                            <th>Sipariş Sayısı</th>
+                            <th>${status === 'pending' ? 'Planlanan Tarih' : 'Tamamlanma Tarihi'}</th>
+                            ${status === 'pending' ? '<th>İşlemler</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${settlements.map(settlement => this.renderSettlementRow(settlement, status)).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
+    renderSettlementRow(settlement, status) {
+        const date = status === 'pending' ? settlement.nextSettlement : settlement.orders[0]?.completedDate;
+        const formattedDate = date ? new Date(date).toLocaleDateString('tr-TR') : '-';
+
+        const actionButton = status === 'pending' ? `
+            <button class="btn btn-sm btn-success" onclick="adminDashboard.showPaymentModal('${settlement.restaurantId}', '${settlement.restaurantName}', ${settlement.totalAmount}, ${JSON.stringify(settlement.orders.map(o => o.orderId)).replace(/"/g, '&quot;')})">
+                <i class="fas fa-check"></i> Öde
+            </button>
+        ` : '';
+
+        return `
+            <tr>
+                <td>
+                    <div style="font-weight: 600;">${settlement.restaurantName}</div>
+                    <div style="font-size: 0.875rem; color: #6b7280;">ID: ${settlement.restaurantId.substring(0, 8)}...</div>
+                </td>
+                <td>
+                    <span style="font-weight: 600; color: #16a34a;">₺${settlement.totalAmount}</span>
+                </td>
+                <td>
+                    <span class="badge badge-info">${settlement.orderCount} sipariş</span>
+                </td>
+                <td>${formattedDate}</td>
+                ${status === 'pending' ? `<td>${actionButton}</td>` : ''}
+            </tr>
+        `;
+    }
+
+    showPaymentModal(restaurantId, restaurantName, totalAmount, orderIds) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3>💰 Ödeme Tamamla</h3>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: #6b7280;">Restaurant:</span>
+                            <span style="font-weight: 600;">${restaurantName}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: #6b7280;">Sipariş Sayısı:</span>
+                            <span style="font-weight: 600;">${JSON.parse(orderIds.replace(/&quot;/g, '"')).length} adet</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-top: 2px solid #e5e7eb; padding-top: 0.5rem; margin-top: 0.5rem;">
+                            <span style="color: #6b7280; font-weight: 600;">Toplam Tutar:</span>
+                            <span style="font-size: 1.5rem; font-weight: 700; color: #16a34a;">₺${totalAmount}</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Banka Transfer Referansı</label>
+                        <input type="text" id="paymentReference" class="form-control" placeholder="TRF-2025-001" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notlar (Opsiyonel)</label>
+                        <textarea id="paymentNotes" class="form-control" rows="3" placeholder="Banka havalesi ile ödendi..."></textarea>
+                    </div>
+
+                    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <i class="fas fa-exclamation-triangle" style="color: #f59e0b; margin-top: 0.125rem;"></i>
+                            <div>
+                                <div style="font-weight: 600; color: #92400e; margin-bottom: 0.25rem;">Dikkat</div>
+                                <div style="font-size: 0.875rem; color: #78350f;">
+                                    Bu işlem geri alınamaz. Ödemeyi tamamlamadan önce banka transfer işlemini yaptığınızdan emin olun.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">İptal</button>
+                    <button class="btn btn-success" onclick="adminDashboard.completePayment('${restaurantId}', '${orderIds}')">
+                        <i class="fas fa-check"></i> Ödemeyi Onayla
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    async completePayment(restaurantId, orderIdsStr) {
+        try {
+            const reference = document.getElementById('paymentReference').value.trim();
+            const notes = document.getElementById('paymentNotes').value.trim();
+
+            if (!reference) {
+                this.showToast('❌ Banka referans numarası gerekli', 'error');
+                return;
+            }
+
+            const orderIds = JSON.parse(orderIdsStr.replace(/&quot;/g, '"'));
+
+            const response = await window.KapTazeAPIService.request('/admin/treasury/settlements/complete', {
+                method: 'POST',
+                body: JSON.stringify({
+                    restaurantId,
+                    orderIds,
+                    reference,
+                    notes: notes || undefined
+                })
+            });
+
+            if (response.success) {
+                this.showToast('✅ Ödeme başarıyla tamamlandı!', 'success');
+                document.querySelector('.modal-overlay').remove();
+                await this.loadTreasuryData();
+            } else {
+                this.showToast('❌ Ödeme tamamlanamadı: ' + response.error, 'error');
+            }
+
+        } catch (error) {
+            console.error('❌ Error completing payment:', error);
+            this.showToast('❌ Ödeme tamamlanırken hata oluştu', 'error');
+        }
+    }
+
+    async loadCommissionSettings() {
+        try {
+            const response = await window.KapTazeAPIService.request('/admin/treasury/commission-settings', {
+                method: 'GET'
+            });
+
+            if (response.success) {
+                this.displayCommissionSettings(response.data);
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading commission settings:', error);
+            this.showToast('❌ Komisyon ayarları yüklenirken hata oluştu', 'error');
+        }
+    }
+
+    displayCommissionSettings(data) {
+        const container = document.getElementById('treasuryDataContainer');
+
+        const html = `
+            <div style="max-width: 1000px;">
+                <!-- Default Rate -->
+                <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Varsayılan Komisyon Oranı</h3>
+                            <p style="color: #6b7280; font-size: 0.875rem;">Tüm restoranlar için geçerli</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 2.5rem; font-weight: 700; color: #16a34a;">%${data.defaultRate}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Rates -->
+                <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="font-size: 1.125rem; font-weight: 600;">Özel Komisyon Oranları</h3>
+                        <button class="btn btn-primary" onclick="adminDashboard.showCommissionModal()">
+                            <i class="fas fa-plus"></i> Özel Oran Ekle
+                        </button>
+                    </div>
+
+                    ${data.customRates.length === 0 ? `
+                        <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                            <i class="fas fa-percentage" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                            <p>Henüz özel komisyon oranı tanımlanmamış</p>
+                        </div>
+                    ` : `
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Restaurant</th>
+                                    <th>Oran</th>
+                                    <th>Sebep</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.customRates.map(rate => `
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight: 600;">${rate.restaurantName}</div>
+                                            <div style="font-size: 0.875rem; color: #6b7280;">ID: ${rate.restaurantId.substring(0, 8)}...</div>
+                                        </td>
+                                        <td>
+                                            <span style="font-weight: 700; font-size: 1.125rem; color: #16a34a;">%${rate.rate}</span>
+                                        </td>
+                                        <td>${rate.reason || '-'}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-secondary" onclick="adminDashboard.editCommissionRate('${rate.restaurantId}', '${rate.restaurantName}', ${rate.rate}, '${rate.reason || ''}')">
+                                                <i class="fas fa-edit"></i> Düzenle
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `}
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    }
+
+    showCommissionModal(restaurantId = null, restaurantName = '', currentRate = 10, currentReason = '') {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3>${restaurantId ? 'Özel Oranı Düzenle' : 'Yeni Özel Oran Ekle'}</h3>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ${!restaurantId ? `
+                        <div class="form-group">
+                            <label>Restaurant Seç</label>
+                            <select id="commissionRestaurantId" class="form-control" required>
+                                <option value="">Restaurant seçin...</option>
+                            </select>
+                        </div>
+                    ` : `
+                        <input type="hidden" id="commissionRestaurantId" value="${restaurantId}">
+                        <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <strong>${restaurantName}</strong>
+                        </div>
+                    `}
+
+                    <div class="form-group">
+                        <label>Komisyon Oranı (%)</label>
+                        <input type="number" id="commissionRate" class="form-control" min="0" max="100" step="0.1" value="${currentRate}" required>
+                        <small style="color: #6b7280;">0-100 arasında bir değer girin</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Sebep</label>
+                        <textarea id="commissionReason" class="form-control" rows="3" placeholder="Örn: Lansman promosyonu - 3 ay %8">${currentReason}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">İptal</button>
+                    <button class="btn btn-primary" onclick="adminDashboard.saveCommissionRate()">
+                        <i class="fas fa-save"></i> Kaydet
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Load restaurants if needed
+        if (!restaurantId) {
+            this.loadRestaurantsForCommission();
+        }
+    }
+
+    async loadRestaurantsForCommission() {
+        try {
+            const response = await window.KapTazeAPIService.request('/admin/restaurants', {
+                method: 'GET',
+                params: { page: 1, limit: 1000 }
+            });
+
+            if (response.success) {
+                const select = document.getElementById('commissionRestaurantId');
+                select.innerHTML = '<option value="">Restaurant seçin...</option>' +
+                    response.data.restaurants.map(r => `<option value="${r._id}">${r.name}</option>`).join('');
+            }
+        } catch (error) {
+            console.error('❌ Error loading restaurants:', error);
+        }
+    }
+
+    editCommissionRate(restaurantId, restaurantName, rate, reason) {
+        this.showCommissionModal(restaurantId, restaurantName, rate, reason);
+    }
+
+    async saveCommissionRate() {
+        try {
+            const restaurantId = document.getElementById('commissionRestaurantId').value;
+            const rate = parseFloat(document.getElementById('commissionRate').value);
+            const reason = document.getElementById('commissionReason').value.trim();
+
+            if (!restaurantId) {
+                this.showToast('❌ Restaurant seçmelisiniz', 'error');
+                return;
+            }
+
+            if (isNaN(rate) || rate < 0 || rate > 100) {
+                this.showToast('❌ Geçerli bir oran girin (0-100)', 'error');
+                return;
+            }
+
+            const response = await window.KapTazeAPIService.request('/admin/treasury/commission-settings/custom', {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    restaurantId,
+                    rate,
+                    reason: reason || undefined
+                })
+            });
+
+            if (response.success) {
+                this.showToast('✅ Komisyon oranı başarıyla kaydedildi!', 'success');
+                document.querySelector('.modal-overlay').remove();
+                await this.loadCommissionSettings();
+            } else {
+                this.showToast('❌ Oran kaydedilemedi: ' + response.error, 'error');
+            }
+
+        } catch (error) {
+            console.error('❌ Error saving commission rate:', error);
+            this.showToast('❌ Oran kaydedilirken hata oluştu', 'error');
+        }
+    }
+
+    filterTreasuryByStatus(status) {
+        this.currentTreasuryTab = status;
+
+        // Update active button
+        document.querySelectorAll('[data-treasury-tab]').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-treasury-tab="${status}"]`).classList.add('active');
+
+        // Load data
+        this.loadSettlementsData();
+    }
+
+    async refreshTreasury() {
+        console.log('🔄 Refreshing treasury...');
+        await this.loadTreasuryData();
     }
 
     cleanup() {
