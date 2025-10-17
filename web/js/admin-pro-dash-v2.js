@@ -1598,67 +1598,50 @@ class AdminProDashboardV2 {
 
     // Consumer management functions
     displayConsumers(consumers) {
-        console.log('👥 Displaying consumers:', consumers.length, consumers);
-        
-        // Get consumers table container
-        let container = document.getElementById('consumersTable');
-        
+        console.log('👥 Displaying consumers:', consumers.length);
+
+        const container = document.getElementById('consumersTable');
         if (!container) {
-            // Fallback to dataContainer approach
-            const activeSection = document.querySelector('.content-section.active');
-            container = activeSection ? activeSection.querySelector('#dataContainer') : null;
+            console.error('❌ Consumers container not found');
+            return;
         }
-        
-        if (!container) {
-            console.error('❌ Consumers table container not found!');
+
+        if (!consumers || consumers.length === 0) {
+            container.innerHTML = `
+                <div class="table-container">
+                    <div style="padding: 3rem; text-align: center; color: var(--gray-500);">
+                        <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                        <p style="font-size: 1.1rem; margin: 0;">Henüz tüketici bulunmuyor</p>
+                    </div>
+                </div>
+            `;
             return;
         }
 
         const html = `
-            <div class="table-header">
-                <div class="table-title-section">
-                    <h3>📱 Mobil Uygulama Kullanıcıları</h3>
+            <div class="table-container">
+                <div class="table-header">
+                    <h3 class="table-title">Tüketici Listesi</h3>
                     <span class="record-count">${consumers.length} kullanıcı</span>
                 </div>
-                
-                <div class="table-actions">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Kullanıcı ara..." id="consumerSearch">
-                    </div>
-                    
-                    <div class="filter-group">
-                        <select id="consumerStatusFilter">
-                            <option value="all">Tüm Durumlar</option>
-                            <option value="active">Aktif</option>
-                            <option value="inactive">Pasif</option>
-                            <option value="suspended">Askıda</option>
-                        </select>
-                    </div>
-                    
-                    <button class="btn-refresh" onclick="adminDashboard.refreshConsumers()">
-                        <i class="fas fa-sync-alt"></i> Yenile
-                    </button>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Kullanıcı</th>
+                                <th>İletişim</th>
+                                <th>Durum</th>
+                                <th>İstatistikler</th>
+                                <th>Son Aktivite</th>
+                                <th>Kayıt Tarihi</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${consumers.map(consumer => this.renderConsumerRow(consumer)).join('')}
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Kullanıcı</th>
-                            <th>İletişim</th>
-                            <th>Durum</th>
-                            <th>İstatistikler</th>
-                            <th>Son Aktivite</th>
-                            <th>Kayıt Tarihi</th>
-                            <th>İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${consumers.map(consumer => this.renderConsumerRow(consumer)).join('')}
-                    </tbody>
-                </table>
             </div>
         `;
 
@@ -1720,74 +1703,55 @@ class AdminProDashboardV2 {
         `;
     }
 
-    getConsumerStatusBadge(status) {
-        const statusConfig = {
-            'active': { class: 'status-approved', text: 'Aktif', icon: 'check' },
-            'inactive': { class: 'status-pending', text: 'Pasif', icon: 'pause' },
-            'suspended': { class: 'status-rejected', text: 'Askıda', icon: 'ban' }
+    renderConsumerRow(consumer) {
+        const statusColors = {
+            'active': 'success',
+            'inactive': 'secondary',
+            'suspended': 'danger'
         };
 
-        const config = statusConfig[status] || statusConfig['active'];
-        return `<span class="status-badge ${config.class}">
-            <i class="fas fa-${config.icon}"></i>
-            ${config.text}
-        </span>`;
-    }
+        const statusTexts = {
+            'active': 'Aktif',
+            'inactive': 'Pasif',
+            'suspended': 'Askıda'
+        };
 
-    renderConsumerRow(consumer) {
-        const statusBadge = this.getConsumerStatusBadge(consumer.status);
         const registrationDate = new Date(consumer.createdAt || consumer.registrationDate).toLocaleDateString('tr-TR');
         const lastActivity = consumer.lastActivity ? new Date(consumer.lastActivity).toLocaleDateString('tr-TR') : 'Bilinmiyor';
-        
-        // Consumer name - handle both formats
+
         const fullName = consumer.fullName || `${consumer.name || consumer.firstName || ''} ${consumer.surname || consumer.lastName || ''}`.trim() || 'İsimsiz Kullanıcı';
-        
-        // Safe access to stats
         const orderCount = consumer.orderCount || consumer.totalOrders || 0;
         const totalSpent = consumer.totalSpent || 0;
-        
-        // Device info
+
         const devicePlatform = consumer.deviceInfo?.platform || 'Bilinmiyor';
         const deviceIcon = devicePlatform === 'ios' ? 'fab fa-apple' : devicePlatform === 'android' ? 'fab fa-android' : 'fas fa-mobile-alt';
-        
+
         return `
             <tr>
                 <td>
-                    <div>
-                        <strong style="color: var(--gray-900);">${fullName}</strong>
-                        <br><small style="color: var(--gray-600);"><i class="${deviceIcon}"></i> ${devicePlatform}</small>
-                    </div>
+                    <div style="font-weight: 600;">${fullName}</div>
+                    <div style="font-size: 0.85rem; color: var(--gray-500);"><i class="${deviceIcon}"></i> ${devicePlatform}</div>
                 </td>
                 <td>
-                    <div>
-                        <strong style="font-size: 0.875rem;">${consumer.email}</strong>
-                        ${consumer.phone ? `<br><small style="color: var(--gray-600);">${consumer.phone}</small>` : ''}
-                    </div>
+                    <div style="font-weight: 600;">${consumer.email}</div>
+                    ${consumer.phone ? `<div style="font-size: 0.85rem; color: var(--gray-500);">${consumer.phone}</div>` : ''}
                 </td>
-                <td>${statusBadge}</td>
                 <td>
-                    <div style="font-size: 0.875rem;">
-                        <div><i class="fas fa-shopping-cart" style="color: var(--primary);"></i> ${orderCount} sipariş</div>
-                        <div><i class="fas fa-lira-sign" style="color: var(--success);"></i> ₺${totalSpent.toFixed(2)}</div>
-                    </div>
+                    <span class="badge badge-${statusColors[consumer.status] || 'secondary'}">
+                        ${statusTexts[consumer.status] || consumer.status}
+                    </span>
                 </td>
-                <td style="font-size: 0.875rem;">${lastActivity}</td>
-                <td style="font-size: 0.875rem;">${registrationDate}</td>
                 <td>
-                    <div style="display: flex; gap: 0.25rem;">
-                        <button class="action-btn action-view" onclick="adminDashboard.viewConsumer('${consumer._id || consumer.id}')" title="Detay">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        ${consumer.status === 'active' ? `
-                            <button class="action-btn action-suspend" onclick="adminDashboard.suspendConsumer('${consumer._id || consumer.id}')" title="Askıya Al">
-                                <i class="fas fa-ban"></i>
-                            </button>
-                        ` : consumer.status === 'suspended' ? `
-                            <button class="action-btn action-approve" onclick="adminDashboard.activateConsumer('${consumer._id || consumer.id}')" title="Aktifleştir">
-                                <i class="fas fa-check"></i>
-                            </button>
-                        ` : ''}
-                    </div>
+                    <div>${orderCount} sipariş</div>
+                    <div style="font-size: 0.85rem; color: var(--success);">₺${totalSpent.toFixed(2)}</div>
+                </td>
+                <td>${lastActivity}</td>
+                <td>${registrationDate}</td>
+                <td>
+                    <button class="btn-icon" onclick="adminDashboard.viewConsumerDetails('${consumer._id || consumer.id}')"
+                            title="Detayları Görüntüle">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </td>
             </tr>
         `;
@@ -1887,17 +1851,100 @@ class AdminProDashboardV2 {
     }
 
     // Consumer action functions
-    viewConsumer(consumerId) {
-        console.log('👁️ Viewing consumer:', consumerId);
+    viewConsumerDetails(consumerId) {
+        console.log('👁️ Viewing consumer details:', consumerId);
         const consumer = this.data.consumers.find(c => (c._id || c.id) === consumerId);
-        if (consumer) {
-            const fullName = `${consumer.name || consumer.firstName || ''} ${consumer.surname || consumer.lastName || ''}`.trim();
-            const deviceInfo = consumer.deviceInfo?.platform || 'Bilinmiyor';
-            const lastActivity = consumer.lastActivity ? new Date(consumer.lastActivity).toLocaleDateString('tr-TR') : 'Bilinmiyor';
-            const registrationDate = new Date(consumer.createdAt || consumer.registrationDate).toLocaleDateString('tr-TR');
-            
-            alert(`Kullanıcı Detayları:\n\nAdı: ${fullName}\nEmail: ${consumer.email}\nTelefon: ${consumer.phone || 'Belirtilmemiş'}\nDurum: ${consumer.status}\nSipariş Sayısı: ${consumer.orderCount || 0}\nToplam Harcama: ₺${(consumer.totalSpent || 0).toFixed(2)}\nCihaz: ${deviceInfo}\nSon Aktivite: ${lastActivity}\nKayıt Tarihi: ${registrationDate}`);
+
+        if (!consumer) {
+            alert('Tüketici bulunamadı');
+            return;
         }
+
+        this.showConsumerDetailsModal(consumer);
+    }
+
+    showConsumerDetailsModal(consumer) {
+        const statusColors = {
+            'active': 'success',
+            'inactive': 'secondary',
+            'suspended': 'danger'
+        };
+
+        const statusTexts = {
+            'active': 'Aktif',
+            'inactive': 'Pasif',
+            'suspended': 'Askıda'
+        };
+
+        const fullName = consumer.fullName || `${consumer.name || consumer.firstName || ''} ${consumer.surname || consumer.lastName || ''}`.trim() || 'İsimsiz Kullanıcı';
+        const devicePlatform = consumer.deviceInfo?.platform || 'Bilinmiyor';
+        const deviceIcon = devicePlatform === 'ios' ? 'fab fa-apple' : devicePlatform === 'android' ? 'fab fa-android' : 'fas fa-mobile-alt';
+        const orderCount = consumer.orderCount || consumer.totalOrders || 0;
+        const totalSpent = consumer.totalSpent || 0;
+
+        const modalHTML = `
+            <div class="modal-overlay" onclick="this.remove()">
+                <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h2>👤 Tüketici Detayları</h2>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display: grid; gap: 1.5rem;">
+                            <!-- User Info -->
+                            <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">👤 Kullanıcı Bilgileri</h3>
+                                <div style="display: grid; gap: 0.5rem;">
+                                    <div><strong>Ad Soyad:</strong> ${fullName}</div>
+                                    <div><strong>Email:</strong> ${consumer.email}</div>
+                                    ${consumer.phone ? `<div><strong>Telefon:</strong> ${consumer.phone}</div>` : ''}
+                                    <div><strong>Durum:</strong> <span class="badge badge-${statusColors[consumer.status] || 'secondary'}">${statusTexts[consumer.status] || consumer.status}</span></div>
+                                </div>
+                            </div>
+
+                            <!-- Device Info -->
+                            <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">📱 Cihaz Bilgileri</h3>
+                                <div style="display: grid; gap: 0.5rem;">
+                                    <div><strong>Platform:</strong> <i class="${deviceIcon}"></i> ${devicePlatform}</div>
+                                    ${consumer.deviceInfo?.model ? `<div><strong>Model:</strong> ${consumer.deviceInfo.model}</div>` : ''}
+                                    ${consumer.deviceInfo?.osVersion ? `<div><strong>OS Versiyon:</strong> ${consumer.deviceInfo.osVersion}</div>` : ''}
+                                </div>
+                            </div>
+
+                            <!-- Statistics -->
+                            <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">📊 İstatistikler</h3>
+                                <div style="display: grid; gap: 0.5rem;">
+                                    <div><strong>Toplam Sipariş:</strong> <span style="color: var(--primary);">${orderCount} sipariş</span></div>
+                                    <div><strong>Toplam Harcama:</strong> <strong style="color: var(--success); font-size: 1.2rem;">₺${totalSpent.toFixed(2)}</strong></div>
+                                    ${orderCount > 0 ? `<div><strong>Ortalama Sipariş:</strong> ₺${(totalSpent / orderCount).toFixed(2)}</div>` : ''}
+                                </div>
+                            </div>
+
+                            <!-- Activity -->
+                            <div style="background: var(--gray-50); padding: 1rem; border-radius: 8px;">
+                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">⏱️ Aktivite Bilgileri</h3>
+                                <div style="display: grid; gap: 0.5rem;">
+                                    <div><strong>Son Aktivite:</strong> ${consumer.lastActivity ? new Date(consumer.lastActivity).toLocaleString('tr-TR') : 'Bilinmiyor'}</div>
+                                    <div><strong>Kayıt Tarihi:</strong> ${new Date(consumer.createdAt || consumer.registrationDate).toLocaleString('tr-TR')}</div>
+                                    ${consumer.updatedAt ? `<div><strong>Güncellenme:</strong> ${new Date(consumer.updatedAt).toLocaleString('tr-TR')}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+                            Kapat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
 
     suspendConsumer(consumerId) {

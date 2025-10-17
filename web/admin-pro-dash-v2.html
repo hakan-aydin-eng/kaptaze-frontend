@@ -1444,8 +1444,8 @@
                 <!-- Consumers Section -->
                 <section id="consumers" class="content-section">
                     <div class="section-header">
-                        <h2 class="section-title">Tüketici Yönetimi</h2>
-                        <div class="table-actions">
+                        <h2 class="section-title">👥 Tüketici Yönetimi</h2>
+                        <div class="section-actions">
                             <button class="btn btn-secondary" onclick="adminDashboard.refreshConsumers()">
                                 <i class="fas fa-sync"></i>
                                 Yenile
@@ -1453,11 +1453,9 @@
                         </div>
                     </div>
 
-                    <div class="table-container">
-                        <div class="table-header">
-                            <h3 class="table-title">Kayıtlı Tüketiciler</h3>
-                        </div>
-                        <div id="consumersTable" class="loading">
+                    <!-- Consumers Data Container -->
+                    <div id="consumersTable">
+                        <div class="loading">
                             <div class="spinner"></div>
                             <span>Tüketiciler yükleniyor...</span>
                         </div>
@@ -1746,7 +1744,7 @@
     </div>
 
     <!-- Load Admin Dashboard JavaScript -->
-    <script src="./js/admin-pro-dash-v2.js?v=2025.10.17.2"></script>
+    <script src="./js/admin-pro-dash-v2.js?v=2025.10.17.3"></script>
     <script src="./js/notification-manager.js?v=2025.09.18"></script>
 </body>
 </html>
