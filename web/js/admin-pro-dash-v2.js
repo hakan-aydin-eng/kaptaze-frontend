@@ -1534,18 +1534,34 @@ class AdminProDashboardV2 {
 
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
-        modal.style.display = 'flex';
-        modal.style.zIndex = '999999';
-        modal.style.position = 'fixed';  // Fixed positioning
-        modal.style.top = '0';
-        modal.style.left = '0';
-        modal.style.width = '100%';
-        modal.style.height = '100%';
+        // Full inline styles to ensure proper centering
+        modal.style.cssText = `
+            display: flex !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            justify-content: center !important;
+            align-items: center !important;
+            z-index: 999999 !important;
+            padding: 1rem !important;
+        `;
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-content" style="
+                max-width: 700px;
+                width: 100%;
+                max-height: 90vh;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                overflow: hidden;
+                position: relative;
+            ">
                 <div class="modal-header">
                     <h3>🏪 Restaurant Detayları</h3>
-                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove(); document.body.style.overflow = 'auto';">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
