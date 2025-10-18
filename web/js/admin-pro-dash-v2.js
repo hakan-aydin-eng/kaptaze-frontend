@@ -1531,6 +1531,7 @@ class AdminProDashboardV2 {
         const address = restaurant.address || {};
         const socialMedia = restaurant.socialMedia || {};
         const stats = restaurant.stats || {};
+        const wallet = restaurant.wallet || {};
 
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
@@ -1628,8 +1629,8 @@ class AdminProDashboardV2 {
                             <div style="font-size: 0.75rem; opacity: 0.9;">Toplam Sipariş</div>
                         </div>
                         <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 1rem; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.75rem; font-weight: 700;">₺${(stats.totalRevenue || 0).toFixed(0)}</div>
-                            <div style="font-size: 0.75rem; opacity: 0.9;">Toplam Gelir</div>
+                            <div style="font-size: 1.75rem; font-weight: 700;">₺${(wallet.totalEarned || 0).toFixed(0)}</div>
+                            <div style="font-size: 0.75rem; opacity: 0.9;">Net Gelir (Komisyon Sonrası)</div>
                         </div>
                         <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 1rem; border-radius: 8px; text-align: center;">
                             <div style="font-size: 1.75rem; font-weight: 700;">${stats.activeMenuItems || 0}</div>
