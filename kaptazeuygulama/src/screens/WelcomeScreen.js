@@ -24,17 +24,17 @@ const WelcomeScreen = ({ navigation }) => {
         {/* Logo and Title */}
         <View style={styles.header}>
           <Image source={require('../../assets/icon.png')} style={styles.logo} />
-          <Text style={styles.title}>KapTaze</Text>
+          <Text style={styles.title}>kapkazan</Text>
           <Text style={styles.subtitle}>
-            Gıda israfını önleme platformu
+            Sürpriz Paket Platformu
           </Text>
         </View>
 
         {/* Features */}
         <View style={styles.features}>
           <View style={styles.feature}>
-            <Text style={styles.featureIcon}>♻️</Text>
-            <Text style={styles.featureText}>Gıda israfını azalt</Text>
+            <Text style={styles.featureIcon}>🎁</Text>
+            <Text style={styles.featureText}>Sürpriz paketler keşfet</Text>
           </View>
           <View style={styles.feature}>
             <Text style={styles.featureIcon}>💰</Text>
