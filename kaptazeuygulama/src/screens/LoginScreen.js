@@ -103,7 +103,7 @@ const LoginScreen = ({ navigation }) => {
         {/* Logo */}
         <View style={styles.logoContainer}>
           <Image source={require('../../assets/icon.png')} style={styles.logo} />
-          <Text style={styles.brandName}>KapTaze</Text>
+          <Text style={styles.brandName}>kapkazan</Text>
         </View>
 
 
@@ -135,6 +135,14 @@ const LoginScreen = ({ navigation }) => {
             />
             {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
           </View>
+
+          {/* Forgot Password Link */}
+          <TouchableOpacity
+            style={styles.forgotPasswordLink}
+            onPress={() => Alert.alert('🔒 Şifremi Unuttum', 'Şifre sıfırlama özelliği yakında eklenecek!')}
+          >
+            <Text style={styles.forgotPasswordText}>Şifremi Unuttum?</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
@@ -270,6 +278,16 @@ const styles = StyleSheet.create({
   registerLinkButton: {
     color: '#16a34a',
     fontSize: 16,
+    fontWeight: '500',
+  },
+  forgotPasswordLink: {
+    alignItems: 'flex-end',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  forgotPasswordText: {
+    color: '#16a34a',
+    fontSize: 14,
     fontWeight: '500',
   },
 });
