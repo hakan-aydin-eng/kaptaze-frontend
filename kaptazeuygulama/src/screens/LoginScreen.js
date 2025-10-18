@@ -139,7 +139,7 @@ const LoginScreen = ({ navigation }) => {
           {/* Forgot Password Link */}
           <TouchableOpacity
             style={styles.forgotPasswordLink}
-            onPress={() => Alert.alert('🔒 Şifremi Unuttum', 'Şifre sıfırlama özelliği yakında eklenecek!')}
+            onPress={() => navigation.navigate('ForgotPassword')}
           >
             <Text style={styles.forgotPasswordText}>Şifremi Unuttum?</Text>
           </TouchableOpacity>
