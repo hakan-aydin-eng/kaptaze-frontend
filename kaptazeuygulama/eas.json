@@ -27,7 +27,10 @@
         "buildType": "app-bundle"
       },
       "ios": {
-        "buildConfiguration": "Release"
+        "buildConfiguration": "Release",
+        "cocoapods": {
+          "deploymentTarget": "13.4"
+        }
       }
     }
   },
