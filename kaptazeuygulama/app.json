@@ -12,7 +12,8 @@
         {
           "ios": {
             "deploymentTarget": "15.1",
-            "useFrameworks": "dynamic"
+            "useFrameworks": "static",
+            "extraPodfileContent": "\npost_install do |installer|\n  installer.pods_project.targets.each do |target|\n    target.build_configurations.each do |config|\n      # Fix for Firebase + useFrameworks: static\n      if target.name.include? \"RNFB\"\n        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'\n      end\n      # Fix for Google Maps\n      if target.name.include? \"Google\"\n        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'\n      end\n    end\n  end\nend\n"
           },
           "android": {
             "newArchEnabled": false
