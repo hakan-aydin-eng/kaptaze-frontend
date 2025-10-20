@@ -7,19 +7,12 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "plugins": [
-      "@react-native-firebase/app",
       [
         "expo-build-properties",
         {
           "ios": {
             "deploymentTarget": "15.1",
-            "useFrameworks": "static",
-            "extraPods": [
-              {
-                "name": "react-native-firebase",
-                "modular_headers": true
-              }
-            ]
+            "useFrameworks": "static"
           },
           "android": {
             "newArchEnabled": false
@@ -52,7 +45,7 @@
         "NSLocationAlwaysUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["location", "fetch"],
+        "UIBackgroundModes": ["location", "fetch", "remote-notification"],
         "LSApplicationQueriesSchemes": ["googlemaps", "comgooglemaps"],
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
