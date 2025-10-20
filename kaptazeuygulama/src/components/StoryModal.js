@@ -310,7 +310,7 @@ const StoryModal = ({
                 📍 {story.restaurantName || story.restaurant?.name || 'Restaurant'}
               </Text>
               <Text style={styles.packageName}>
-                🎁 {story.title || story.packageName || story.packageInfo?.packageName || 'Sürpriz Paket'}
+                🎁 {story.title || story.packageName || story.packageInfo?.packageName || 'Fırsat Paketi'}
               </Text>
               {story.packageInfo?.packagePrice && (
                 <Text style={styles.packagePrice}>

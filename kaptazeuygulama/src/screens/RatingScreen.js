@@ -218,7 +218,7 @@ const RatingScreen = ({ navigation, route }) => {
         <View style={styles.ratingSection}>
           <Text style={styles.sectionTitle}>⭐ Deneyiminizi Puanlayın</Text>
           <Text style={styles.sectionSubtitle}>
-            Sürpriz paketiniz nasıldı? Soldan sağa puan verin:
+            Fırsat paketiniz nasıldı? Soldan sağa puan verin:
           </Text>
 
           <View style={styles.starsContainer}>
@@ -231,9 +231,9 @@ const RatingScreen = ({ navigation, route }) => {
 
         {/* Photo Section */}
         <View style={styles.photoSection}>
-          <Text style={styles.sectionTitle}>📸 Sürpriz Paket Fotoğrafları</Text>
+          <Text style={styles.sectionTitle}>📸 Fırsat Paketi Fotoğrafları</Text>
           <Text style={styles.sectionSubtitle}>
-            Aldığınız sürpriz paketin 1 fotoğrafını paylaşın! 🎁
+            Aldığınız fırsat paketinin 1 fotoğrafını paylaşın! 🎁
           </Text>
 
           {photos.length > 0 && (

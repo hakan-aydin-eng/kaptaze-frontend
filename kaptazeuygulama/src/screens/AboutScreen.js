@@ -35,12 +35,12 @@ const AboutScreen = ({ navigation }) => {
             <Text style={styles.appIcon}>🍽️</Text>
             <Text style={styles.appName}>KapKazan</Text>
             <Text style={styles.version}>Sürüm 1.0.3</Text>
-            <Text style={styles.tagline}>Sürpriz lezzetler, büyük tasarruf!</Text>
+            <Text style={styles.tagline}>Fırsat paketleri, büyük tasarruf!</Text>
           </View>
 
           <Text style={styles.sectionTitle}>Uygulama Hakkında</Text>
           <Text style={styles.paragraph}>
-            KapKazan, Antalya'nın sürpriz paket uygulamasıdır. Restoranlardan indirimli sürpriz paketler alın, hem tasarruf edin hem lezzet keşfedin!
+            KapKazan, Antalya'nın fırsat paketleri uygulamasıdır. Restoranlardan indirimli fırsat paketleri alın, hem tasarruf edin hem lezzet keşfedin!
           </Text>
 
           <Text style={styles.paragraph}>
@@ -49,11 +49,11 @@ const AboutScreen = ({ navigation }) => {
 
           <Text style={styles.sectionTitle}>Özellikler</Text>
           <View style={styles.featureList}>
-            <Text style={styles.feature}>🎁 Sürpriz paketler ile lezzet keşfedin</Text>
+            <Text style={styles.feature}>🎁 Fırsat paketleri ile lezzet keşfedin</Text>
             <Text style={styles.feature}>💰 %50'ye varan indirimler</Text>
             <Text style={styles.feature}>🎯 Konum tabanlı restoran önerileri</Text>
             <Text style={styles.feature}>⭐ Paket değerlendirme ve fotoğraf paylaşımı</Text>
-            <Text style={styles.feature}>📸 Sürpriz hikayeler</Text>
+            <Text style={styles.feature}>📸 Fırsat Hikayeleri</Text>
             <Text style={styles.feature}>📱 Kullanıcı dostu arayüz</Text>
             <Text style={styles.feature}>🔒 Güvenli ödeme sistemi</Text>
             <Text style={styles.feature}>❤️ Favori restoran listesi</Text>

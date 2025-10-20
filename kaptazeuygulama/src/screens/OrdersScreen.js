@@ -222,7 +222,7 @@ const OrdersScreen = ({ navigation }) => {
                           ⭐ Teslim aldıktan sonra puanlamayı unutma! 😊
                         </Text>
                         <Text style={styles.photoEncouragementText}>
-                          📸 Sürpriz paketinin fotoğrafını çekip puanlama ekranına ekleyebilirsin! 🎁
+                          📸 Fırsat paketinin fotoğrafını çekip puanlama ekranına ekleyebilirsin! 🎁
                         </Text>
                       </View>
                     )}
@@ -233,7 +233,7 @@ const OrdersScreen = ({ navigation }) => {
                           ⭐ Teslim aldıktan sonra puanlamayı unutma! 😊
                         </Text>
                         <Text style={styles.photoReminderText}>
-                          📸 Sürpriz paketinin fotoğrafını çekip puanlama ekranına ekleyebilirsin! 🎁
+                          📸 Fırsat paketinin fotoğrafını çekip puanlama ekranına ekleyebilirsin! 🎁
                         </Text>
                       </View>
                     )}

@@ -34,8 +34,8 @@ const SupportScreen = ({ navigation }) => {
     },
     {
       id: 3,
-      question: 'Sürpriz paketler nedir?',
-      answer: 'Sürpriz paketler, restoranların gün sonunda kalan kaliteli yemeklerini %50\'ye varan indirimlerle sunduğu paketlerdir. Ne olduğunu önceden bilemezsiniz ama her zaman taze ve lezzetlidir!',
+      question: 'Fırsat paketleri nedir?',
+      answer: 'Fırsat paketleri, restoranların gün sonunda kalan kaliteli yemeklerini %50\'ye varan indirimlerle sunduğu paketlerdir. Ne olduğunu önceden bilemezsiniz ama her zaman taze ve lezzetlidir!',
     },
     {
       id: 4,
@@ -55,7 +55,7 @@ const SupportScreen = ({ navigation }) => {
     {
       id: 9,
       question: 'Paket fotoğrafı nasıl paylaşırım?',
-      answer: 'Siparişinizi teslim aldıktan sonra "Siparişlerim" bölümünden puanlama yapabilir ve aldığınız sürpriz paketin fotoğrafını paylaşabilirsiniz. Fotoğraflarınız "Sürpriz Hikayeler" bölümünde görünür!',
+      answer: 'Siparişinizi teslim aldıktan sonra "Siparişlerim" bölümünden puanlama yapabilir ve aldığınız fırsat paketinin fotoğrafını paylaşabilirsiniz. Fotoğraflarınız "Fırsat Hikayeleri" bölümünde görünür!',
     },
   ];
 

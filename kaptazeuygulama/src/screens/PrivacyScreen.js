@@ -52,7 +52,7 @@ const PrivacyScreen = ({ navigation }) => {
 
           <Text style={styles.sectionTitle}>3. Konum Verileri</Text>
           <Text style={styles.paragraph}>
-            KapKazan, yakınızda bulunan restoranları göstermek ve sürpriz paket hizmetlerini optimize etmek için konum bilgilerinizi kullanır. Konum paylaşımını istediğiniz zaman cihaz ayarlarından devre dışı bırakabilirsiniz.
+            KapKazan, yakınızda bulunan restoranları göstermek ve fırsat paketleri hizmetlerini optimize etmek için konum bilgilerinizi kullanır. Konum paylaşımını istediğiniz zaman cihaz ayarlarından devre dışı bırakabilirsiniz.
           </Text>
 
           <Text style={styles.sectionTitle}>4. Veri Paylaşımı</Text>

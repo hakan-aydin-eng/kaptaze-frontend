@@ -81,7 +81,7 @@ const SurpriseStories = ({ userCoordinates }) => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>📸 Sürpriz Hikayeler</Text>
+        <Text style={styles.title}>📸 Fırsat Hikayeleri</Text>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Hikayeler yükleniyor... 🔄</Text>
         </View>
@@ -92,9 +92,9 @@ const SurpriseStories = ({ userCoordinates }) => {
   if (!stories || stories.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>📸 Sürpriz Hikayeler</Text>
+        <Text style={styles.title}>📸 Fırsat Hikayeleri</Text>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Henüz sürpriz hikaye yok 📱</Text>
+          <Text style={styles.emptyText}>Henüz fırsat hikayesi yok 📱</Text>
           <Text style={styles.emptySubtext}>
             İlk sen bir paket sipariş et ve puanlarken fotoğraf ekle! 🎁
           </Text>
@@ -105,9 +105,9 @@ const SurpriseStories = ({ userCoordinates }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📸 Sürpriz Hikayeler</Text>
+      <Text style={styles.title}>📸 Fırsat Hikayeleri</Text>
       <Text style={styles.subtitle}>
-        Kullanıcılarımızın aldığı sürpriz paketler! 😍
+        Kullanıcılarımızın aldığı fırsat paketleri! 😍
       </Text>
 
       <ScrollView
