@@ -274,7 +274,7 @@ const ProfileScreen = ({ navigation }) => {
             {user ? `${user.name} ${user.surname}` : 'Misafir Kullanıcı'}
           </Text>
           <Text style={[styles.userEmail, darkMode && styles.darkSubText]}>
-            {user ? user.email : 'misafir@kaptaze.com'}
+            {user ? user.email : 'misafir@kapkazan.com'}
           </Text>
           {user?.phone && (
             <Text style={[styles.userPhone, darkMode && styles.darkSubText]}>
@@ -359,7 +359,7 @@ const ProfileScreen = ({ navigation }) => {
         {/* App Version */}
         <View style={styles.versionContainer}>
           <Text style={[styles.versionText, darkMode && styles.darkSubText]}>
-            KapTaze v1.0.4
+            kapkazan v1.0.4
           </Text>
           <Text style={[styles.versionText, darkMode && styles.darkSubText]}>
             Made with ❤️ in Antalya

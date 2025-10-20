@@ -86,11 +86,11 @@ const SupportScreen = ({ navigation }) => {
   };
 
   const handleWhatsApp = () => {
-    Linking.openURL('https://wa.me/902420000000?text=Merhaba, KapTaze hakkında yardıma ihtiyacım var.');
+    Linking.openURL('https://wa.me/902420000000?text=Merhaba, kapkazan hakkında yardıma ihtiyacım var.');
   };
 
   const handleEmail = () => {
-    Linking.openURL('mailto:destek@kaptaze.com');
+    Linking.openURL('mailto:destek@kapkazan.com');
   };
 
   return (
