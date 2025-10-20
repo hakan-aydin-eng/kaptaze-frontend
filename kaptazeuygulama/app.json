@@ -11,11 +11,7 @@
         "expo-build-properties",
         {
           "ios": {
-            "useFrameworks": "static",
-            "deploymentTarget": "13.4",
-            "extraPodspecProperties": {
-              "compiler_flags": "-Wno-non-modular-include-in-framework-module"
-            }
+            "deploymentTarget": "13.4"
           },
           "android": {
             "newArchEnabled": false
