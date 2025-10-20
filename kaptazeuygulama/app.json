@@ -44,7 +44,6 @@
       "bundleIdentifier": "com.kaptaze.app",
       "buildNumber": "13",
       "jsEngine": "hermes",
-      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
         "NSLocationAlwaysUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
