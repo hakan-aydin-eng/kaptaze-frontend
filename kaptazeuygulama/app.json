@@ -12,7 +12,7 @@
         {
           "ios": {
             "deploymentTarget": "15.1",
-            "useFrameworks": "static"
+            "useFrameworks": "dynamic"
           },
           "android": {
             "newArchEnabled": false
@@ -45,8 +45,15 @@
         "NSLocationAlwaysUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["location", "fetch", "remote-notification"],
-        "LSApplicationQueriesSchemes": ["googlemaps", "comgooglemaps"],
+        "UIBackgroundModes": [
+          "location",
+          "fetch",
+          "remote-notification"
+        ],
+        "LSApplicationQueriesSchemes": [
+          "googlemaps",
+          "comgooglemaps"
+        ],
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         }
