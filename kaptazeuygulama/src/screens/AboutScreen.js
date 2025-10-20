@@ -35,7 +35,7 @@ const AboutScreen = ({ navigation }) => {
             <Text style={styles.appIcon}>🍽️</Text>
             <Text style={styles.appName}>KapKazan</Text>
             <Text style={styles.version}>Sürüm 1.0.3</Text>
-            <Text style={styles.tagline}>Fırsat paketleri, büyük tasarruf!</Text>
+            <Text style={styles.tagline}>Fırsat paketleri, büyük tasarruflar!</Text>
           </View>
 
           <Text style={styles.sectionTitle}>Uygulama Hakkında</Text>
