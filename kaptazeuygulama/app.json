@@ -7,12 +7,15 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
       [
         "expo-build-properties",
         {
           "ios": {
             "deploymentTarget": "13.4",
-            "useFrameworks": "static"
+            "useFrameworks": "static",
+            "newArchEnabled": false
           },
           "android": {
             "newArchEnabled": false
@@ -32,10 +35,7 @@
           "color": "#16a34a",
           "defaultChannel": "default"
         }
-      ],
-      "@react-native-firebase/app",
-      "@react-native-firebase/messaging",
-      "./plugins/withPodfileModifier"
+      ]
     ],
     "splash": {
       "image": "./assets/splash-icon.png",
