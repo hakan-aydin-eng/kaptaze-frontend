@@ -43,7 +43,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kaptaze.app",
-      "buildNumber": "12",
+      "buildNumber": "13",
       "jsEngine": "hermes",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
