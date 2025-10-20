@@ -7,12 +7,19 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "plugins": [
+      "@react-native-firebase/app",
       [
         "expo-build-properties",
         {
           "ios": {
             "deploymentTarget": "15.1",
-            "useFrameworks": "dynamic"
+            "useFrameworks": "static",
+            "extraPods": [
+              {
+                "name": "react-native-firebase",
+                "modular_headers": true
+              }
+            ]
           },
           "android": {
             "newArchEnabled": false
@@ -26,7 +33,8 @@
           "color": "#16a34a",
           "defaultChannel": "default"
         }
-      ]
+      ],
+      "expo-location"
     ],
     "splash": {
       "image": "./assets/splash-icon.png",
