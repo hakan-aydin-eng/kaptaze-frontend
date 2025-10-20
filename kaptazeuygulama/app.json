@@ -20,11 +20,6 @@
         }
       ],
       [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır."
-        }
-      ],
       [
         "expo-notifications",
         {
