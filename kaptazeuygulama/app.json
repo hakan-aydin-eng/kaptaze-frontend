@@ -71,6 +71,7 @@
       "package": "com.kaptaze.app",
       "versionCode": 2,
       "jsEngine": "hermes",
+      "googleServicesFile": "./android/app/google-services.json",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
