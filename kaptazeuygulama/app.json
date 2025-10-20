@@ -7,8 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "plugins": [
-      "@react-native-firebase/app",
-      "@react-native-firebase/messaging",
       [
         "expo-build-properties",
         {
