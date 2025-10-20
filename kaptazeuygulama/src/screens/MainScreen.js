@@ -737,7 +737,7 @@ const MainScreen = ({ navigation }) => {
               <Text style={styles.deliveryIcon}>📦</Text>
               <Text style={styles.deliveryText}>Teslim Al</Text>
               <View style={styles.deliveryBadge}>
-                <Text style={styles.deliveryBadgeText}>Gıda İsrafını Durdur</Text>
+                <Text style={styles.deliveryBadgeText}>fırsat paketleri kap</Text>
               </View>
             </View>
           </View>
