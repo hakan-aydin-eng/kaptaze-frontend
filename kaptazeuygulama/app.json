@@ -13,17 +13,7 @@
           "ios": {
             "deploymentTarget": "15.1",
             "useFrameworks": "static",
-            "extraPodfileContent": "\npost_install do |installer|\n  installer.pods_project.targets.each do |target|\n    target.build_configurations.each do |config|\n      # Universal fix for non-modular headers (Firebase + React Native Core)\n      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'\n    end\n  end\nend\n",
-            "extraPods": [
-              {
-                "name": "React-Core",
-                "modular_headers": true
-              },
-              {
-                "name": "RNFBApp",
-                "modular_headers": true
-              }
-            ]
+            "extraPodfileContent": "\npost_install do |installer|\n  installer.pods_project.targets.each do |target|\n    target.build_configurations.each do |config|\n      # Universal fix for non-modular headers (Firebase + React Native Core)\n      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'\n    end\n  end\nend\n"
           },
           "android": {
             "newArchEnabled": false
