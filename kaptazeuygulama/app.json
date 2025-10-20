@@ -11,7 +11,8 @@
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "13.4"
+            "deploymentTarget": "13.4",
+            "useFrameworks": "static"
           },
           "android": {
             "newArchEnabled": false
@@ -33,8 +34,7 @@
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-firebase/messaging",
-      "./plugins/withFirebaseModularHeaders"
+      "@react-native-firebase/messaging"
     ],
     "splash": {
       "image": "./assets/splash-icon.png",
