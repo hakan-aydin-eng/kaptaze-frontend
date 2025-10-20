@@ -703,18 +703,24 @@ const MainScreen = ({ navigation }) => {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
+          {/* Brand Name - Center */}
+          <View style={styles.brandContainer}>
+            <Text style={styles.brandName}>kapkazan</Text>
+          </View>
+
+          {/* Location + Delivery Badge Row */}
           <View style={styles.headerTop}>
             <View style={styles.locationContainer}>
               <Text style={styles.locationIcon}>📍</Text>
-              <View>
-                <TouchableOpacity onPress={() => setShowLocationModal(true)}>
-                  <Text style={styles.locationText}>{userLocation}</Text>
-                  <Text style={styles.radiusText}>{selectedDistance} km çapı</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity onPress={() => setShowLocationModal(true)}>
+                <Text style={styles.locationText}>{userLocation}</Text>
+              </TouchableOpacity>
             </View>
-            
-            {/* Notification button removed - using Firebase push notifications instead */}
+
+            <View style={styles.deliveryBadge}>
+              <Text style={styles.deliveryIcon}>📦</Text>
+              <Text style={styles.deliveryBadgeText}>fırsat paketleri kap</Text>
+            </View>
           </View>
 
           {/* Search Bar */}
@@ -728,17 +734,6 @@ const MainScreen = ({ navigation }) => {
                 onChangeText={setSearchQuery}
               />
               <Text style={styles.searchIcon}>🔍</Text>
-            </View>
-          </View>
-
-          {/* Teslim Al Tab */}
-          <View style={styles.tabContainer}>
-            <View style={styles.deliveryTab}>
-              <Text style={styles.deliveryIcon}>📦</Text>
-              <Text style={styles.deliveryText}>Teslim Al</Text>
-              <View style={styles.deliveryBadge}>
-                <Text style={styles.deliveryBadgeText}>fırsat paketleri kap</Text>
-              </View>
             </View>
           </View>
         </LinearGradient>
@@ -1102,15 +1097,10 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   locationText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#ffffff',
     textDecorationLine: 'underline',
-  },
-  radiusText: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 2,
   },
   changeLocationText: {
     fontSize: 12,
@@ -1133,6 +1123,17 @@ const styles = StyleSheet.create({
   headerButtonIcon: {
     fontSize: 18,
     color: '#ffffff',
+  },
+  brandContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+    marginTop: 8,
+  },
+  brandName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    letterSpacing: 1,
   },
   // Notification styles removed - using Firebase push notifications instead
   searchContainer: {
@@ -1159,38 +1160,24 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     marginLeft: 8,
   },
-  tabContainer: {
-    alignItems: 'center',
-  },
-  deliveryTab: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  deliveryBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
   },
   deliveryIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  deliveryText: {
-    color: '#ffffff',
-    fontWeight: '600',
-    marginRight: 8,
-  },
-  deliveryBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    fontSize: 14,
+    marginRight: 4,
   },
   deliveryBadgeText: {
     color: '#ffffff',
-    fontSize: 10,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '600',
   },
   offerBanner: {
     marginHorizontal: 16,
