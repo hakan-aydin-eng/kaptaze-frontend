@@ -26,7 +26,7 @@ const WelcomeScreen = ({ navigation }) => {
           <Image source={require('../../assets/icon.png')} style={styles.logo} />
           <Text style={styles.title}>kapkazan</Text>
           <Text style={styles.subtitle}>
-            Sürpriz Paket Platformu
+            Fırsat Paketleri Platformu
           </Text>
         </View>
 
@@ -34,7 +34,7 @@ const WelcomeScreen = ({ navigation }) => {
         <View style={styles.features}>
           <View style={styles.feature}>
             <Text style={styles.featureIcon}>🎁</Text>
-            <Text style={styles.featureText}>Sürpriz paketler keşfet</Text>
+            <Text style={styles.featureText}>Fırsat paketlerini keşfet</Text>
           </View>
           <View style={styles.feature}>
             <Text style={styles.featureIcon}>💰</Text>
