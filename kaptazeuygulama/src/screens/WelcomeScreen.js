@@ -42,7 +42,7 @@ const WelcomeScreen = ({ navigation }) => {
           </View>
           <View style={styles.feature}>
             <Text style={styles.featureIcon}>🏪</Text>
-            <Text style={styles.featureText}>Yakındaki fırsatları keşfet</Text>
+            <Text style={styles.featureText}>Yakındaki fırsatları kap</Text>
           </View>
         </View>
 
