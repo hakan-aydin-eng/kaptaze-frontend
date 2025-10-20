@@ -27,6 +27,12 @@
           "defaultChannel": "default"
         }
       ],
+      [
+        "react-native-maps",
+        {
+          "provider": "google"
+        }
+      ],
       "expo-location"
     ],
     "splash": {
