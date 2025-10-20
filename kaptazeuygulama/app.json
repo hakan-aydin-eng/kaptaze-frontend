@@ -34,7 +34,8 @@
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
+      "@react-native-firebase/messaging",
+      "./plugins/withPodfileModifier"
     ],
     "splash": {
       "image": "./assets/splash-icon.png",
