@@ -366,10 +366,10 @@ const notificationManager = {
 
             // Map form values to backend expected values
             const typeMapping = {
-                'general': 'genel',
-                'promotion': 'promosyon',
-                'city': 'şehir',
-                'restaurant': 'restoran'
+                'general': 'all',
+                
+                'city': 'city',
+                'restaurant': 'restaurant'
             };
 
             // Prepare notification data
@@ -377,7 +377,7 @@ const notificationManager = {
                 type: typeMapping[type] || type,
                 priority,
                 title,
-                message,
+                body: message,
                 targetData: {}
             };
 
