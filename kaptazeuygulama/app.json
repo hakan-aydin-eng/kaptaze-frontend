@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "KapKazan",
+    "name": "kapkazan",
     "slug": "kaptaze",
     "version": "1.2.0",
     "orientation": "portrait",
@@ -38,7 +38,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kaptaze.app",
-      "buildNumber": "13",
+      "buildNumber": "14",
       "jsEngine": "hermes",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
