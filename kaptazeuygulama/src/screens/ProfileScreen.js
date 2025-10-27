@@ -79,7 +79,8 @@ const ProfileScreen = ({ navigation }) => {
     { id: 6, title: 'Yardım & Destek', icon: '💬', screen: 'Support' },
     { id: 7, title: 'Gizlilik Politikası', icon: '🔒', screen: 'Privacy' },
     { id: 8, title: 'Hakkında', icon: 'ℹ️', screen: 'About' },
-    { id: 9, title: 'Çıkış Yap', icon: '🚪', action: 'logout', danger: true },
+    { id: 9, title: 'Hesabımı Sil', icon: '🗑️', action: 'deleteAccount', danger: true },
+    { id: 10, title: 'Çıkış Yap', icon: '🚪', action: 'logout', danger: true },
   ];
 
   const handleMenuPress = async (item) => {
@@ -90,12 +91,39 @@ const ProfileScreen = ({ navigation }) => {
           'Çıkış yapmak istediğinizden emin misiniz?',
           [
             { text: 'İptal', style: 'cancel' },
-            { 
-              text: 'Çıkış Yap', 
+            {
+              text: 'Çıkış Yap',
               style: 'destructive',
               onPress: async () => {
                 await logout();
                 navigation.navigate('Welcome');
+              }
+            }
+          ]
+        );
+        break;
+      case 'deleteAccount':
+        Alert.alert(
+          '⚠️ Hesabımı Sil',
+          'Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve tüm verileriniz kalıcı olarak silinecektir.',
+          [
+            { text: 'İptal', style: 'cancel' },
+            {
+              text: 'Hesabımı Sil',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  setIsUpdating(true);
+                  await apiService.deleteAccount();
+                  Alert.alert('✅ Başarılı', 'Hesabınız başarıyla silindi');
+                  await logout();
+                  navigation.navigate('Welcome');
+                } catch (error) {
+                  console.error('Delete account error:', error);
+                  Alert.alert('❌ Hata', error.message || 'Hesap silinirken bir hata oluştu');
+                } finally {
+                  setIsUpdating(false);
+                }
               }
             }
           ]

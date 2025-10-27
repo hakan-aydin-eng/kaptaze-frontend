@@ -36,9 +36,9 @@
       "backgroundColor": "#16a34a"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.kaptaze.app",
-      "buildNumber": "14",
+      "buildNumber": "15",
       "jsEngine": "hermes",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
@@ -47,8 +47,6 @@
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
-          "location",
-          "fetch",
           "remote-notification"
         ],
         "LSApplicationQueriesSchemes": [

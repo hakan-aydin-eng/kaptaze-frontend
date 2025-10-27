@@ -624,6 +624,25 @@ class ApiService {
       body: JSON.stringify({ token, newPassword })
     });
   }
+
+  // Account Deletion (Apple App Store requirement - Guideline 5.1.1)
+  async deleteAccount() {
+    console.log('🗑️ ApiService: Deleting user account');
+
+    // Get auth token from AsyncStorage
+    const authToken = await AsyncStorage.getItem('@kaptaze_user_token');
+
+    if (!authToken) {
+      throw new Error('No authentication token found');
+    }
+
+    return this.request('/auth/account', {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+  }
 }
 
 const apiService = new ApiService();
