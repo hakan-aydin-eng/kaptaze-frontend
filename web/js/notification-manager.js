@@ -22,7 +22,7 @@ const notificationManager = {
             if (response.ok) {
                 const result = await response.json();
                 if (result.success) {
-                    const data = result.data.overview;
+                    const data = result.data;
 
                     // Update dashboard statistics
                     const totalNotificationsEl = document.querySelector('[data-stat="totalNotifications"]');
@@ -30,10 +30,10 @@ const notificationManager = {
                     const favoriteNotificationsEl = document.querySelector('[data-stat="favoriteNotifications"]');
                     const proximityNotificationsEl = document.querySelector('[data-stat="proximityNotifications"]');
 
-                    if (totalNotificationsEl) totalNotificationsEl.textContent = data.totalNotifications || 0;
-                    if (reachedNotificationsEl) reachedNotificationsEl.textContent = data.totalReached || 0;
-                    if (favoriteNotificationsEl) favoriteNotificationsEl.textContent = data.totalFavoriteNotifications || 0;
-                    if (proximityNotificationsEl) proximityNotificationsEl.textContent = data.totalProximityNotifications || 0;
+                    if (totalNotificationsEl) totalNotificationsEl.textContent = data.total || data.today || 0;
+                    if (reachedNotificationsEl) reachedNotificationsEl.textContent = data.week || 0;
+                    if (favoriteNotificationsEl) favoriteNotificationsEl.textContent = data.unread || 0;
+                    if (proximityNotificationsEl) proximityNotificationsEl.textContent = data.total || 0;
 
                     // Update delivery rate display
                     const deliveryRateEl = document.querySelector('[data-stat="deliveryRate"]');
@@ -108,7 +108,7 @@ const notificationManager = {
             if (response.ok) {
                 const result = await response.json();
                 if (result.success && result.data) {
-                    const notifications = result.data.notifications;
+                    const notifications = Array.isArray(result.data) ? result.data : (result.data.notifications || []);
                     historyContainer.innerHTML = this.renderNotificationHistory(notifications);
                     console.log('✅ Notification history loaded:', notifications.length, 'notifications');
                 } else {
