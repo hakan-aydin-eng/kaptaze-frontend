@@ -40,4 +40,4 @@ temp/
 # API Keys and sensitive data
 config/api-keys.js
 **/api-keys.*
-**/*api*key*
+**/*api*key*app.json
