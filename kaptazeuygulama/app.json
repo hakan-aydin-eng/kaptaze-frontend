@@ -38,10 +38,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.kaptaze.app",
-      "buildNumber": "15",
+      "buildNumber": "17",
       "jsEngine": "hermes",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
+        "UIRequiresFullScreen": true,
         "NSLocationWhenInUseUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
         "NSLocationAlwaysUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Bu uygulama yakınındaki restoranları göstermek için konum bilginizi kullanır.",
@@ -58,7 +59,7 @@
         }
       },
       "config": {
-        "googleMapsApiKey": "AIzaSyBGEzq8t3l5L1H4n5v8Y9yW1uF9O5dQ7X2"
+        "googleMapsApiKey": "AIzaSyCsNL5wBMfHwv692NNqxNrQPC3iUE7BaLc"
       }
     },
     "android": {
@@ -76,7 +77,7 @@
       ],
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyBGEzq8t3l5L1H4n5v8Y9yW1uF9O5dQ7X2"
+          "apiKey": "AIzaSyCsNL5wBMfHwv692NNqxNrQPC3iUE7BaLc"
         }
       }
     },
