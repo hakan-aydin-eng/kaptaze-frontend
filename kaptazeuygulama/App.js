@@ -34,8 +34,10 @@ import PrivacyScreen from './src/screens/PrivacyScreen';
 import AboutScreen from './src/screens/AboutScreen';
 import SupportScreen from './src/screens/SupportScreen';
 import RatingScreen from './src/screens/RatingScreen';
+import OpportunityFinderScreen from './src/screens/OpportunityFinderScreen';
 import UserDataProvider from './src/context/UserDataContext';
 import AuthProvider, { useAuth } from './src/context/AuthContext';
+import SplashScreen from './src/components/SplashScreen';
 
 const Stack = createStackNavigator();
 
@@ -81,6 +83,7 @@ const AppNavigator = () => {
       <Stack.Screen name="About" component={AboutScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="Rating" component={RatingScreen} />
+      <Stack.Screen name="OpportunityFinder" component={OpportunityFinderScreen} />
     </Stack.Navigator>
   );
 };
@@ -122,16 +125,22 @@ class ErrorBoundary extends React.Component {
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     // Wake up backend immediately (prevent cold start)
     fetch('https://kaptaze-backend-api.onrender.com/health')
       .then(() => console.log('✅ Backend warmed up'))
       .catch(() => console.log('⚠️ Backend wake-up failed'));
-    
+
     // Show UI immediately
     setIsReady(true);
   }, []);
+
+  // Show splash screen first
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
 
   if (!isReady) {
     return (

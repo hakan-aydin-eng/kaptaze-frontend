@@ -2,7 +2,7 @@
   "expo": {
     "name": "kapkazan",
     "slug": "kaptaze",
-    "version": "1.2.0",
+    "version": "1.2.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -31,14 +31,14 @@
       "expo-location"
     ],
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash-kapkazan.jpg",
       "resizeMode": "contain",
       "backgroundColor": "#16a34a"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.kaptaze.app",
-      "buildNumber": "17",
+      "buildNumber": "113",
       "jsEngine": "hermes",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {

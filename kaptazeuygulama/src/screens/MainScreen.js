@@ -47,11 +47,11 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // Radius of the Earth in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const d = R * c; // Distance in km
   return Math.round(d * 10) / 10; // Round to 1 decimal place
 };
@@ -74,7 +74,7 @@ const MainScreen = ({ navigation }) => {
 
   // Refresh state
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Infinite scroll states
   const [displayedRestaurants, setDisplayedRestaurants] = useState([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -125,7 +125,7 @@ const MainScreen = ({ navigation }) => {
   // 🔄 PHASE 2: Real-time Restaurant Updates
   useEffect(() => {
     console.log('📡 Setting up real-time restaurant updates...');
-    
+
     const intervalId = setInterval(async () => {
       console.log('🔄 Auto-refreshing restaurant data...');
       try {
@@ -135,7 +135,7 @@ const MainScreen = ({ navigation }) => {
         console.error('❌ Auto-refresh failed:', error);
       }
     }, 120000); // Refresh every 2 minutes
-    
+
     return () => {
       console.log('🛑 Stopping real-time updates');
       clearInterval(intervalId);
@@ -225,7 +225,7 @@ const MainScreen = ({ navigation }) => {
 
   const handleLocationChange = () => {
     // Pass user location data to map
-    navigation.navigate('Map', { 
+    navigation.navigate('Map', {
       userLocation,
       userCoordinates,
       selectedDistance
@@ -234,18 +234,18 @@ const MainScreen = ({ navigation }) => {
 
   const applyDistanceFilter = () => {
     console.log('📏 Applying distance filter:', selectedDistance, 'km');
-    
+
     if (!userCoordinates) {
       console.log('⚠️ No user coordinates available for distance filtering');
       return;
     }
-    
+
     // Filter restaurants by distance
     const filteredByDistance = restaurants.filter(restaurant => {
       if (!restaurant.location || !restaurant.location.coordinates) {
         return true; // Keep restaurants without coordinates
       }
-      
+
       const [lon, lat] = restaurant.location.coordinates;
       const distance = calculateDistance(
         userCoordinates.latitude,
@@ -253,12 +253,12 @@ const MainScreen = ({ navigation }) => {
         lat,
         lon
       );
-      
+
       return distance <= selectedDistance;
     });
-    
+
     console.log(`✅ Filtered ${restaurants.length} restaurants to ${filteredByDistance.length} within ${selectedDistance}km`);
-    
+
     // Update displayed restaurants
     setDisplayedRestaurants(filteredByDistance.slice(0, ITEMS_PER_PAGE));
     setHasMore(filteredByDistance.length > ITEMS_PER_PAGE);
@@ -285,31 +285,31 @@ const MainScreen = ({ navigation }) => {
 
         const apiResponse = await apiService.getRestaurants(filters);
         console.log('📊 API response:', apiResponse);
-        
+
         if (apiResponse.success && apiResponse.data && apiResponse.data.restaurants) {
           apiRestaurants = apiResponse.data.restaurants;
           console.log('✅ API restaurants loaded:', apiRestaurants.length);
           console.log('📋 Restaurant names:', apiRestaurants.map(r => r.name));
-          
+
         } else {
           console.log('⚠️ No restaurants in API response');
         }
       } catch (error) {
         console.log('❌ API request failed:', error);
       }
-      
-      
-      
+
+
+
       // Only use API data - no fallback
       const allRestaurants = apiRestaurants;
-      
+
       // Format API data to match expected structure
       const formattedRestaurants = allRestaurants.map((restaurant, index) => {
         // Calculate real distance from user coordinates
         let calculatedDistance = '2.5km';
         if (userCoordinates && restaurant.location) {
           let restaurantLat, restaurantLng;
-          
+
           // Handle different coordinate formats
           if (restaurant.location.coordinates && Array.isArray(restaurant.location.coordinates)) {
             // MongoDB GeoJSON format: [longitude, latitude]
@@ -320,12 +320,12 @@ const MainScreen = ({ navigation }) => {
             restaurantLat = restaurant.location.lat;
             restaurantLng = restaurant.location.lng;
           }
-          
+
           if (restaurantLat && restaurantLng) {
             const distance = calculateDistance(
-              userCoordinates.latitude, 
+              userCoordinates.latitude,
               userCoordinates.longitude,
-              restaurantLat, 
+              restaurantLat,
               restaurantLng
             );
             calculatedDistance = `${distance}km`;
@@ -334,7 +334,7 @@ const MainScreen = ({ navigation }) => {
           // If no user coordinates, assign default distance based on index for demo
           calculatedDistance = `${(2 + (index * 0.5)).toFixed(1)}km`;
         }
-        
+
         return {
           ...restaurant,
           name: restaurant.name || restaurant.ad, // API uses 'name', fallback uses 'ad'
@@ -354,7 +354,7 @@ const MainScreen = ({ navigation }) => {
             close: '22:00'
           },
           // Format packages to match restaurant detail screen - only active packages
-          packages: restaurant.packages && restaurant.packages.length > 0 ? 
+          packages: restaurant.packages && restaurant.packages.length > 0 ?
             restaurant.packages
               .filter(pkg => pkg.status === 'active') // Only active packages
               .map(pkg => ({
@@ -369,31 +369,31 @@ const MainScreen = ({ navigation }) => {
       });
 
       // Duplicate removal (by id or name)
-      const uniqueRestaurants = formattedRestaurants.filter((restaurant, index, self) => 
+      const uniqueRestaurants = formattedRestaurants.filter((restaurant, index, self) =>
         index === self.findIndex(r => r._id === restaurant._id || r.name === restaurant.name)
       );
-      
+
       // Sort: nearest with packages first, then nearest without packages
       const sortedRestaurants = uniqueRestaurants.sort((a, b) => {
         const aHasPackages = a.packages && a.packages.length > 0;
         const bHasPackages = b.packages && b.packages.length > 0;
         const distanceA = a.distanceValue || parseFloat(a.distance) || 999;
         const distanceB = b.distanceValue || parseFloat(b.distance) || 999;
-        
+
         // First priority: restaurants with packages
         if (aHasPackages && !bHasPackages) return -1;
         if (!aHasPackages && bHasPackages) return 1;
-        
+
         // Second priority: distance (nearest first)
         return distanceA - distanceB;
       });
-      
+
       setRestaurants(sortedRestaurants);
       setDisplayedRestaurants(sortedRestaurants.slice(0, ITEMS_PER_PAGE));
       setHasMore(sortedRestaurants.length > ITEMS_PER_PAGE);
-      
+
       console.log(`📱 Toplam ${uniqueRestaurants.length} restoran API'den yüklendi`);
-      
+
     } catch (error) {
       console.error('Restaurant loading error:', error);
       // No fallback - show empty state
@@ -408,24 +408,24 @@ const MainScreen = ({ navigation }) => {
   const loadFeaturedRestaurants = async () => {
     try {
       console.log('Loading featured restaurants from API...');
-      
+
       // Use already loaded restaurants from main list (for consistency)
       if (restaurants.length > 0) {
         const nearbyHighRated = restaurants.filter(restaurant => {
-          const rating = typeof restaurant.rating === 'object' ? 
+          const rating = typeof restaurant.rating === 'object' ?
             restaurant.rating.average : restaurant.rating;
           const distance = restaurant.distanceValue || parseFloat(restaurant.distance) || 999;
-          
+
           // Filter: Within 5km radius AND 4+ rating
           return distance <= 5 && rating >= 4.0;
         }).slice(0, 8);
-        
+
         setFeaturedRestaurants(nearbyHighRated);
         console.log(`✨ Featured: ${nearbyHighRated.length} restaurants within 5km with 4+ rating`);
       } else {
         // Fallback to API call if restaurants not loaded yet
         const response = await apiService.getRestaurants();
-        
+
         if (response.success && response.data && response.data.restaurants) {
           const apiRestaurants = response.data.restaurants;
           setFeaturedRestaurants(apiRestaurants.filter(r => {
@@ -448,7 +448,7 @@ const MainScreen = ({ navigation }) => {
     try {
       console.log('🏷️ Loading categories from API...');
       const response = await apiService.getCategories();
-      
+
       if (response.success && response.data) {
         // Convert API categories to filter format
         const apiCategories = response.data.map(cat => ({
@@ -456,13 +456,13 @@ const MainScreen = ({ navigation }) => {
           name: cat.name,
           emoji: cat.emoji || '🍽️'
         }));
-        
+
         // Add "All" option at the beginning
         const allCategories = [
           { id: 'all', name: 'Hepsi', emoji: '🍽️' },
           ...apiCategories
         ];
-        
+
         setCategories(allCategories);
         console.log('✅ Categories loaded:', allCategories);
       } else {
@@ -549,13 +549,13 @@ const MainScreen = ({ navigation }) => {
   const loadMoreRestaurants = () => {
     if (!isLoadingMore && hasMore) {
       setIsLoadingMore(true);
-      
+
       setTimeout(() => {
         const nextPage = currentPage + 1;
         const startIndex = (nextPage - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE;
         const newItems = filteredRestaurants.slice(startIndex, endIndex);
-        
+
         if (newItems.length > 0) {
           setDisplayedRestaurants(prev => [...prev, ...newItems]);
           setCurrentPage(nextPage);
@@ -563,7 +563,7 @@ const MainScreen = ({ navigation }) => {
         } else {
           setHasMore(false);
         }
-        
+
         setIsLoadingMore(false);
       }, 1000); // Simulate loading delay
     }
@@ -573,7 +573,7 @@ const MainScreen = ({ navigation }) => {
   const handleScroll = (event) => {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
     const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 100;
-    
+
     if (isCloseToBottom) {
       loadMoreRestaurants();
     }
@@ -592,15 +592,15 @@ const MainScreen = ({ navigation }) => {
     const totalPackages = item.packages?.reduce((sum, pkg) => sum + pkg.quantity, 0) || 0;
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.featuredCard}
         onPress={() => navigation.navigate('RestaurantDetail', { restaurant: item })}
       >
         {/* Image Header */}
         <View style={styles.featuredImageContainer}>
           {item.imageUrl ? (
-            <Image 
-              source={{ uri: item.imageUrl }} 
+            <Image
+              source={{ uri: item.imageUrl }}
               style={styles.featuredImage}
               onError={() => console.log('Featured image failed to load')}
             />
@@ -611,9 +611,9 @@ const MainScreen = ({ navigation }) => {
               </Text>
             </View>
           )}
-          
+
           {/* Heart Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.heartButton}
             onPress={() => toggleFavorite(item)}
           >
@@ -621,7 +621,7 @@ const MainScreen = ({ navigation }) => {
               {isFavorite(item._id) ? '♥' : '♡'}
             </Text>
           </TouchableOpacity>
-          
+
           {/* Package Count Badge */}
           <View style={styles.packageBadge}>
             <Text style={styles.packageBadgeText}>{totalPackages} paket</Text>
@@ -644,7 +644,7 @@ const MainScreen = ({ navigation }) => {
             </View>
           )}
         </View>
-        
+
         {/* Card Info */}
         <View style={styles.featuredInfo}>
           <Text style={styles.featuredName} numberOfLines={1}>{item.name}</Text>
@@ -682,377 +682,403 @@ const MainScreen = ({ navigation }) => {
       style={styles.container}
     >
       <View style={styles.safeArea}>
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={400}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#16a34a']}
-            progressBackgroundColor="#ffffff"
-            tintColor="#16a34a"
-          />
-        }
-      >
-        {/* Header */}
-        <LinearGradient
-          colors={['#16a34a', '#059669', '#065f46']}
-          style={styles.header}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={400}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#16a34a']}
+              progressBackgroundColor="#ffffff"
+              tintColor="#16a34a"
+            />
+          }
         >
-          {/* Brand Name - Center */}
-          <View style={styles.brandContainer}>
-            <Text style={styles.brandName}>kapkazan</Text>
-          </View>
-
-          {/* Location + Delivery Badge Row */}
-          <View style={styles.headerTop}>
-            <View style={styles.locationContainer}>
-              <Text style={styles.locationIcon}>📍</Text>
-              <TouchableOpacity onPress={() => setShowLocationModal(true)}>
-                <Text style={styles.locationText}>{userLocation}</Text>
-              </TouchableOpacity>
+          {/* Header */}
+          <LinearGradient
+            colors={['#16a34a', '#059669', '#065f46']}
+            style={styles.header}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            {/* Brand Name - Center */}
+            <View style={styles.brandContainer}>
+              <Text style={styles.brandName}>kapkazan</Text>
             </View>
 
-            <View style={styles.deliveryBadge}>
-              <Text style={styles.deliveryIcon}>📦</Text>
-              <Text style={styles.deliveryBadgeText}>fırsat paketleri kap</Text>
-            </View>
-          </View>
-
-          {/* Search Bar */}
-          <View style={styles.searchContainer}>
-            <View style={styles.searchGlass}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Restoran ara..."
-                placeholderTextColor="rgba(255,255,255,0.7)"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-              <Text style={styles.searchIcon}>🔍</Text>
-            </View>
-          </View>
-        </LinearGradient>
-
-        {/* Surprise Stories Section */}
-        <SurpriseStories userCoordinates={userCoordinates} />
-
-        {/* Featured Restaurants Section */}
-        <View style={styles.featuredSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Keşfettin mi?</Text>
-            <Text style={styles.sectionSubtitle}>5km çevrendeki 4+ puanlı restoranlar</Text>
-          </View>
-          
-          <FlatList
-            data={featuredRestaurants}
-            renderItem={renderFeaturedItem}
-            keyExtractor={(item) => item._id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.featuredList}
-          />
-        </View>
-
-        {/* Filter Categories */}
-        <View style={styles.filterSection}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.filterContainer}>
-              {categories.map((category) => (
-                <TouchableOpacity
-                  key={category.id}
-                  onPress={() => setActiveFilter(category.id)}
-                  style={[
-                    styles.filterButton,
-                    activeFilter === category.id && styles.filterButtonActive
-                  ]}
-                >
-                  <Text style={styles.filterEmoji}>{category.emoji}</Text>
-                  <Text style={[
-                    styles.filterText,
-                    activeFilter === category.id && styles.filterTextActive
-                  ]}>
-                    {category.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
-        </View>
-
-
-        {/* Restaurant List */}
-        <View style={styles.restaurantList}>
-          {displayedRestaurants.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Bu kategoride restoran bulunamadı.</Text>
-            </View>
-          ) : (
-            displayedRestaurants.map((restaurant) => {
-              const statusInfo = getPackageStatus(restaurant);
-              const mainPackage = restaurant.packages?.[0] || {};
-              const totalPackages = restaurant.packages?.reduce((sum, pkg) => sum + pkg.quantity, 0) || 0;
-              
-
-              return (
-                <TouchableOpacity 
-                  key={restaurant._id} 
-                  style={styles.restaurantCard}
-                  onPress={() => navigation.navigate('RestaurantDetail', { restaurant })}
-                >
-                  {/* Restaurant Image Header */}
-                  <View style={[
-                    styles.restaurantImageContainer,
-                    totalPackages === 0 && styles.restaurantImageContainerNoPackages
-                  ]}>
-                    {(restaurant.restaurantImage || restaurant.profileImage || restaurant.imageUrl) ? (
-                      <Image 
-                        source={{ uri: restaurant.restaurantImage || restaurant.profileImage || restaurant.imageUrl }} 
-                        style={styles.restaurantImage}
-                        onError={() => console.log('Restaurant image failed to load:', restaurant.name)}
-                      />
-                    ) : (
-                      <View style={styles.restaurantGradient}>
-                        <Text style={styles.restaurantIcon}>
-                          {restaurant.image || getRestaurantIcon(restaurant.category)}
-                        </Text>
-                      </View>
-                    )}
-                    
-                    {/* Overlay Gradient */}
-                    <View style={styles.imageOverlay} />
-                    
-                    {/* Heart Button */}
-                    <TouchableOpacity 
-                      style={styles.restaurantHeart}
-                      onPress={() => toggleFavorite(restaurant)}
-                    >
-                      <Text style={styles.heartIcon}>
-                        {isFavorite(restaurant._id) ? '♥' : '♡'}
-                      </Text>
-                    </TouchableOpacity>
-                    
-                    {/* NEW Badge (for new restaurants) */}
-                    {restaurant.isNew && (
-                      <View style={styles.newBadge}>
-                        <Text style={styles.newBadgeText}>YENİ</Text>
-                      </View>
-                    )}
-
-                    {/* Package Count Badge (Featured Style) */}
-                    {totalPackages > 0 && (
-                      <View style={styles.packageBadge}>
-                        <Text style={styles.packageBadgeText}>{totalPackages} paket</Text>
-                      </View>
-                    )}
-
-                    {/* Price Badge (Featured Style) */}
-                    {restaurant.packages && restaurant.packages.length > 0 && restaurant.packages[0].originalPrice && (
-                      <View style={styles.priceBadge}>
-                        <View style={styles.priceRow}>
-                          <Text style={styles.originalPriceFeatured}>
-                            ₺{restaurant.packages[0].originalPrice}
-                          </Text>
-                          <Text style={styles.salePriceFeatured}>
-                            ₺{restaurant.packages[0].salePrice}
-                          </Text>
-                        </View>
-                        <Text style={styles.discountText}>
-                          %{restaurant.packages[0].discount}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                  
-                  {/* Restaurant Info - HTML Style Compact */}
-                  <View style={styles.cardContent}>
-                    <Text style={styles.restaurantName}>{restaurant.name}</Text>
-                    <Text style={styles.restaurantCategory}>{restaurant.category}</Text>
-                    <View style={styles.restaurantMeta}>
-                      <View style={styles.ratingContainer}>
-                        <Text style={styles.starIcon}>⭐</Text>
-                        <Text style={styles.ratingText}>
-                          {typeof restaurant.rating === 'object' ? 
-                            (restaurant.rating.average || 4.5).toFixed(1) : 
-                            (restaurant.rating || 4.5).toFixed(1)
-                          }
-                        </Text>
-                      </View>
-                      <View style={styles.pickupTimeContainer}>
-                        <Text style={styles.pickupTimeIcon}>⏰</Text>
-                        <Text style={styles.pickupTimeText}>
-                          {restaurant.operatingHours ?
-                            `${restaurant.operatingHours.open}-${restaurant.operatingHours.close}` :
-                            '09:00-22:00'}
-                        </Text>
-                      </View>
-                      <View style={styles.distanceContainer}>
-                        <Text style={styles.distanceIcon}>📍</Text>
-                        <Text style={styles.distanceText}>{restaurant.distance}</Text>
-                      </View>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            })
-          )}
-          
-          {/* Loading Indicator for Infinite Scroll */}
-          {isLoadingMore && (
-            <View style={styles.loadingMore}>
-              <ActivityIndicator size="small" color="#16a34a" />
-              <Text style={styles.loadingMoreText}>Daha fazla restoran yükleniyor...</Text>
-            </View>
-          )}
-          
-          {/* End Message */}
-          {!hasMore && displayedRestaurants.length > ITEMS_PER_PAGE && (
-            <View style={styles.endMessage}>
-              <Text style={styles.endMessageText}>🎉 Tüm restoranları gördünüz!</Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-
-      {/* Location Selection Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showLocationModal}
-        onRequestClose={() => setShowLocationModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Konum ve Çap Ayarı</Text>
-            <Text style={styles.modalSubtitle}>
-              {userLocation} konumundaki restoranları görüyorsunuz
-            </Text>
-            
-            <Text style={styles.distanceLabel}>
-              Arama Çapı: {selectedDistance} km
-            </Text>
-            
-            <View style={styles.sliderContainer}>
-              {/* Distance controls replaced slider for build compatibility */}
-              
-              {/* Distance Controls */}
-              <View style={styles.distanceControls}>
-                <TouchableOpacity
-                  style={styles.adjustButton}
-                  onPress={() => setSelectedDistance(Math.max(1, selectedDistance - 1))}
-                >
-                  <Text style={styles.adjustButtonText}>-</Text>
-                </TouchableOpacity>
-                <Text style={styles.currentDistance}>{selectedDistance} km</Text>
-                <TouchableOpacity
-                  style={styles.adjustButton}
-                  onPress={() => setSelectedDistance(Math.min(25, selectedDistance + 1))}
-                >
-                  <Text style={styles.adjustButtonText}>+</Text>
+            {/* Location + Delivery Badge Row */}
+            <View style={styles.headerTop}>
+              <View style={styles.locationContainer}>
+                <Text style={styles.locationIcon}>📍</Text>
+                <TouchableOpacity onPress={() => setShowLocationModal(true)}>
+                  <Text style={styles.locationText}>{userLocation}</Text>
                 </TouchableOpacity>
               </View>
-              
-              {/* Quick Distance Options */}
-              <View style={styles.quickOptions}>
-                {[1, 5, 10, 15, 25].map((distance) => (
+
+              <View style={styles.deliveryBadge}>
+                <Text style={styles.deliveryIcon}>📦</Text>
+                <Text style={styles.deliveryBadgeText}>fırsat paketleri kap</Text>
+              </View>
+            </View>
+
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+              <View style={styles.searchGlass}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Restoran ara..."
+                  placeholderTextColor="rgba(255,255,255,0.7)"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                <Text style={styles.searchIcon}>🔍</Text>
+              </View>
+            </View>
+          </LinearGradient>
+
+          {/* Surprise Stories Section */}
+          <SurpriseStories userCoordinates={userCoordinates} />
+
+          {/* Opportunity Finder Button - Fırsat Bul */}
+          <TouchableOpacity
+            style={styles.opportunityFinderButton}
+            onPress={() => navigation.navigate('OpportunityFinder', { userCoordinates })}
+          >
+            <LinearGradient
+              colors={['#f59e0b', '#f97316', '#ea580c']}
+              style={styles.opportunityGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.opportunityContent}>
+                <View style={styles.opportunityIcon}>
+                  <Text style={styles.opportunityEmoji}>🎯</Text>
+                </View>
+                <View style={styles.opportunityText}>
+                  <Text style={styles.opportunityTitle}>FIRSAT BUL!</Text>
+                  <Text style={styles.opportunitySubtitle}>
+                    Hemen Karar Ver
+                  </Text>
+                </View>
+                <Text style={styles.opportunityArrow}>→</Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Featured Restaurants Section */}
+          <View style={styles.featuredSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Keşfettin mi?</Text>
+              <Text style={styles.sectionSubtitle}>5km çevrendeki 4+ puanlı restoranlar</Text>
+            </View>
+
+            <FlatList
+              data={featuredRestaurants}
+              renderItem={renderFeaturedItem}
+              keyExtractor={(item) => item._id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.featuredList}
+            />
+          </View>
+
+          {/* Filter Categories */}
+          <View style={styles.filterSection}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.filterContainer}>
+                {categories.map((category) => (
                   <TouchableOpacity
-                    key={distance}
+                    key={category.id}
+                    onPress={() => setActiveFilter(category.id)}
                     style={[
-                      styles.quickOption,
-                      selectedDistance === distance && styles.quickOptionActive
+                      styles.filterButton,
+                      activeFilter === category.id && styles.filterButtonActive
                     ]}
-                    onPress={() => setSelectedDistance(distance)}
                   >
+                    <Text style={styles.filterEmoji}>{category.emoji}</Text>
                     <Text style={[
-                      styles.quickOptionText,
-                      selectedDistance === distance && styles.quickOptionTextActive
+                      styles.filterText,
+                      activeFilter === category.id && styles.filterTextActive
                     ]}>
-                      {distance}km
+                      {category.name}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
-            </View>
-            
-            {/* Use My Location Button */}
-            <TouchableOpacity 
-              style={styles.useLocationButton}
-              onPress={async () => {
-                await loadUserLocation();
-                setShowLocationModal(false);
-              }}
-            >
-              <Text style={styles.useLocationIcon}>📍</Text>
-              <Text style={styles.useLocationText}>Konumumu Kullan</Text>
-            </TouchableOpacity>
-            
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={styles.modalButtonCancel}
-                onPress={() => setShowLocationModal(false)}
-              >
-                <Text style={styles.modalButtonCancelText}>İptal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.modalButtonConfirm}
-                onPress={() => {
+            </ScrollView>
+          </View>
+
+
+          {/* Restaurant List */}
+          <View style={styles.restaurantList}>
+            {displayedRestaurants.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>Bu kategoride restoran bulunamadı.</Text>
+              </View>
+            ) : (
+              displayedRestaurants.map((restaurant) => {
+                const statusInfo = getPackageStatus(restaurant);
+                const mainPackage = restaurant.packages?.[0] || {};
+                const totalPackages = restaurant.packages?.reduce((sum, pkg) => sum + pkg.quantity, 0) || 0;
+
+
+                return (
+                  <TouchableOpacity
+                    key={restaurant._id}
+                    style={styles.restaurantCard}
+                    onPress={() => navigation.navigate('RestaurantDetail', { restaurant })}
+                  >
+                    {/* Restaurant Image Header */}
+                    <View style={[
+                      styles.restaurantImageContainer,
+                      totalPackages === 0 && styles.restaurantImageContainerNoPackages
+                    ]}>
+                      {(restaurant.restaurantImage || restaurant.profileImage || restaurant.imageUrl) ? (
+                        <Image
+                          source={{ uri: restaurant.restaurantImage || restaurant.profileImage || restaurant.imageUrl }}
+                          style={styles.restaurantImage}
+                          onError={() => console.log('Restaurant image failed to load:', restaurant.name)}
+                        />
+                      ) : (
+                        <View style={styles.restaurantGradient}>
+                          <Text style={styles.restaurantIcon}>
+                            {restaurant.image || getRestaurantIcon(restaurant.category)}
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Overlay Gradient */}
+                      <View style={styles.imageOverlay} />
+
+                      {/* Heart Button */}
+                      <TouchableOpacity
+                        style={styles.restaurantHeart}
+                        onPress={() => toggleFavorite(restaurant)}
+                      >
+                        <Text style={styles.heartIcon}>
+                          {isFavorite(restaurant._id) ? '♥' : '♡'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      {/* NEW Badge (for new restaurants) */}
+                      {restaurant.isNew && (
+                        <View style={styles.newBadge}>
+                          <Text style={styles.newBadgeText}>YENİ</Text>
+                        </View>
+                      )}
+
+                      {/* Package Count Badge (Featured Style) */}
+                      {totalPackages > 0 && (
+                        <View style={styles.packageBadge}>
+                          <Text style={styles.packageBadgeText}>{totalPackages} paket</Text>
+                        </View>
+                      )}
+
+                      {/* Price Badge (Featured Style) */}
+                      {restaurant.packages && restaurant.packages.length > 0 && restaurant.packages[0].originalPrice && (
+                        <View style={styles.priceBadge}>
+                          <View style={styles.priceRow}>
+                            <Text style={styles.originalPriceFeatured}>
+                              ₺{restaurant.packages[0].originalPrice}
+                            </Text>
+                            <Text style={styles.salePriceFeatured}>
+                              ₺{restaurant.packages[0].salePrice}
+                            </Text>
+                          </View>
+                          <Text style={styles.discountText}>
+                            %{restaurant.packages[0].discount}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Restaurant Info - HTML Style Compact */}
+                    <View style={styles.cardContent}>
+                      <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                      <Text style={styles.restaurantCategory}>{restaurant.category}</Text>
+                      <View style={styles.restaurantMeta}>
+                        <View style={styles.ratingContainer}>
+                          <Text style={styles.starIcon}>⭐</Text>
+                          <Text style={styles.ratingText}>
+                            {typeof restaurant.rating === 'object' ?
+                              (restaurant.rating.average || 4.5).toFixed(1) :
+                              (restaurant.rating || 4.5).toFixed(1)
+                            }
+                          </Text>
+                        </View>
+                        <View style={styles.pickupTimeContainer}>
+                          <Text style={styles.pickupTimeIcon}>⏰</Text>
+                          <Text style={styles.pickupTimeText}>
+                            {restaurant.operatingHours ?
+                              `${restaurant.operatingHours.open}-${restaurant.operatingHours.close}` :
+                              '09:00-22:00'}
+                          </Text>
+                        </View>
+                        <View style={styles.distanceContainer}>
+                          <Text style={styles.distanceIcon}>📍</Text>
+                          <Text style={styles.distanceText}>{restaurant.distance}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })
+            )}
+
+            {/* Loading Indicator for Infinite Scroll */}
+            {isLoadingMore && (
+              <View style={styles.loadingMore}>
+                <ActivityIndicator size="small" color="#16a34a" />
+                <Text style={styles.loadingMoreText}>Daha fazla restoran yükleniyor...</Text>
+              </View>
+            )}
+
+            {/* End Message */}
+            {!hasMore && displayedRestaurants.length > ITEMS_PER_PAGE && (
+              <View style={styles.endMessage}>
+                <Text style={styles.endMessageText}>🎉 Tüm restoranları gördünüz!</Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+
+        {/* Location Selection Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showLocationModal}
+          onRequestClose={() => setShowLocationModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Konum ve Çap Ayarı</Text>
+              <Text style={styles.modalSubtitle}>
+                {userLocation} konumundaki restoranları görüyorsunuz
+              </Text>
+
+              <Text style={styles.distanceLabel}>
+                Arama Çapı: {selectedDistance} km
+              </Text>
+
+              <View style={styles.sliderContainer}>
+                {/* Distance controls replaced slider for build compatibility */}
+
+                {/* Distance Controls */}
+                <View style={styles.distanceControls}>
+                  <TouchableOpacity
+                    style={styles.adjustButton}
+                    onPress={() => setSelectedDistance(Math.max(1, selectedDistance - 1))}
+                  >
+                    <Text style={styles.adjustButtonText}>-</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.currentDistance}>{selectedDistance} km</Text>
+                  <TouchableOpacity
+                    style={styles.adjustButton}
+                    onPress={() => setSelectedDistance(Math.min(25, selectedDistance + 1))}
+                  >
+                    <Text style={styles.adjustButtonText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Quick Distance Options */}
+                <View style={styles.quickOptions}>
+                  {[1, 5, 10, 15, 25].map((distance) => (
+                    <TouchableOpacity
+                      key={distance}
+                      style={[
+                        styles.quickOption,
+                        selectedDistance === distance && styles.quickOptionActive
+                      ]}
+                      onPress={() => setSelectedDistance(distance)}
+                    >
+                      <Text style={[
+                        styles.quickOptionText,
+                        selectedDistance === distance && styles.quickOptionTextActive
+                      ]}>
+                        {distance}km
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Use My Location Button */}
+              <TouchableOpacity
+                style={styles.useLocationButton}
+                onPress={async () => {
+                  await loadUserLocation();
                   setShowLocationModal(false);
-                  // Apply distance filter to restaurants
-                  applyDistanceFilter();
                 }}
               >
-                <Text style={styles.modalButtonConfirmText}>Uygula</Text>
+                <Text style={styles.useLocationIcon}>📍</Text>
+                <Text style={styles.useLocationText}>Konumumu Kullan</Text>
               </TouchableOpacity>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalButtonCancel}
+                  onPress={() => setShowLocationModal(false)}
+                >
+                  <Text style={styles.modalButtonCancelText}>İptal</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalButtonConfirm}
+                  onPress={() => {
+                    setShowLocationModal(false);
+                    // Apply distance filter to restaurants
+                    applyDistanceFilter();
+                  }}
+                >
+                  <Text style={styles.modalButtonConfirmText}>Uygula</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
+        </Modal>
+
+        {/* Notification panel removed - using Firebase push notifications instead */}
+
+        {/* Bottom Navigation */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity style={styles.navItem}>
+            <Text style={styles.navIcon}>🏠</Text>
+            <Text style={styles.navLabel}>Ana Sayfa</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => navigation.navigate('Map', {
+              userLocation,
+              userCoordinates,
+              selectedDistance
+            })}
+          >
+            <Text style={styles.navIcon}>🗺️</Text>
+            <Text style={styles.navLabel}>Harita</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => navigation.navigate('Favorites')}
+          >
+            <Text style={styles.navIcon}>❤️</Text>
+            <Text style={styles.navLabel}>Favoriler</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => navigation.navigate('Orders')}
+          >
+            <Text style={styles.navIcon}>📋</Text>
+            <Text style={styles.navLabel}>Siparişler</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Text style={styles.navIcon}>👤</Text>
+            <Text style={styles.navLabel}>Profil</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
-
-      {/* Notification panel removed - using Firebase push notifications instead */}
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>🏠</Text>
-          <Text style={styles.navLabel}>Ana Sayfa</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navItem}
-          onPress={() => navigation.navigate('Map', {
-            userLocation,
-            userCoordinates,
-            selectedDistance
-          })}
-        >
-          <Text style={styles.navIcon}>🗺️</Text>
-          <Text style={styles.navLabel}>Harita</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navItem}
-          onPress={() => navigation.navigate('Favorites')}
-        >
-          <Text style={styles.navIcon}>❤️</Text>
-          <Text style={styles.navLabel}>Favoriler</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navItem}
-          onPress={() => navigation.navigate('Orders')}
-        >
-          <Text style={styles.navIcon}>📋</Text>
-          <Text style={styles.navLabel}>Siparişler</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navItem}
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <Text style={styles.navIcon}>👤</Text>
-          <Text style={styles.navLabel}>Profil</Text>
-        </TouchableOpacity>
-      </View>
       </View>
     </LinearGradient>
   );
@@ -1942,6 +1968,56 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
+  },
+  // Opportunity Finder Button Styles
+  opportunityFinderButton: {
+    marginHorizontal: 16,
+    marginVertical: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#f59e0b',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  opportunityGradient: {
+    padding: 20,
+  },
+  opportunityContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  opportunityIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  opportunityEmoji: {
+    fontSize: 32,
+  },
+  opportunityText: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  opportunityTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  opportunitySubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+  },
+  opportunityArrow: {
+    fontSize: 24,
+    color: '#ffffff',
+    fontWeight: 'bold',
   },
 });
 
