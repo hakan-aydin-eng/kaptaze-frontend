@@ -2,7 +2,7 @@
   "expo": {
     "name": "kapkazan",
     "slug": "kaptaze",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -28,7 +28,14 @@
           "defaultChannel": "default"
         }
       ],
-      "expo-location"
+      "expo-location",
+      [
+        "react-native-maps",
+        {
+          "iosApiKey": "AIzaSyD9Y6wbMftggdkvi7JSAbQYeqBVEpwhBz8",
+          "androidApiKey": "AIzaSyD9Y6wbMftggdkvi7JSAbQYeqBVEpwhBz8"
+        }
+      ]
     ],
     "splash": {
       "image": "./assets/splash-kapkazan.jpg",
@@ -38,7 +45,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.kaptaze.app",
-      "buildNumber": "113",
+      "buildNumber": "114",
       "jsEngine": "hermes",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {

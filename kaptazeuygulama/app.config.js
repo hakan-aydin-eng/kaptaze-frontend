@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "KapTaze",
     slug: "kaptaze",
-    version: "1.0.4",
+    version: "1.2.3",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
@@ -49,7 +49,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.kaptaze.app",
-      buildNumber: "12",
+      buildNumber: "114",
       jsEngine: "hermes",
       googleServicesFile: "./GoogleService-Info.plist",
       infoPlist: {
@@ -63,12 +63,12 @@ export default {
           NSAllowsArbitraryLoads: true
         },
         // CRITICAL: Google Maps API Key for iOS
-        GMSApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY || "AIzaSyBGEzq8t3l5L1H4n5v8Y9yW1uF9O5dQ7X2"
+        GMSApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY || "AIzaSyD9Y6wbMftggdkvi7JSAbQYeqBVEpwhBz8"
       },
       config: {
-        googleMapsApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY || "AIzaSyBGEzq8t3l5L1H4n5v8Y9yW1uF9O5dQ7X2"
+        googleMapsApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY || "AIzaSyD9Y6wbMftggdkvi7JSAbQYeqBVEpwhBz8"
       },
-      googleMapsApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY || "AIzaSyBGEzq8t3l5L1H4n5v8Y9yW1uF9O5dQ7X2"
+      googleMapsApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY || "AIzaSyD9Y6wbMftggdkvi7JSAbQYeqBVEpwhBz8"
     },
     android: {
       adaptiveIcon: {
@@ -86,7 +86,7 @@ export default {
       ],
       config: {
         googleMaps: {
-          apiKey: "AIzaSyBGEzq8t3l5L1H4n5v8Y9yW1uF9O5dQ7X2"
+          apiKey: "AIzaSyD9Y6wbMftggdkvi7JSAbQYeqBVEpwhBz8"
         }
       }
     },
