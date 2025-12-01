@@ -14,8 +14,8 @@ src/config/env.js
 .expo/
 .expo-shared/
 expo-env.d.ts
-ios/Pods/
-android/app/build/
+ios/
+android/
 
 # Logs
 logs
