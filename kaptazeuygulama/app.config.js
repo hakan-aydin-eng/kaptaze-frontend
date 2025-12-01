@@ -2,7 +2,7 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: "KapTaze",
+    name: "kapkazan",
     slug: "kaptaze",
     version: "1.2.3",
     orientation: "portrait",
