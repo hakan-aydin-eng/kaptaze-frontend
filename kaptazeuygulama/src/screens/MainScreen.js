@@ -757,9 +757,9 @@ const MainScreen = ({ navigation }) => {
                   <Text style={styles.opportunityEmoji}>🎯</Text>
                 </View>
                 <View style={styles.opportunityText}>
-                  <Text style={styles.opportunityTitle}>FIRSAT BUL!</Text>
+                  <Text style={styles.opportunityTitle}>FIRSAT AVCISI</Text>
                   <Text style={styles.opportunitySubtitle}>
-                    Hemen Karar Ver
+                    En Yakın Lezzetleri Yakala
                   </Text>
                 </View>
                 <Text style={styles.opportunityArrow}>→</Text>
